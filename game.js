@@ -28,7 +28,7 @@ const EQUIP_DEFS = [
   { id:'hvac',      name:'HVAC',              ic:'temp',    max:5, base:500,  desc:'+8% temperature tolerance per level.' },
   { id:'humid',     name:'Humidification',    ic:'humid',   max:5, base:300,  desc:'+8% low-humidity tolerance per level.' },
   { id:'dehumid',   name:'Dehumidification',  ic:'drop',    max:5, base:300,  desc:'+8% high-humidity tolerance per level.' },
-  { id:'co2sys',    name:'CO2 System',        ic:'co2',     max:5, base:600,  desc:'+4% growth speed & quality per level.' },
+  { id:'co2sys',    name:'CO2 System',        ic:'co2',     max:5, base:600,  desc:'+4% growth speed & yield per level.' },
   { id:'irrigation',name:'Irrigation',        ic:'water',   max:5, base:350,  desc:'Water drains 12% slower per level.' },
   { id:'nutrients', name:'Nutrient System',   ic:'feed',    max:5, base:350,  desc:'Nutrition drains 12% slower, feeding more effective.' },
   { id:'sensors',   name:'Env Sensors',       ic:'inspect', max:5, base:450,  desc:'Better problem detection. +2% quality per level.' },
@@ -294,7 +294,20 @@ function normalizeState(){
   e.light=clamp(num(e.light,80),0,100); e.temp=clamp(num(e.temp,76),50,100);
   e.humidity=clamp(num(e.humidity,52),0,100); e.co2=clamp(num(e.co2,900),300,2000);
   S.env=e;
+  /* QA GE-603: sanitize equipment — corrupt values poison harvest/env math */
+  if(!S.equipment||typeof S.equipment!=='object') S.equipment={};
+  ["lights","hvac","humid","dehumid","co2sys","irrigation","nutrients","sensors","drycure"].forEach(k=>{
+    S.equipment[k]=clamp(int(S.equipment[k],1),1,9);
+  });
+  if(!S.crew||typeof S.crew!=='object'||Array.isArray(S.crew)) S.crew={};
+  ["assistant","irrigation","health","breeder","harvest","manager"].forEach(k=>{ S.crew[k]=!!S.crew[k]; });
+  /* QA GE-506: a corrupt difficulty bricks advanceDay — fall back to grower */
+  if(typeof DIFFS==='undefined'||!DIFFS[S.difficulty]) S.difficulty='grower';
   if(!Array.isArray(S.plants)) S.plants=[];
+  /* QA GE-602: drop poisoned entries before per-item scrub — one null must not nuke the save */
+  S.plants=S.plants.filter(p=>p&&typeof p==='object');
+  if(!Array.isArray(S.inventory)) S.inventory=[];
+  S.inventory=S.inventory.filter(it=>it&&typeof it==='object');
   if(!Array.isArray(S.titles)) S.titles=[];
   if(!Array.isArray(S.achievements)) S.achievements=[];
   if(!Array.isArray(S.missionsDone)) S.missionsDone=[];
@@ -308,8 +321,10 @@ function normalizeState(){
   if(!S.phenoCounters||typeof S.phenoCounters!=='object') S.phenoCounters={};
   Object.keys(S.phenoCounters).forEach(k=>{ S.phenoCounters[k]=Math.max(0,int(S.phenoCounters[k],0)); });
   if(!Array.isArray(S.keepers)) S.keepers=[];
+  S.keepers=S.keepers.filter(k=>k&&typeof k==='object');
   S.keeperCapacity=Math.max(1,int(S.keeperCapacity,3)); S.keeperCapLevel=clamp(int(S.keeperCapLevel,0),0,4);
   if(!Array.isArray(S.mothers)) S.mothers=[];
+  S.mothers=S.mothers.filter(m=>m&&typeof m==='object');
   S.motherCapacity=clamp(int(S.motherCapacity,1),1,4);
   if(!Array.isArray(S.phenoHunts)) S.phenoHunts=[];
   if(!S.phenoHistory||typeof S.phenoHistory!=='object') S.phenoHistory={};
@@ -377,7 +392,12 @@ function load(){
     const raw = localStorage.getItem((typeof NX_saveKey==='function')?NX_saveKey():SAVE_KEY);
     if(!raw){ freshStart(); return 'none'; }
     const d = JSON.parse(raw);
-    if(!d || int(d.version,0)<1 || typeof d.cash!=='number' || !Array.isArray(d.plants) || !d.env){ freshStart(); return 'corrupt'; }
+    if(!d || typeof d!=='object' || Array.isArray(d)){ freshStart(); return 'corrupt'; }
+    /* QA GE-601: never-erase — repair individual fields instead of wiping the whole save */
+    if(int(d.version,0)<1) d.version=1;
+    if(typeof d.cash!=='number' || !Number.isFinite(d.cash)) d.cash=0;
+    if(!Array.isArray(d.plants)) d.plants=[];
+    if(!d.env || typeof d.env!=='object') d.env={ light:80, temp:76, humidity:52, co2:900 };
     const def = defaultState();
     S = Object.assign(def, d);
     S.stats = Object.assign(def.stats, d.stats||{});
@@ -548,6 +568,8 @@ function icon(n,cls){
 /* ---- deterministic RNG for procedural art ---- */
 function sHash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function sRng(seed){ let a=sHash(seed); return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+/* QA GE-003: unique gradient IDs — duplicated fixed ids across inline SVGs break fills */
+let GE_svgUid=0; function GE_gid(prefix){ return prefix+'_u'+(++GE_svgUid); }
 
 /* ---- procedural cannabis plant: 10 botanical stages, phenotype + problem aware ----
    stage: 0 SEED, 1 SPROUT, 2 SEEDLING, 3 EARLY VEG, 4 VEG, 5 LATE VEG,
@@ -774,9 +796,10 @@ function facilitySceneSVG(tier){
   const hot=S.env.temp>86, cold=S.env.temp<64;
   const nL=T.lights, W=400, H=150;
   let h='<svg class="fac-scene" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice" aria-hidden="true">';
-  h+='<defs><radialGradient id="flg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff5a5a" stop-opacity="'+glow+'"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></radialGradient>'+
-     '<linearGradient id="fwl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#171114"/><stop offset="1" stop-color="#0a0708"/></linearGradient></defs>';
-  h+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#fwl)"/>';
+  const gidFlg=GE_gid('flg'), gidFwl=GE_gid('fwl');
+  h+='<defs><radialGradient id="'+gidFlg+'" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff5a5a" stop-opacity="'+glow+'"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></radialGradient>'+
+     '<linearGradient id="'+gidFwl+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#171114"/><stop offset="1" stop-color="#0a0708"/></linearGradient></defs>';
+  h+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#'+gidFwl+')"/>';
   for(let i=0;i<10;i++) h+='<rect x="'+(i*44-8)+'" y="0" width="2" height="'+H+'" fill="#ffffff" opacity="0.022"/>';
   /* ceiling duct (hvac) */
   if(q.hvac>=2||T.rich>=2){ h+='<rect x="0" y="10" width="'+W+'" height="8" fill="#1c1c1e" stroke="#333"/>';
@@ -788,7 +811,7 @@ function facilitySceneSVG(tier){
     h+='<path d="M'+x+' 18v-8" stroke="#444" stroke-width="3"/>';
     h+='<rect x="'+(x-34)+'" y="20" width="68" height="8" rx="2" fill="#151517" stroke="#7a0d0d"/>';
     for(let b=0;b<4;b++) h+='<rect x="'+(x-28+b*15)+'" y="22" width="11" height="4" fill="#ff6b6b" opacity="'+(0.35+light/100*0.65).toFixed(2)+'"/>';
-    h+='<ellipse cx="'+x+'" cy="86" rx="58" ry="52" fill="url(#flg)"/>';
+    h+='<ellipse cx="'+x+'" cy="86" rx="58" ry="52" fill="url(#'+gidFlg+')"/>';
   }
   /* CO2 tanks */
   if(q.co2sys>=2){ [26,W-26].forEach(x=>{ h+='<rect x="'+(x-9)+'" y="'+(H-64)+'" width="18" height="52" rx="8" fill="#232326" stroke="#4a4a4e"/>'; h+='<rect x="'+(x-9)+'" y="'+(H-64)+'" width="18" height="12" rx="6" fill="#2e4a2e"/>'; }); }
@@ -883,11 +906,15 @@ function dayTransition(day,lines){
    '<p class="muted tap">TAP TO CONTINUE</p></div>','cine-day',1500);
 }
 /* ---- procedural flower / bud visual for cards ---- */
+const GE_flowerCache={}; /* QA GE-704: flowerSVG output is deterministic per seed — memoize (genetics grids rendered 7k+ nodes) */
 function flowerSVG(seedStr,cls){
+  const ckey='f|'+seedStr+'|'+(cls||'');
+  const hit=GE_flowerCache[ckey]; if(hit) return hit;
   const R=sRng('flower|'+seedStr);
   const purp=R()<0.45;
-  let inner='<defs><radialGradient id="bg'+sHash(seedStr)%991+'" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#2a1215"/><stop offset="1" stop-color="#0b0b0c"/></radialGradient></defs>';
-  inner+='<rect x="0" y="0" width="120" height="120" fill="url(#bg'+sHash(seedStr)%991+')"/>';
+  const bgid=GE_gid('bg'); /* QA GE-003: unique id — no cross-seed gradient collisions */
+  let inner='<defs><radialGradient id="'+bgid+'" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#2a1215"/><stop offset="1" stop-color="#0b0b0c"/></radialGradient></defs>';
+  inner+='<rect x="0" y="0" width="120" height="120" fill="url(#'+bgid+')"/>';
   const cx=60, cy=62;
   const cols=purp?['#3a2440','#4e3054','#5e3a63','#6e4a76']:['#2e4a26','#3a5c2e','#486e38','#57824a'];
   for(let ring=2;ring>=0;ring--){
@@ -910,8 +937,10 @@ function flowerSVG(seedStr,cls){
   for(let i=0;i<46;i++){ /* trichome frost */
     inner+='<circle cx="'+(cx+(R()-0.5)*76).toFixed(1)+'" cy="'+(cy+(R()-0.5)*76).toFixed(1)+'" r="'+(0.7+R()*1.1).toFixed(1)+'" fill="#fff" opacity="'+(0.5+R()*0.5).toFixed(2)+'"/>';
   }
-  inner+='<rect x="0" y="86" width="120" height="34" fill="url(#sh'+sHash(seedStr)%991+')" opacity="0"/>';
-  return '<svg class="flower-art '+(cls||'')+'" viewBox="0 0 120 120" aria-hidden="true">'+inner+'</svg>';
+  inner+='<rect x="0" y="86" width="120" height="34" fill="url(#'+bgid+')" opacity="0"/>';
+  const svg='<svg class="flower-art '+(cls||'')+'" viewBox="0 0 120 120" aria-hidden="true">'+inner+'</svg>';
+  if(Object.keys(GE_flowerCache).length<400) GE_flowerCache[ckey]=svg;
+  return svg;
 }
 /* ---- grow-room scene banner: lights react to S.env ---- */
 function roomSceneSVG(){
@@ -919,8 +948,9 @@ function roomSceneSVG(){
   const light=clamp(num(S.env.light,80),0,100), glow=(0.18+light/100*0.75).toFixed(2);
   const hot=S.env.temp>86, cold=S.env.temp<64;
   let h='<svg class="room-scene" viewBox="0 0 400 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">';
-  h+='<defs><radialGradient id="lg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff5a5a" stop-opacity="'+glow+'"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></radialGradient>'+
-     '<linearGradient id="hz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>';
+  const gidLg=GE_gid('lg'), gidHz=GE_gid('hz');
+  h+='<defs><radialGradient id="'+gidLg+'" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff5a5a" stop-opacity="'+glow+'"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></radialGradient>'+
+     '<linearGradient id="'+gidHz+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>';
   h+='<rect x="0" y="0" width="400" height="130" fill="#0a0708"/>';
   for(let i=0;i<9;i++) h+='<rect x="'+(i*50-10)+'" y="0" width="2" height="130" fill="#ffffff" opacity="0.025"/>';
   h+='<rect x="0" y="14" width="400" height="7" fill="#1c1c1e" stroke="#333"/>'; /* ducting */
@@ -928,10 +958,10 @@ function roomSceneSVG(){
   [70,200,330].forEach(x=>{
     h+='<rect x="'+(x-46)+'" y="26" width="92" height="9" rx="2" fill="#151517" stroke="#7a0d0d"/>';
     for(let b=0;b<6;b++) h+='<rect x="'+(x-40+b*14)+'" y="28" width="10" height="5" fill="#ff6b6b" opacity="'+(0.35+light/100*0.65).toFixed(2)+'"/>';
-    h+='<ellipse cx="'+x+'" cy="78" rx="72" ry="46" fill="url(#lg)"/>';
+    h+='<ellipse cx="'+x+'" cy="78" rx="72" ry="46" fill="url(#'+gidLg+')"/>';
     h+='<path d="M'+(x-46)+' 35v-8M'+(x+46)+' 35v-8" stroke="#444" stroke-width="3"/>';
   });
-  h+='<rect x="0" y="0" width="400" height="130" fill="url(#hz)"/>';
+  h+='<rect x="0" y="0" width="400" height="130" fill="url(#'+gidHz+')"/>';
   /* plant row silhouettes */
   for(let i=0;i<8;i++){ const x=18+i*48, hh=26+((i*37)%3)*8;
     h+='<path d="M'+x+' 130 v-'+hh+' m0 0 c-9 -4 -12 -12 -8 -20 c6 2 9 10 8 20z m0 0 c9 -4 12 -12 8 -20 c-6 2 -9 10 -8 20z" fill="#12240f" stroke="#1d3a1a" stroke-width="1"/>';
@@ -943,19 +973,21 @@ function roomSceneSVG(){
 /* ---- brand marks ---- */
 function crownSVG(gold,cls){
   const c=gold?'#d4a017':'#e02020';
+  const gid=GE_gid('crw'+(gold?'g':'r'));
   return '<svg class="crown-svg '+(cls||'')+'" viewBox="0 0 48 34" aria-hidden="true">'+
-   '<defs><linearGradient id="crw'+(gold?'g':'r')+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(gold?'#f4d35e':'#ff5a5a')+'"/><stop offset="1" stop-color="'+c+'"/></linearGradient></defs>'+
-   '<path d="M4 10l7 5.5L24 6l13 9.5L44 10 40.5 28h-33z" fill="url(#crw'+(gold?'g':'r')+')" stroke="#000" stroke-width="1"/>'+
+   '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(gold?'#f4d35e':'#ff5a5a')+'"/><stop offset="1" stop-color="'+c+'"/></linearGradient></defs>'+
+   '<path d="M4 10l7 5.5L24 6l13 9.5L44 10 40.5 28h-33z" fill="url(#'+gid+')" stroke="#000" stroke-width="1"/>'+
    '<rect x="7.5" y="29" width="33" height="3" rx="1.5" fill="'+c+'"/>'+
    '<circle cx="4" cy="9" r="2.4" fill="'+c+'"/><circle cx="24" cy="5" r="2.4" fill="'+c+'"/><circle cx="44" cy="9" r="2.4" fill="'+c+'"/>'+
    '<circle cx="24" cy="19" r="2.6" fill="'+(gold?'#7a0d0d':'#ffd7d7')+'"/></svg>';
 }
 function gasmaskSVG(cls){
+  const gid=GE_gid('gmz');
   return '<svg class="gasmask-svg '+(cls||'')+'" viewBox="0 0 64 64" aria-hidden="true">'+
-   '<defs><radialGradient id="gmz" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff3b3b"/><stop offset="1" stop-color="#7a0d0d"/></radialGradient></defs>'+
+   '<defs><radialGradient id="'+gid+'" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff3b3b"/><stop offset="1" stop-color="#7a0d0d"/></radialGradient></defs>'+
    '<path d="M32 5C20.5 5 13 13.5 13 26c0 7.8 3.8 14 9.6 17.4L25.5 51h13l2.9-7.6C47.2 40 51 33.8 51 26 51 13.5 43.5 5 32 5z" fill="#161616" stroke="#e02020" stroke-width="2"/>'+
    '<circle cx="23.5" cy="26" r="7" fill="#050505" stroke="#333" stroke-width="1.5"/><circle cx="40.5" cy="26" r="7" fill="#050505" stroke="#333" stroke-width="1.5"/>'+
-   '<circle cx="23.5" cy="26" r="3.4" fill="url(#gmz)"/><circle cx="40.5" cy="26" r="3.4" fill="url(#gmz)"/>'+
+   '<circle cx="23.5" cy="26" r="3.4" fill="url(#'+gid+')"/><circle cx="40.5" cy="26" r="3.4" fill="url(#'+gid+')"/>'+
    '<rect x="27" y="35" width="10" height="8" rx="3" fill="#0a0a0a" stroke="#444"/>'+
    '<path d="M15 13l5 3.5M49 13l-5 3.5" stroke="#e02020" stroke-width="2.5"/></svg>';
 }
@@ -997,6 +1029,11 @@ function modal(html){
   const back=document.createElement('div'); back.className='modal-back ge-modal-back';
   back.innerHTML='<div class="modal ge-modal">'+html+'</div>';
   root.appendChild(back);
+  /* QA GE-005: backdrop tap dismisses regular modals (cinematics use cineOverlay, unaffected) */
+  back.addEventListener('click',function(e){ if(e.target===back){ try{closeModal(back);}catch(_){ back.remove(); } } });
+  if(!window.__geEscWired){ window.__geEscWired=true;
+    document.addEventListener('keydown',function(e){ if(e&&e.key==='Escape'){ var r=$('modal-root'); var top=r&&r.lastElementChild;
+      if(top&&top.classList.contains('modal-back')){ try{closeModal(top);}catch(_){ top.remove(); } } } }); }
   /* force reflow so the tokens entrance transition (.is-open) plays */
   void back.offsetWidth;
   back.classList.add('is-open');
@@ -1010,7 +1047,8 @@ function confirmModal(title,text,onYes){
     '<div class="ge-modal-foot"><button class="ge-btn ge-btn-danger" id="cm-no">CANCEL</button>'+
     '<button class="ge-btn ge-btn-primary" id="cm-yes">CONFIRM</button></div>');
   m.querySelector('#cm-no').onclick=()=>closeModal(m);
-  m.querySelector('#cm-yes').onclick=()=>{ closeModal(m); onYes(); };
+  let cmFired=false; /* QA GE-702: disarm after first activation — detached nodes can still receive events */
+  m.querySelector('#cm-yes').onclick=()=>{ if(cmFired) return; cmFired=true; closeModal(m); onYes(); };
 }
 
 function statBar(label,val,max,color){
@@ -1028,7 +1066,9 @@ const RENDER={};
 let current='splash';
 function show(name){
   if(!SCREENS.includes(name)) name='menu';
+  if((typeof S==='undefined'||!S)&&name!=='login'&&name!=='splash'&&name!=='difficulty'&&name!=='welcome') name='login'; /* QA GE-002: never render with null state */
   try{ if(typeof closeFocus==='function') closeFocus(); }catch(e){}
+  try{ const mr=$('modal-root'); if(mr) while(mr.firstChild) mr.firstChild.remove(); }catch(e){} /* QA GE-700: no ghost modals over the new screen */
   SCREENS.forEach(s=>$('scr-'+s).classList.add('hidden'));
   $('scr-'+name).classList.remove('hidden');
   current=name;
@@ -1041,7 +1081,9 @@ function show(name){
   try{
     if((name==='grow'||name==='home')&&typeof WX_bannerHTML==='function'){
       const bn=WX_bannerHTML();
-      if(bn){ const sec=$('scr-'+name); const d=document.createElement('div'); d.innerHTML=bn; sec.insertBefore(d,sec.firstChild); }
+      /* QA GE-701: remove any previous banner before inserting (no duplicates) */
+      if(bn){ const sec=$('scr-'+name); const prev=sec.querySelector(':scope > .ge-wx-banner-wrap'); if(prev) prev.remove();
+        const d=document.createElement('div'); d.className='ge-wx-banner-wrap'; d.innerHTML=bn; sec.insertBefore(d,sec.firstChild); }
     }
   }catch(e){}
   try{ document.body.dataset.screen=name; }catch(e){}
@@ -1172,6 +1214,7 @@ function checkAchievements(){
 
 /* ---------------- New game ---------------- */
 function newGame(diff){
+  if(!DIFFS[diff]) diff='grower'; /* QA GE-004: never start with an invalid difficulty */
   freshStart();
   const D=DIFFS[diff];
   S.difficulty=diff; S.cash=D.cash; S.started=true;
@@ -1426,6 +1469,8 @@ RENDER.breeding=function(){
 function createCross(name){
   const A2=getStrain(breedA), B2=getStrain(breedB);
   if(!A2||!B2){ toast(icon('x','ge-ic-md')+' Select two parents.'); return false; }
+  if(breedA===breedB){ toast(icon('x','ge-ic-md')+' Select two different parents.'); return false; } /* QA GE-201 */
+  if(!isUnlocked(breedA)||!isUnlocked(breedB)){ toast(icon('lock','ge-ic-md')+' Genetics locked.'); return false; } /* QA GE-202 */
   if(S.cash<150){ toast(icon('x','ge-ic-md')+' Need $150 breeding fee.'); return false; }
   S.cash-=150;
   const breederBonus=S.crew.breeder?6:0;
@@ -1750,7 +1795,7 @@ function envEval(){
   else if(e.temp>82+tTol){ issues.push({icon:'temp',text:'Too hot',tone:'critical'}); score-=14; }
   if(e.humidity<40-hTol){ issues.push({icon:'humid',text:'Humidity low',tone:'watch'}); score-=10; }
   else if(e.humidity>60+hhTol){ issues.push({icon:'humid',text:'Humidity high',tone:'warning'}); score-=10; }
-  const lTol=10*tol;
+  const lTol=10*(1+0.08*(q.lights-1))*tol; /* QA GE-403: lights widen light tolerance (was ignored) */
   if(e.light<70-lTol){ issues.push({icon:'light',text:'Light low',tone:'warning'}); score-=12; }
   if(e.co2<800){ issues.push({icon:'co2',text:'CO2 low',tone:'watch'}); score-=8; }
   else if(e.co2>1500){ issues.push({icon:'co2',text:'CO2 high',tone:'warning'}); score-=6; }
@@ -1832,6 +1877,8 @@ function refreshGrowUI(){ if(current==='grow') RENDER.grow(); if(current==='grow
 
 /* ---------------- Harvest ---------------- */
 function harvestPlant(p){
+  if(!p||p.harvested) return; /* QA GE-303: idempotency — already harvested (flag survives detached refs) */
+  p.harvested=true;
   const st=getStrain(p.strainId);
   if(stageOf(p)<5){ toast(icon('clock','ge-ic-md')+' Not ready yet \u2014 '+STAGES[stageOf(p)]+'.'); return; }
   if(!p.pheno){ p.pheno=genPheno(st); p.pheno.num=nextPhenoNum(p.strainId); }
@@ -2307,6 +2354,7 @@ function plantFocus(pid){
      (canClone?'<button class="ge-btn ge-btn-ghost" data-fa="clone">'+icon('clone','ge-ic-md')+'CLONE</button>':'')+
      '<button class="ge-btn ge-btn-primary" data-fa="harvest" '+(ready?'':'disabled')+'>'+icon('harvest','ge-ic-md')+'HARVEST</button>'+
      '<button class="ge-btn ge-btn-ghost" data-fa="close">'+icon('x','ge-ic-md')+'CLOSE</button>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-danger" data-fa="remove">'+icon('trash','ge-ic-md')+'REMOVE</button>'+
     '</div></div></div>';
   document.body.appendChild(bd); document.body.appendChild(sh);
   try{ requestAnimationFrame(()=>{ sh.classList.add('open'); }); }catch(e){ sh.classList.add('open'); }
@@ -2317,6 +2365,16 @@ function focusAction(pid,a){
   if(a==='close'){ closeFocus(); return; }
   if(a==='inspect'){ closeFocus(); inspectPheno(pid); return; }
   if(a==='harvest'){ closeFocus(); doAction(pid,'harvest'); return; }
+  /* QA GE-101: manual plant removal — dead/dying plants previously had no UI path */
+  if(a==='remove'){
+    const pl=S.plants.find(x=>x.id===pid);
+    confirmModal('REMOVE PLANT?','This permanently removes '+(pl?esc(GR_plantName(pl)):'this plant')+'. No harvest, no refund.',function(){
+      S.plants=S.plants.filter(x=>x.id!==pid);
+      closeFocus(); save(); updateHUD(); if(current==='grow') RENDER.grow(); if(current==='grows') RENDER.grows();
+      toast(icon('trash','ge-ic-md')+' Plant removed.');
+    });
+    return;
+  }
   if(a==='clone'){ const pl=S.plants.find(x=>x.id===pid); closeFocus(); if(pl&&pl.pheno&&pl.pheno.motherId) takeClone(pl.pheno.motherId); return; }
   const fx=$('focus-fx'), pl=$('focus-plant');
   if(fx){
@@ -2447,10 +2505,14 @@ RENDER.dispensary=function(){
      '<button class="ge-btn ge-btn-gold" id="proc-ed">EDIBLES<br><span class="ge-caption ge-muted">→10u/oz $25</span></button></div>'+
      '<button class="ge-btn ge-btn-ghost ge-btn-block" id="proc-x">'+icon('x','ge-ic-md')+'CANCEL</button>');
     m.querySelector('#proc-x').onclick=()=>closeModal(m);
+    let procDone=false; /* QA GE-313: per-modal idempotency — detached button replays must not re-fire */
     const doProc=kind=>{
-      const amt=clamp(+m.querySelector('#proc-amt').value||0,1,it.amount);
+      if(procDone) return;
+      const amt=clamp(+m.querySelector('#proc-amt').value||0,1,Math.max(0,it.amount));
+      if(!(amt>0)||!S.inventory.some(x=>x.id===it.id)){ toast(icon('x','ge-ic-md')+' Nothing left to process.'); return; }
       const cost=kind==='concentrate'?30*amt:25*amt;
       if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
+      procDone=true;
       S.cash-=cost; it.amount=Math.round((it.amount-amt)*10)/10;
       const outAmt=kind==='concentrate'?Math.round(amt*0.18*10)/10:Math.round(amt*10);
       S.inventory.push({ id:S.nextInvId++, strainId:it.strainId, strainName:it.strainName, amount:outAmt,
@@ -2548,6 +2610,7 @@ RENDER.empire=function(){
   });
   r.querySelectorAll('[data-buyfac]').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.buyfac, f=FACILITIES[i];
+    if(!f||i!==int(S.facility,0)+1){ toast(icon('lock','ge-ic-md')+' Facilities expand in order.'); return; } /* QA GE-400 */
     if(S.cash<f.cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(f.cost)+'.'); return; }
     const prevT=facTierIdx();
     S.cash-=f.cost; S.facility=i; gainXP(150); gainRep(20);
@@ -2556,7 +2619,8 @@ RENDER.empire=function(){
     EM_facilityUnlockCine(prevT,newT,f.name);
   });
   r.querySelectorAll('[data-buye]').forEach(b=>b.onclick=()=>{
-    const d=EQUIP_DEFS.find(x=>x.id===b.dataset.buye), lvl=S.equipment[d.id], cost=equipCost(d,lvl);
+    const d=EQUIP_DEFS.find(x=>x.id===b.dataset.buye), lvl=d?S.equipment[d.id]:0, cost=d?equipCost(d,lvl):0;
+    if(!d||lvl>=d.max){ return; } /* QA GE-401: max-level + null guard */
     if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
     S.cash-=cost; S.equipment[d.id]++; gainXP(40);
     toast('<span class="ge-up">↑</span> '+esc(d.name)+' → Lv '+S.equipment[d.id]);
@@ -2564,6 +2628,7 @@ RENDER.empire=function(){
   });
   r.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>{
     const c=CREW_DEFS.find(x=>x.id===b.dataset.hire);
+    if(!c||S.crew[c.id]){ toast(icon('check','ge-ic-md')+' Already on payroll.'); return; } /* QA GE-402 */
     if(S.cash<c.hire){ toast(icon('x','ge-ic-md')+' Need '+fmt$(c.hire)+'.'); return; }
     S.cash-=c.hire; S.crew[c.id]=true; gainXP(60);
     toast(icon('users','ge-ic-md')+' Hired '+esc(c.name));
@@ -2763,6 +2828,7 @@ RENDER.missions=function(){
    KEEPER VAULT + MOTHER ROOM + CLONING + PHENO HUNTS
    ============================================================ */
 function markKeeper(report){
+  if(!report||typeof report!=='object'){ try{ toast(icon('x','ge-ic-md')+' Keeper data invalid.'); }catch(e){} return false; } /* QA GE-203 */
   if(S.keepers.length>=S.keeperCapacity){
     S.stats.vaultFilledOnce++;
     save();
@@ -2805,8 +2871,7 @@ function keeperCine(report){
   const okBtn=back.querySelector('#kc-ok');
   if(!okBtn) throw new Error('keeper confirm button missing');
   const okFn=(e)=>{ try{ if(e&&e.stopPropagation) e.stopPropagation(); }catch(e2){} back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); confirmKeeper(report); };
-  okBtn.addEventListener('click',okFn);
-  okBtn.onclick=okFn;
+  okBtn.addEventListener('click',okFn); /* QA GE-204: single binding (dupe guard remains as backstop) */
   }catch(e){
     /* The cinematic is garnish — the keeper is the payload. Never let a
        ceremony failure silently swallow a keeper: save it directly. */
@@ -2939,7 +3004,7 @@ function promoteMother(keeperId){
   const k=S.keepers.find(x=>x.id===keeperId); if(!k) return;
   if(S.mothers.length>=S.motherCapacity){ toast(icon('leaf','ge-ic-md')+' Mother room full! Upgrade capacity in EMPIRE.'); return; }
   if(S.mothers.some(mm=>mm.keeperId===keeperId)){ toast('Already a mother plant.'); return; }
-  S.mothers.push({id:'m'+Date.now(),keeperId:k.id,strainId:k.strainId,strainName:k.strainName,
+  S.mothers.push({id:'m'+Date.now()+rndi(100,999),keeperId:k.id,strainId:k.strainId,strainName:k.strainName,
     phenoNum:k.phenoNum,genetics:JSON.parse(JSON.stringify(k.genetics)),traits:k.traits.slice(),
     rarity:k.rarity,legendaryTrait:k.legendaryTrait||null,dayCreated:S.day,clonesTaken:0,
     runs:0,bestQ:0,bestY:0,qualities:[],yields:[],awards:[]});
@@ -8143,6 +8208,7 @@ function MN_defaultMn() {
     unlocks: { envAuto: false, advDisp: false },
     customersServed: 0,
     plantDeaths: 0, deathsToday: 0,
+    flowerDaysGood: 0, /* QA GE-501: flowering days with dialed-in environment */
     prevPlants: 0, prevHarvests: 0,
     lastTickDay: 0
   };
@@ -8157,6 +8223,7 @@ function MN_migrate() {
   m.unlocks.advDisp = !!m.unlocks.advDisp;
   m.customersServed = MN_int(m.customersServed, 0);
   m.plantDeaths = MN_int(m.plantDeaths, 0);
+  m.flowerDaysGood = MN_int(m.flowerDaysGood, 0); /* QA GE-501 */
   m.deathsToday = MN_int(m.deathsToday, 0);
   m.prevPlants = MN_int(m.prevPlants, 0);
   m.prevHarvests = MN_int(m.prevHarvests, 0);
@@ -8224,6 +8291,12 @@ function MN_dayTick() {
   MN_bumpStreak('mn-fullhouse', ps.length >= 8 && avg >= 85);
   MN_bumpStreak('mn-crew', MN_crewAll());
 
+  /* QA GE-501: flowering days with a dialed-in environment (for MASTER CULTIVATOR) */
+  try{
+    const inFlower=MN_plants().some(p=>{ const stg=(typeof stageOf==='function')?stageOf(p):-1; return stg>=2&&stg<=4; });
+    if(inFlower&&envOk) s.mn.flowerDaysGood=MN_int(s.mn.flowerDaysGood,0)+1;
+  }catch(e){}
+
   /* timed-mission expiry / cleanup */
   const act = s.mn.active || {};
   Object.keys(act).forEach(id => {
@@ -8271,7 +8344,11 @@ function MN_startMission(id) {
       huntsCompleted10: MN_num(st.huntsCompleted10, 0),
       quickTurnarounds: MN_num(st.quickTurnarounds, 0),
       sales: MN_num(st.sales, 0),
-      plantDeaths: MN_int(s.mn.plantDeaths, 0)
+      plantDeaths: MN_int(s.mn.plantDeaths, 0),
+      phenoTested: MN_num(st.phenoTested, 0), /* QA GE-502: snapshot leak → instant completion */
+      keepersFound: MN_num(st.keepersFound, 0),
+      customersServed: MN_int(s.mn.customersServed, 0), /* QA GE-501 */
+      flowerDaysGood: MN_int(s.mn.flowerDaysGood, 0)
     }
   };
   if (s.mn.failed && s.mn.failed[id]) delete s.mn.failed[id];
@@ -8313,12 +8390,13 @@ function MN_timedHTML(m) {
     const days = MN_int(m.days, 0);
     if (a) {
       const di = MN_dayIn(m.id);
+      const diShow = Math.min(di, Math.max(1, days)); /* QA GE-505: clamp display to the window */
       const left = Math.max(0, days - di + 1);
       const urgent = left<=2;
       return '<div class="ms-timer'+(urgent?' ms-urgent':'')+'">'+icon('clock','ge-ic-md')+
-        '<b class="ge-data">MISSION DAY '+di+'/'+days+'</b>'+
+        '<b class="ge-data">MISSION DAY '+diShow+'/'+days+'</b>'+
         '<span class="ms-left'+(urgent?' is-hot':'')+'">'+left+' DAY'+(left===1?'':'S')+' REMAINING</span>'+
-        '<div class="ge-progress ge-progress-thin'+(urgent?' ge-progress-bad':'')+'"><i style="width:'+Math.round(di/Math.max(1,days)*100)+'%"></i></div></div>';
+        '<div class="ge-progress ge-progress-thin'+(urgent?' ge-progress-bad':'')+'"><i style="width:'+Math.min(100,Math.round(di/Math.max(1,days)*100))+'%"></i></div></div>';
     }
     if (MN_failed(m.id)) {
       return '<div class="ms-timer ms-failed">'+icon('x','ge-ic-md')+
@@ -8747,6 +8825,7 @@ function CT_checkout(custId){
   const cart=cust.cart;
   /* verify stock still available */
   for(const ci of cart.items){
+    if(!(CT_num(ci.qty,0)>0)){ CT_abandon(cust,'badline'); return false; } /* QA GE-330: reject non-positive quantities */
     const it=S.inventory.find(i=>i.id===ci.invId);
     if(!it||CT_num(it.amount,0)<ci.qty){
       /* out of stock: try alternative or abandon */
@@ -8759,7 +8838,7 @@ function CT_checkout(custId){
   cart.items.forEach(ci=>{
     const it=S.inventory.find(i=>i.id===ci.invId);
     it.amount=Math.max(0,CT_num(it.amount,0)-ci.qty);
-    total+=ci.qty*ci.price;
+    total+=ci.qty*CT_num(ci.price,0); /* QA: CT_num guards corrupt/missing price (NaN cash) */
   });
   /* remove emptied items */
   S.inventory=S.inventory.filter(i=>CT_num(i.amount,0)>0.01);
@@ -9707,15 +9786,17 @@ function NX_registerMissions(){
     add({id:'mn-disprush',cat:'Business',name:'DISPENSARY RUSH',timed:true,days:1,
      desc:'Fill 50 customer orders at 4.5★+ average rating within 24 game hours.',
      prog:s=>{ if(!MN_active('mn-disprush')) return [0,2];
-       const o=MN_delta('mn-disprush','ordersFilled',NX_stat('ordersFilled'));
+       const o=MN_delta('mn-disprush','customersServed',MN_int(s.mn&&s.mn.customersServed,0)); /* QA GE-501: ordersFilled was never written; customersServed is live */
        return MN_parts([o>=50,NX_avgStars()>=4.5]); },
      reward:{cash:3500,xp:1200,rep:50}});
     add({id:'mn-mastercult',cat:'Cultivation',name:'MASTER CULTIVATOR',timed:true,days:30,
      desc:'One full flowering cycle: hold VPD in range, pH/EC stable, irrigation on schedule. Difficulty scales with rank.',
      prog:s=>{ if(!MN_active('mn-mastercult')) return [0,4];
-       const sc=MN_delta('mn-mastercult','flowerDaysGood',NX_stat('flowerDaysGood'));
+       const sc=MN_delta('mn-mastercult','flowerDaysGood',MN_int(s.mn&&s.mn.flowerDaysGood,0)); /* QA GE-501: live-tracked below */
        return MN_parts([sc>=21,MN_delta('mn-mastercult','plantDeaths',(s.mn&&s.mn.plantDeaths)||0)<=0,MN_avgHealth()>=85,true]); },
      reward:{cash:5000,xp:2000,rep:60,p0:10}});
+    /* QA GE-500: land the new defs in MISSIONS immediately (MN_register dedupes, safe) */
+    try{ if(typeof MN_register==='function') MN_register(); }catch(e2){}
   }catch(e){}
 }
 function NX_stat(k){ try{ return num(S.stats[k],0); }catch(e){ return 0; } }
@@ -10394,7 +10475,7 @@ function CAP_settingsExtra(){
           };});
           const sv=r.querySelector('#cap-set-save2'); if(sv) sv.onclick=()=>{ try{ save(); }catch(e){} try{ toast('EMPIRE SAVED'); }catch(e2){} try{ RENDER.settings(); }catch(e3){} };
           const pf=r.querySelector('#cap-set-profile'); if(pf) pf.onclick=()=>{ try{ show('profile'); }catch(e){} };
-          const sw=r.querySelector('#cap-set-switch'); if(sw) sw.onclick=()=>{ try{ if(typeof NX_logout==='function') NX_logout(); else show('login'); }catch(e){} };
+          const sw=r.querySelector('#cap-set-switch'); if(sw) sw.onclick=()=>{ try{ confirmModal('SWITCH PROFILE?','Your empire is saved on this device. Switch profile now?',function(){ try{ if(typeof NX_logout==='function') NX_logout(); else show('login'); }catch(e){} }); }catch(e){} };
           const pp=r.querySelector('#cap-set-privacy'); if(pp) pp.onclick=()=>{ try{ modal(CAP_legalText('privacy')); }catch(e){} };
           const tm=r.querySelector('#cap-set-terms'); if(tm) tm.onclick=()=>{ try{ modal(CAP_legalText('terms')); }catch(e){} };
         }catch(e){}

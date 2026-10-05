@@ -856,7 +856,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 @keyframes pulse{50%{transform:scale(1.08);}}
 /* ---- plant focus sheet ---- */
 .focus-back{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;}
-.focus-sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#121214;border-top:2px solid var(--crimson);border-radius:18px 18px 0 0;z-index:91;padding:10px 16px 24px;transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.9,.25,1.1);max-height:86vh;overflow-y:auto;}
+.focus-sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#121214;border-top:2px solid var(--crimson);border-radius:18px 18px 0 0;z-index:91;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.9,.25,1.1);max-height:86vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .focus-sheet.open{transform:translateY(0);}
 .focus-handle{width:44px;height:5px;border-radius:3px;background:#3a3a3e;margin:2px auto 10px;}
 .focus-stage{position:relative;height:170px;background:radial-gradient(ellipse at 50% 80%,rgba(224,32,32,.14),transparent 65%),#0b0b0d;border:1px solid var(--line);border-radius:14px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-bottom:10px;}
