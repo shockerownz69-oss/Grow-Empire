@@ -67,18 +67,18 @@ const P0_LEVEL_PTS = [0, 10, 25, 50, 90, 150]; // points to reach level index
    stats: yld=yield, pot=potency, terp=terpenes, ft=flower days,
    stab=stability, resin, vigor. lock: {t:'rep'|'cash'|'mission', v} */
 const STRAINS = [
- {id:'queens-revenge-s1',type:'hybrid',name:"Queen's Revenge S1",yld:82,pot:94,terp:90,ft:63,stab:88,resin:96,vigor:80,tags:['Gassy','Frosty','Exotic','Keeper'],seed:120},
- {id:'slurricane-7',type:'indica',name:'Slurricane #7',yld:78,pot:88,terp:92,ft:60,stab:85,resin:90,vigor:82,tags:['Frosty','Fruit','Purple','Keeper'],seed:100},
- {id:'gg4-s1',type:'hybrid',name:'GG4 S1',yld:85,pot:90,terp:84,ft:62,stab:90,resin:93,vigor:88,tags:['Gassy','Heavy','Resin Monster','Stable'],seed:90},
- {id:'rks-s1',type:'indica',name:'RKS S1',yld:74,pot:86,terp:78,ft:65,stab:82,resin:84,vigor:76,tags:['Skunky','Old School','Heavy'],seed:85},
- {id:'tangerine-tbone',type:'sativa',name:'Tangerine T-Bone',yld:80,pot:84,terp:95,ft:58,stab:86,resin:82,vigor:90,tags:['Fruit','Exotic','Fast'],seed:95},
+ {id:'queens-revenge-s1',type:'hybrid',name:"Queen's Revenge S1",yld:82,pot:94,terp:90,ft:63,stab:88,resin:96,vigor:80,tags:['Gassy','Frosty','Exotic','Keeper'],seed:120,lock:{t:'rep',v:75}},
+ {id:'slurricane-7',type:'indica',name:'Slurricane #7',yld:78,pot:88,terp:92,ft:60,stab:85,resin:90,vigor:82,tags:['Frosty','Fruit','Purple','Keeper'],seed:100,lock:{t:'rep',v:50}},
+ {id:'gg4-s1',type:'hybrid',name:'GG4 S1',yld:85,pot:90,terp:84,ft:62,stab:90,resin:93,vigor:88,tags:['Gassy','Heavy','Resin Monster','Stable'],seed:90,lock:{t:'rep',v:50}},
+ {id:'rks-s1',type:'indica',name:'RKS S1',yld:74,pot:86,terp:78,ft:65,stab:82,resin:84,vigor:76,tags:['Skunky','Old School','Heavy'],seed:85,lock:{t:'rep',v:25}},
+ {id:'tangerine-tbone',type:'sativa',name:'Tangerine T-Bone',yld:80,pot:84,terp:95,ft:58,stab:86,resin:82,vigor:90,tags:['Fruit','Exotic','Fast'],seed:95,lock:{t:'rep',v:25}},
  {id:'northern-lights',type:'indica',name:'Northern Lights',yld:76,pot:78,terp:72,ft:55,stab:95,resin:78,vigor:92,tags:['Stable','Fast','Old School'],seed:40},
  {id:'blue-dream',type:'sativa',name:'Blue Dream BX',yld:88,pot:76,terp:80,ft:60,stab:90,resin:74,vigor:95,tags:['Fruit','Heavy','Stable'],seed:45},
  {id:'og-kush',type:'hybrid',name:'OG Kush IBL',yld:70,pot:89,terp:88,ft:64,stab:87,resin:88,vigor:74,tags:['Gassy','Old School','Keeper'],seed:70,lock:{t:'rep',v:25}},
- {id:'sour-diesel',type:'sativa',name:'Sour Diesel',yld:82,pot:85,terp:86,ft:68,stab:84,resin:80,vigor:90,tags:['Gassy','Skunky','Heavy'],seed:60},
+ {id:'sour-diesel',type:'sativa',name:'Sour Diesel',yld:82,pot:85,terp:86,ft:68,stab:84,resin:80,vigor:90,tags:['Gassy','Skunky','Heavy'],seed:60,lock:{t:'rep',v:25}},
  {id:'granddaddy-purp',type:'indica',name:'Granddaddy Purp',yld:75,pot:82,terp:84,ft:58,stab:92,resin:82,vigor:80,tags:['Purple','Fruit','Stable'],seed:50},
  {id:'white-widow',type:'hybrid',name:'White Widow',yld:78,pot:84,terp:76,ft:56,stab:94,resin:92,vigor:88,tags:['Frosty','Resin Monster','Stable','Fast'],seed:55},
- {id:'pineapple-express',type:'hybrid',name:'Pineapple Express',yld:84,pot:78,terp:90,ft:57,stab:86,resin:76,vigor:93,tags:['Fruit','Fast','Heavy'],seed:48},
+ {id:'pineapple-express',type:'hybrid',name:'Pineapple Express',yld:84,pot:78,terp:90,ft:57,stab:86,resin:76,vigor:93,tags:['Fruit','Fast','Heavy'],seed:48,lock:{t:'rep',v:50}},
  {id:'girl-scout-cookies',type:'hybrid',name:'Girl Scout Cookies',yld:72,pot:90,terp:89,ft:62,stab:83,resin:90,vigor:76,tags:['Exotic','Frosty','Keeper'],seed:75,lock:{t:'rep',v:50}},
  {id:'zkittlez',type:'indica',name:'Zkittlez',yld:74,pot:83,terp:96,ft:59,stab:81,resin:84,vigor:82,tags:['Fruit','Exotic','Purple'],seed:80,lock:{t:'rep',v:75}},
  {id:'gelato-33',type:'hybrid',name:'Gelato #33',yld:76,pot:88,terp:91,ft:60,stab:85,resin:89,vigor:80,tags:['Frosty','Exotic','Keeper'],seed:85,lock:{t:'rep',v:75}},
@@ -95,7 +95,7 @@ const STRAINS = [
  {id:'gushers',type:'hybrid',name:'Gushers',yld:80,pot:84,terp:92,ft:59,stab:83,resin:85,vigor:86,tags:['Fruit','Exotic','Heavy'],seed:88,lock:{t:'rep',v:350}},
  {id:'sunset-sherbet',type:'indica',name:'Sunset Sherbet',yld:76,pot:85,terp:90,ft:60,stab:86,resin:87,vigor:83,tags:['Fruit','Frosty','Purple'],seed:80,lock:{t:'rep',v:100}},
  {id:'dosidos',type:'indica',name:'Do-Si-Dos',yld:78,pot:88,terp:86,ft:62,stab:87,resin:90,vigor:79,tags:['Gassy','Frosty','Heavy'],seed:85,lock:{t:'rep',v:75}},
- {id:'strawberry-cough',type:'sativa',name:'Strawberry Cough',yld:82,pot:79,terp:88,ft:58,stab:89,resin:76,vigor:91,tags:['Fruit','Fast','Stable'],seed:55},
+ {id:'strawberry-cough',type:'sativa',name:'Strawberry Cough',yld:82,pot:79,terp:88,ft:58,stab:89,resin:76,vigor:91,tags:['Fruit','Fast','Stable'],seed:55,lock:{t:'rep',v:25}},
  {id:'chemdawg',type:'hybrid',name:'Chemdawg 91',yld:77,pot:89,terp:87,ft:66,stab:78,resin:86,vigor:82,tags:['Gassy','Skunky','Old School'],seed:95,lock:{t:'rep',v:120}},
  {id:'ak-47',type:'sativa',name:'AK-47',yld:86,pot:80,terp:75,ft:54,stab:93,resin:80,vigor:94,tags:['Fast','Stable','Heavy','Old School'],seed:42},
  {id:'super-silver-haze',type:'sativa',name:'Super Silver Haze',yld:84,pot:83,terp:82,ft:70,stab:85,resin:82,vigor:89,tags:['Old School','Heavy','Skunky'],seed:58,lock:{t:'rep',v:25}},
@@ -301,10 +301,10 @@ function strainDisplayName(st){
   try{ if(st&&st.lock&&st.lock.t==='mission'&&!isUnlocked(st.id)) return '???'; }catch(e){}
   return st?st.name:'???';
 }
-function unlockStrain(id){
+function unlockStrain(id, acquired=false){
   if(!S.lockedStrains.includes(id)) return false;
   S.lockedStrains = S.lockedStrains.filter(x=>x!==id);
-  markStrainOwned(id);
+  if(acquired) markStrainOwned(id); /* QA: availability != owned — stamp only on genuine acquisition */
   const st = getStrain(id);
   toast(icon('dna','ge-ic-md')+' Unlocked genetics: '+(st?st.name:id));
   return true;
@@ -435,6 +435,8 @@ function freshStart(){
   try{ if(S&&S.prefs&&typeof S.prefs==='object') keepPrefs=JSON.parse(JSON.stringify(S.prefs)); }catch(e){}
   try{ if(S&&S.tips&&typeof S.tips==='object') keepTips=JSON.parse(JSON.stringify(S.tips)); }catch(e){}
   S = defaultState(); normalizeState();
+  /* QA: new game — the 5 starters are AVAILABLE but not yet acquired; clear legacy backfill */
+  S.strainOwned={};
   if(keepPrefs){ S.prefs=keepPrefs; try{ if(typeof CAP_prefs==='function') CAP_prefs(); }catch(e){} }
   if(keepTips){ S.tips=keepTips; }
 }
@@ -1196,7 +1198,7 @@ function gainRep(n){
   S.reputation+=Math.round(n*mult);
   // auto-unlock rep-gated strains
   STRAINS.forEach(st=>{
-    if(st.lock&&st.lock.t==='rep'&&S.reputation>=st.lock.v) unlockStrain(st.id);
+    if(st.lock&&st.lock.t==='rep'&&S.reputation>=st.lock.v) unlockStrain(st.id,false); /* availability only — owned on first planting */
   });
   try{ if(typeof TY_repMirror==='function') TY_repMirror(n); }catch(e){}
 }
@@ -1219,7 +1221,7 @@ function checkP0Rewards(){
       if(rw.cash){ S.cash+=rw.cash; toast(icon('project0','ge-ic-md')+' Project 0: +'+fmt$(rw.cash)); }
       if(rw.rep){ gainRep(rw.rep); toast(icon('project0','ge-ic-md')+' Project 0: +'+rw.rep+' rep'); }
       if(rw.xp){ gainXP(rw.xp); }
-      if(rw.gen){ rw.gen.forEach(g=>unlockStrain(g)); }
+      if(rw.gen){ rw.gen.forEach(g=>unlockStrain(g,true)); }
       if(rw.title){ S.project0.titles.push(rw.title); S.titles.push(rw.title); toast(icon('trophy','ge-ic-md')+' Title earned: '+rw.title); }
     }
   });
@@ -1244,13 +1246,13 @@ function checkMissions(){
       if(r.cash){ const c=Math.round(r.cash*rmult); S.cash+=c; }
       if(r.rep) gainRep(r.rep);
       if(r.xp) gainXP(r.xp);
-      if(r.gen) r.gen.forEach(g=>unlockStrain(g));
+      if(r.gen) r.gen.forEach(g=>unlockStrain(g,true));
       if(r.p0) addP0('knowledge',r.p0);
       if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,m.name); }catch(e){} }
       const nm=m.name;
       setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Mission complete: <b>'+esc(nm)+'</b>'),50);
       // mission-locked strain p0-50
-      if(m.id==='p0-50') unlockStrain('project-zero-og');
+      if(m.id==='p0-50') unlockStrain('project-zero-og',true);
     }
   });
 }
@@ -1451,7 +1453,7 @@ RENDER.genetics=function(){
     const gdisc=(typeof WX_discount==='function')?WX_discount('genetics'):1;
     const cost=Math.round(st.seed*3*gdisc);
     if(S.cash<cost){ toast('\u274C Not enough cash.'); return; }
-    S.cash-=cost; unlockStrain(st.id); save(); updateHUD(); RENDER.genetics();
+    S.cash-=cost; unlockStrain(st.id,true); save(); updateHUD(); RENDER.genetics();
   });
   r.querySelectorAll('[data-preserve]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.preserve;
@@ -2794,7 +2796,7 @@ function runCompetition(t,item,fee){
     if(t.id==='breeder') S.stats.breederCupWins++;
     addP0('freedom',3); addP0('cultivation',2); gainXP(200);
     html+='<div class="ge-cer-win"><div class="ge-cer-crown">'+crownSVG(true,'c-ico-svg')+'</div><p class="ge-cer-wintext">YOU WIN! +'+fmt$(cashR)+' +'+repR+' rep</p></div>';
-    if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel'); html+='<p class="ge-cer-wintext">'+icon('crown-gold','ge-ic-md')+' Rare genetics unlocked: Crown Jewel!</p>'; }
+    if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel',true); html+='<p class="ge-cer-wintext">'+icon('crown-gold','ge-ic-md')+' Rare genetics unlocked: Crown Jewel!</p>'; }
     toast(icon('trophy','ge-ic-md')+' Competition WON!');
   }else{
     gainXP(40);
@@ -3510,7 +3512,7 @@ const WX_EVENT_DEFS=[
        var st=cands[0], cost=Math.max(1,Math.round(st.seed*3*ev.data.disc));
        if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+' for '+esc(st.name)+'.'); return; }
        S.cash-=cost;
-       if(typeof unlockStrain==='function') unlockStrain(st.id);
+       if(typeof unlockStrain==='function') unlockStrain(st.id,true); /* cash purchase = acquisition */
      }},
     {label:'JUST BROWSING', sub:'The sale stays live — shop at your own pace',
      run:function(){ toast(WX_ic('cart','ge-ic-md')+' Sale stays live for now. Check the depot.'); }}
@@ -3558,7 +3560,7 @@ const WX_EVENT_DEFS=[
        var cost=st.seed*5;
        if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
        S.cash-=cost;
-       if(typeof unlockStrain==='function') unlockStrain(st.id);
+       if(typeof unlockStrain==='function') unlockStrain(st.id,true); /* cash purchase = acquisition */
        if(typeof gainXP==='function') gainXP(50);
        return 'end';
      }},
@@ -4054,7 +4056,7 @@ function WX_grantReward(rw){
   if(rw.xp&&typeof gainXP==='function') gainXP(num(rw.xp,0));
   if(rw.rep&&typeof gainRep==='function') gainRep(Math.round(num(rw.rep,0)*(1+WX_exEmp('manager')/100)));
   if(rw.p0&&typeof addP0==='function') addP0('knowledge',num(rw.p0,0));
-  if(rw.strain&&typeof unlockStrain==='function') unlockStrain(rw.strain);
+  if(rw.strain&&typeof unlockStrain==='function') unlockStrain(rw.strain,true);
 }
 function WX_tickChallenges(){
   var w=S.wx; if(!w) return;
@@ -5382,7 +5384,7 @@ function EX_compCeremony(t,item){
         compId:t.id,compName:t.name,catId:'overall',catName:'OVERALL CHAMPION',place:1,day:int(S.day,1)});
       EX_record('strainValue',EX_trophyBoost(item.strainId),item.strainName);
       setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Competition WON!'),60);
-      if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel'); }
+      if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel',true); }
     }else if(myOverall===2){ gainRep(20); gainXP(100); S.cash=num(S.cash,0)+Math.round(300*mult); }
     else if(myOverall===3){ gainRep(8); gainXP(60); }
     else { gainXP(40); }
@@ -6925,8 +6927,9 @@ function TY_wireLocFac(root){
 function TY_envVals(){
   const t=num(S.env.temp,76), rh=num(S.env.humidity,52), light=num(S.env.light,80);
   const ppfd=Math.round(light*12);
-  /* simplified VPD (kPa) */
-  const svp=0.6108*Math.exp((17.27*t)/(t+237.3));
+  /* simplified air VPD (kPa): S.env.temp is °F — Tetens needs °C */
+  const tC=(t-32)*5/9;
+  const svp=0.6108*Math.exp((17.27*tC)/(tC+237.3));
   const vpd=Math.max(0,svp*(1-rh/100));
   const airflow=int(S.equipment.hvac,1)*20;
   return {ppfd:ppfd,vpd:Math.round(vpd*100)/100,airflow:airflow};
@@ -7571,7 +7574,7 @@ function GT_wireCards(r){
     const gdisc=(typeof WX_discount==='function')?WX_discount('genetics'):1;
     const cost=Math.round(st.seed*3*gdisc);
     if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Not enough cash.'); return; }
-    S.cash-=cost; unlockStrain(st.id); save(); updateHUD(); RENDER.genetics();
+    S.cash-=cost; unlockStrain(st.id,true); save(); updateHUD(); RENDER.genetics();
   });
   r.querySelectorAll('[data-growseed]').forEach(b=>b.onclick=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation();
     if(plantSeed(b.dataset.growseed)) toast(icon('grow','ge-ic-md')+' Planted '+esc(getStrain(b.dataset.growseed).name));
