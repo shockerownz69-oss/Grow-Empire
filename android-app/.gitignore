@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Capacitor / Android build outputs
+android/app/build/
+android/.gradle/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+
+# Signing — NEVER commit these
+*.keystore
+*.jks
+*.p12
+keystore.properties
+android/keystore.properties
+
+# Secrets
+.env
+.env.*
+*.secret
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Debug APKs built locally (CI uploads its own artifacts)
+*.apk

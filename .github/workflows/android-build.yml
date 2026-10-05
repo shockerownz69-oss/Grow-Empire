@@ -1,0 +1,106 @@
+# =============================================================================
+# Grow Empire — Android debug APK builder (Shocker OwnZ)
+# Runs on GitHub-hosted Linux. No computer needed: trigger it from your phone
+# via Actions → "Grow Empire Android Build" → Run workflow.
+# Produces a DEBUG APK for on-device testing (NOT a Play Store release).
+# =============================================================================
+name: Grow Empire Android Build
+
+on:
+  # Manual trigger — the phone-friendly "build button".
+  workflow_dispatch:
+  # Automatic builds when game or Android code changes on main.
+  push:
+    branches: [main]
+    paths:
+      - 'android-app/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'game.js'
+      - '.github/workflows/android-build.yml'
+
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-debug-apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+        shell: bash
+
+    steps:
+      # ------------------------------------------------------------------
+      - name: 1/10 Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      - name: 2/10 Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: android-app/package-lock.json
+
+      # ------------------------------------------------------------------
+      - name: 3/10 Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ------------------------------------------------------------------
+      - name: 4/10 Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0 platform-tools'
+
+      # ------------------------------------------------------------------
+      - name: 5/10 Install Node dependencies
+        run: npm ci --no-audit --no-fund
+
+      # ------------------------------------------------------------------
+      # The game source of truth lives at the repo root (index.html,
+      # styles.css, game.js). Refresh the bundled copy before syncing so the
+      # APK always ships the latest web build.
+      - name: 6/10 Refresh bundled web assets from repo root
+        run: |
+          set -eux
+          cp ../index.html www/index.html
+          cp ../styles.css www/styles.css
+          cp ../game.js www/game.js
+          ls -la www/
+
+      # ------------------------------------------------------------------
+      - name: 7/10 Capacitor sync
+        run: npx cap sync android
+
+      # ------------------------------------------------------------------
+      - name: 8/10 Set up Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      # ------------------------------------------------------------------
+      - name: 9/10 Build debug APK
+        working-directory: android-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      # ------------------------------------------------------------------
+      - name: 10/10 Rename APK and upload artifact
+        run: |
+          set -eux
+          APK=$(find android/app/build/outputs/apk/debug -name 'app-debug.apk' | head -1)
+          test -n "$APK" || (echo "ERROR: app-debug.apk not found" && exit 1)
+          cp "$APK" "Grow-Empire-v1.0.0-debug.apk"
+          ls -la Grow-Empire-v1.0.0-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Grow-Empire-Android-Debug
+          path: android-app/Grow-Empire-v1.0.0-debug.apk
+          if-no-files-found: error

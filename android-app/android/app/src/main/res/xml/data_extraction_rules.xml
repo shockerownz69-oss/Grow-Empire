@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API 31+ backup rules. Mirrors backup_rules.xml: player saves live in
+     WebView localStorage (app_webview/) and must survive reinstalls. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="." />
+        <include domain="database" path="." />
+        <include domain="file" path="." />
+        <include domain="root" path="app_webview/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="." />
+        <include domain="database" path="." />
+        <include domain="file" path="." />
+        <include domain="root" path="app_webview/" />
+    </device-transfer>
+</data-extraction-rules>

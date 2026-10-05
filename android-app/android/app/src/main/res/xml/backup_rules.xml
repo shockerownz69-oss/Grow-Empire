@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-backup rules: player saves live in WebView localStorage.
+     Include app data so progress survives reinstalls on the same
+     Google account; exclude nothing sensitive (there is none). -->
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+    <include domain="database" path="." />
+    <include domain="file" path="." />
+    <include domain="external" path="." />
+    <include domain="root" path="app_webview/" />
+</full-backup-content>

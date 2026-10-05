@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shocker OwnZ brand palette -->
+    <color name="splash_bg">#0a0a0a</color>
+    <color name="matte_black">#0a0a0a</color>
+    <color name="charcoal">#161616</color>
+    <color name="blood_red">#c1121f</color>
+    <color name="crimson">#e02020</color>
+    <color name="deep_red">#7a0d0d</color>
+    <color name="burnt_orange">#ff6b1a</color>
+    <color name="gold">#d4a017</color>
+    <color name="white">#f5f5f5</color>
+    <color name="muted">#8a8a8a</color>
+    <!-- legacy template refs (kept so nothing breaks) -->
+    <color name="colorPrimary">#c1121f</color>
+    <color name="colorPrimaryDark">#0a0a0a</color>
+    <color name="colorAccent">#ff6b1a</color>
+</resources>
