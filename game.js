@@ -3,6 +3,46 @@
    index.html + styles.css + game.js | GitHub Pages ready
    ============================================================ */
 'use strict';
+/* ============================================================================
+   P3-W4 — AUTOMATION TECH TREE + FACILITY EXPANSION helpers
+   ----------------------------------------------------------------------------
+   Additive helpers for Wave 4. Facility indices 0-5 keep their meaning;
+   new tiers are 6 (Breeding Lab), 7 (Project 0 Facility), 8 (Cultivation
+   Empire). Every unlock below is REAL gameplay, never cosmetic.
+   ============================================================================ */
+function P3W4_facIdx(){ try{ return clamp(int(S.facility,0),0,FACILITIES.length-1); }catch(e){ return 0; } }
+/* Breeding Lab: Mother & Clone Wing raises the mother-plant cap 4 -> 6 */
+function P3W4_motherCapMax(){ try{ return int(S.facility,0)>=6?6:4; }catch(e){ return 4; } }
+/* Cultivation Empire: Automation Nexus cuts automation operating costs 15% */
+function P3W4_autoCostMult(){ try{ return int(S.facility,0)>=8?0.85:1; }catch(e){ return 1; } }
+/* Breeding Lab: lab-grade precision, crosses hold +5 stability */
+function P3W4_breedStabBonus(){ try{ return int(S.facility,0)>=6?5:0; }catch(e){ return 0; } }
+/* Project 0 Facility: dry & cure rooms, +5 final harvest quality */
+function P3W4_cureQualBonus(){ try{ return int(S.facility,0)>=7?5:0; }catch(e){ return 0; } }
+/* Project 0 Facility: preservation lab, +25% P0 points on the preservation track */
+function P3W4_p0Mult(track){ try{ return (track==='preservation'&&int(S.facility,0)>=7)?1.25:1; }catch(e){ return 1; } }
+/* Cultivation Empire: dispensary flagship serves +6 customers/day */
+function P3W4_budCapBonus(){ try{ return int(S.facility,0)>=8?6:0; }catch(e){ return 0; } }
+function P3W4_missionDone(mid){ try{ return Array.isArray(S.missionsDone)&&S.missionsDone.indexOf(mid)>=0; }catch(e){ return false; } }
+function P3W4_missionName(mid){ try{ var m=MISSIONS.find(function(x){return x.id===mid;}); return m?m.name:mid; }catch(e){ return mid; } }
+/* Unlock menu per facility tier, for the facility cards (real effects only) */
+function P3W4_facUnlocks(i){
+  if(i===6) return [
+    {ico:'mothers',t:'Mother & Clone Wing: mother cap 4 \u2192 6'},
+    {ico:'dna',t:'Breeding precision: crosses hold +5 stability'},
+    {ico:'keepers',t:'Vault Expansion Program: keeper vault up to 80 slots'}
+  ];
+  if(i===7) return [
+    {ico:'project0',t:'P0 Preservation Lab: +25% Project 0 preservation points'},
+    {ico:'drycure',t:'Dry & Cure Rooms: +5 final harvest quality'},
+    {ico:'aicore',t:'Automation infrastructure: unlocks Advanced Grow AI'}
+  ];
+  if(i===8) return [
+    {ico:'equipment',t:'Automation Nexus: \u221215% automation operating costs'},
+    {ico:'customers',t:'Dispensary Flagship: +6 customers served per day'}
+  ];
+  return [];
+}
 
 /* ---------------- Constants ---------------- */
 const SAVE_KEY = 'soge_save_v1';
@@ -21,7 +61,11 @@ const FACILITIES = [
   { name:'Commercial Room',    slots:16, cost:9000 },
   { name:'Warehouse',          slots:32, cost:28000 },
   { name:'Genetics Laboratory',slots:48, cost:65000 },
-  { name:'Preservation Vault', slots:64, cost:150000 }
+  { name:'Preservation Vault', slots:64, cost:150000 },
+  /* P3-W4 APPEND-ONLY: indices 0-5 above NEVER change meaning. New tiers 6-8. */
+  { name:'Breeding Lab',       slots:80,  cost:300000 },
+  { name:'Project 0 Facility', slots:96,  cost:600000 },
+  { name:'Cultivation Empire', slots:128, cost:1200000 }
 ];
 const EQUIP_DEFS = [
   { id:'lights',    name:'Lights',            ic:'light',   max:5, base:400,  desc:'+6% yield potential per level. Wider light tolerance.' },
@@ -177,6 +221,10 @@ const MISSIONS = [
  {id:'p0-50',cat:'Project 0',name:'True Believer',desc:'Earn 50 Project 0 points.',prog:s=>[Math.min(s.project0.points,50),50],reward:{cash:600,xp:250,gen:['project-zero-og']}},
  {id:'p0-track',cat:'Project 0',name:'Devoted',desc:'Reach level 3 in any Project 0 track.',prog:s=>[P0_TRACKS.some(tr=>p0Level(tr.id)>=3)?1:0,1],reward:{cash:700,xp:300,p0:5}},
  {id:'p0-vault',cat:'Project 0',name:'The Vault',desc:'Own the Preservation Vault.',prog:s=>[s.facility>=5?1:0,1],reward:{cash:1500,xp:600,p0:8}},
+ /* P3-W4: new facility tiers — appended, never renumbered */
+ {id:'em-breedlab',cat:'Empire',name:'Breeding Grounds',desc:'Own the Breeding Lab facility.',prog:s=>[s.facility>=6?1:0,1],reward:{cash:3000,xp:1200,p0:10}},
+ {id:'em-p0fac',cat:'Empire',name:'Project 0 HQ',desc:'Own the Project 0 Facility.',prog:s=>[s.facility>=7?1:0,1],reward:{cash:6000,xp:2000,p0:15}},
+ {id:'em-empire',cat:'Empire',name:'Cultivation Empire',desc:'Own the Cultivation Empire.',prog:s=>[s.facility>=8?1:0,1],reward:{cash:12000,xp:4000,p0:25}},
  {id:'p0-keepers',cat:'Project 0',name:'Keeper Hunter',desc:'Discover 3 keeper phenotypes (90+ quality harvests).',prog:s=>[Math.min(s.stats.keepers,3),3],reward:{cash:900,xp:350,p0:6}},
  // PHENO HUNT
  {id:'ph-5pheno',cat:'Pheno Hunt',name:'Population Study',desc:'Test 5 phenotypes of a single strain.',prog:s=>[Math.min(maxPhenoTested(s),5),5],reward:{cash:250,xp:100,p0:2}},
@@ -231,7 +279,7 @@ let S = null;
 function defaultState(){
   const locked = STRAINS.filter(st=>st.lock).map(st=>st.id);
   return {
-    version:2, cash:0, reputation:0, xp:0, level:1, day:1, difficulty:'beginner',
+    version:3, cash:0, reputation:0, xp:0, level:1, day:1, difficulty:'beginner',
     started:false,
     ty:TY_defaultTy(),
     env:{ light:80, temp:76, humidity:52, co2:900 },
@@ -246,6 +294,8 @@ function defaultState(){
     codexHist:{}, /* P2-W2: Living Codex - per-strain player history (migration-safe) */
     missionsDone:[], missionSeen:[], tutTeaseFired:false, chains:{}, /* P1.5, P2.3 */
     project0:{ points:0, tracks:{genetics:0,nocompromise:0,preservation:0,cultivation:0,family:0,freedom:0,resin:0,knowledge:0}, titles:[] },
+    p0vault:{}, /* P3-W3: per-genetic Project 0 preservation tiers (CANDIDATE..LEGACY) */
+    msDone:{}, /* P3-W6: major-milestone ledger (id -> {day}) - exactly-once, save-safe */
     stats:{ plantsStarted:0,waterings:0,feedings:0,trainings:0,inspects:0,daysAdvanced:0,harvests:0,
       lifetimeHarvestOz:0,lifetimeRevenue:0,bestQuality:0,bestBagAppeal:0,biggestHarvest:0,
       q80Harvests:0,highHealthHarvests:0,flawlessGrows:0,keepers:0,fastestGrow:0,quickTurnarounds:0,
@@ -433,6 +483,8 @@ function normalizeState(){
   });
   if(!S.crew||typeof S.crew!=='object'||Array.isArray(S.crew)) S.crew={};
   ["assistant","irrigation","health","breeder","harvest","manager"].forEach(k=>{ S.crew[k]=!!S.crew[k]; });
+  try{ if(typeof P3W5_migrate==='function') P3W5_migrate(); }catch(e){} /* P3-W5: people+business state (save-safe) */
+  try{ if(typeof MS_backfill==='function') MS_backfill(); }catch(e){} /* P3-W6: milestone backfill - silent, legacy saves */
   /* QA GE-506: a corrupt difficulty bricks advanceDay — fall back to grower */
   if(typeof DIFFS==='undefined'||!DIFFS[S.difficulty]) S.difficulty='grower';
   if(!Array.isArray(S.plants)) S.plants=[];
@@ -440,6 +492,15 @@ function normalizeState(){
   S.plants=S.plants.filter(p=>p&&typeof p==='object');
   if(!Array.isArray(S.inventory)) S.inventory=[];
   S.inventory=S.inventory.filter(it=>it&&typeof it==='object');
+  /* GE-DP-502: sanitize inventory economics. Tampered NaN/negative/zero amounts
+     or NaN quality fields poison cash math (NaN cash bricks the save; negative
+     amounts deducted cash on sale). Drop poisoned stacks, clamp quality
+     numerics. Never grants: stacks can only shrink or vanish. */
+  S.inventory.forEach(it=>{
+    it.amount=num(it.amount,0);
+    ['quality','potency','terpenes','bagAppeal','resin'].forEach(k=>{ it[k]=clamp(num(it[k],50),0,100); });
+  });
+  S.inventory=S.inventory.filter(it=>it.amount>0);
   if(!Array.isArray(S.titles)) S.titles=[];
   if(!Array.isArray(S.achievements)) S.achievements=[];
   if(!Array.isArray(S.missionsDone)) S.missionsDone=[];
@@ -447,25 +508,50 @@ function normalizeState(){
   S.plants.forEach(p=>{ p.health=clamp(num(p.health,100),0,100); p.water=clamp(num(p.water,70),0,100);
     p.nutrition=clamp(num(p.nutrition,70),0,100); p.stress=clamp(num(p.stress,0),0,100);
     p.day=int(p.day,p.stage===-1?0:1); p.germ=num(p.germ,0); /* P1.1: stage -1 (germination) must survive sanitize */
-    p.qualityPotential=clamp(num(p.qualityPotential,50),0,100); });
+    p.qualityPotential=clamp(num(p.qualityPotential,50),0,100);
+    /* QA GE-DP-201: legacy plants predate the new-plant field set (plantSeed) — backfill so
+       advanceDay/render/event paths treat them exactly like new plants (no crash, no NaN math) */
+    if(!Array.isArray(p.problems)) p.problems=[];
+    p.trained=!!p.trained;
+    if(!Number.isFinite(p.minHealth)) p.minHealth=Math.min(100,num(p.health,100));
+    p.growthBoost=num(p.growthBoost,0); });
   if(!Array.isArray(S.inventory)) S.inventory=[];
   S.nextPlantId=Math.max(1,int(S.nextPlantId,1)); S.nextInvId=Math.max(1,int(S.nextInvId,1));
+  /* QA GE-DP-202: legacy saves may lack (or under-report) the id counters — derive from the
+     highest existing entity id so newly created plants/inventory can never collide with
+     migrated ones. Counters only ever move up, never down. */
+  try{
+    let mp=0; S.plants.forEach(p=>{ mp=Math.max(mp,int(p&&p.id,0)); });
+    if(mp>=S.nextPlantId) S.nextPlantId=mp+1;
+    let mi=0; S.inventory.forEach(it=>{ mi=Math.max(mi,int(it&&it.id,0)); });
+    if(mi>=S.nextInvId) S.nextInvId=mi+1;
+  }catch(e){}
   /* --- Phenotype / keeper fields (legacy saves get safe defaults) --- */
   if(!S.phenoCounters||typeof S.phenoCounters!=='object') S.phenoCounters={};
   Object.keys(S.phenoCounters).forEach(k=>{ S.phenoCounters[k]=Math.max(0,int(S.phenoCounters[k],0)); });
   if(!Array.isArray(S.keepers)) S.keepers=[];
   S.keepers=S.keepers.filter(k=>k&&typeof k==='object');
-  S.keeperCapacity=Math.max(1,int(S.keeperCapacity,3)); S.keeperCapLevel=clamp(int(S.keeperCapLevel,0),0,4);
+  S.keeperCapacity=Math.max(1,int(S.keeperCapacity,3)); S.keeperCapLevel=clamp(int(S.keeperCapLevel,0),0,KEEPER_CAPS.length-1); /* P3-W4: additive */
   if(!Array.isArray(S.mothers)) S.mothers=[];
   S.mothers=S.mothers.filter(m=>m&&typeof m==='object');
-  S.motherCapacity=clamp(int(S.motherCapacity,1),1,4);
+  S.motherCapacity=clamp(int(S.motherCapacity,1),1,P3W4_motherCapMax()); /* P3-W4: 6 with Breeding Lab */
   if(!Array.isArray(S.phenoHunts)) S.phenoHunts=[];
+  /* P3-W1 deep breeding: migration-safe tracking fields on custom strains (save v3) */
+  if(!Array.isArray(S.customStrains)) S.customStrains=[];
+  S.customStrains.forEach(s=>{ try{ P3B_backfillCustom(s); }catch(e){} });
+  S.customStrains.forEach(s=>{ try{ P3W2_backfillCustom(s); }catch(e){} }); /* P3-W2: ceremony/p0/lineage fields (save v3) */
   /* first-acquisition backfill (save v3): legacy saves never tracked per-strain acquisition.
-     Treat every currently-unlocked base strain as acquired so "Own X genetics" progress is preserved. */
+     LEGACY-ONLY (version<3 — QA GE-DP-211): treat every currently-unlocked base strain as
+     acquired so "Own X genetics" progress is preserved. Current-era (v3) saves track
+     acquisition genuinely — running this on every load conflates AVAILABLE with OWNED
+     (fresh saves reload with all starters "owned"). One-way: bump to v3 once applied. */
   if(!S.strainOwned||typeof S.strainOwned!=='object') S.strainOwned={};
   try{
-    const lockedNow=Array.isArray(S.lockedStrains)?S.lockedStrains:[];
-    STRAINS.forEach(st=>{ if(lockedNow.indexOf(st.id)<0&&!S.strainOwned[st.id]) S.strainOwned[st.id]=1; });
+    if(int(S.version,0)<3){
+      const lockedNow=Array.isArray(S.lockedStrains)?S.lockedStrains:[];
+      STRAINS.forEach(st=>{ if(lockedNow.indexOf(st.id)<0&&!S.strainOwned[st.id]) S.strainOwned[st.id]=1; });
+      S.version=3;
+    }
   }catch(e){}
   /* P2-W2 Living Codex: migration-safe history (save v3). The backfill ONLY mirrors
      existing tracked records - it never invents progress. Completion marks stay
@@ -543,6 +629,8 @@ function normalizeState(){
   try{ if(typeof CHA_migrate==='function') CHA_migrate(); }catch(e){}
   /* --- P2.5 player memory (migration-safe, honestly backfilled) --- */
   try{ if(typeof ME_migrate==='function') ME_migrate(); }catch(e){}
+  /* --- P3-W3 preservation tiers: sane defaults for legacy saves --- */
+  try{ if(typeof P0T_backfill==='function') P0T_backfill(); }catch(e){}
 }
 
 /* ---------------- Save / load ---------------- */
@@ -557,6 +645,7 @@ function freshStart(){
   /* QA: new game — the 5 starters are AVAILABLE but not yet acquired; clear legacy backfill */
   S.strainOwned={};
   S.codexHist={}; /* P2-W2: fresh save starts with zero codex history */
+  S.version=3; /* QA GE-DP-211: current-era save — the legacy strainOwned backfill must never re-run */
   if(keepPrefs){ S.prefs=keepPrefs; try{ if(typeof CAP_prefs==='function') CAP_prefs(); }catch(e){} }
   if(keepTips){ S.tips=keepTips; }
 }
@@ -732,6 +821,9 @@ filter:'<path d="M4 5h16l-6.2 7.2V19l-3.6-2v-4.8z"/>',
 'arrow-right':'<path d="M4 12h15M13 6l6 6-6 6"/>',
 minus:'<path d="M6 12h12"/>',
 clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+/* P3-W4: automation tech-tree icons */
+timer:'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.5l2.5 1.5M9.5 2.5h5M12 2.5V6.5"/>',
+aicore:'<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 2.5v3M14 2.5v3M10 18.5v3M14 18.5v3M2.5 10h3M2.5 14h3M18.5 10h3M18.5 14h3"/><circle cx="12" cy="12" r="2"/>',
 'alert-triangle':'<path d="M12 3.5L2.5 20h19z"/><path d="M12 9.5v5"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/>'
 };
 Object.assign(ICONS,GE_NEW_ICONS);
@@ -929,14 +1021,17 @@ const HUB_AREAS=[
  {id:'mothers',label:'MOTHER ROOM',x:322,y:200,go:'keepers',tab:'mothers',un:()=>S.mothers.length>0||S.keepers.length>0,hint:'Keep a phenotype first'},
  {id:'drycure',label:'DRY / CURE',x:78,y:272,go:'dispensary',un:()=>S.stats.harvests>0,hint:'Complete a harvest'},
  {id:'compete',label:'COMPETITION ARENA',x:200,y:272,go:'empire',tab:'compete',un:()=>S.level>=4||S.stats.compsEntered>0,hint:'Reach level 4'},
- {id:'equipment',label:'EQUIPMENT DEPOT',x:322,y:272,go:'empire',tab:'equipment',un:()=>S.facility>=1,hint:'Expand your facility'}
+ {id:'equipment',label:'EQUIPMENT DEPOT',x:322,y:272,go:'empire',tab:'equipment',un:()=>S.facility>=1,hint:'Expand your facility'},
+ /* P3-W4: new facility tiers surface on the hub map (append-only) */
+ {id:'p0lab',label:'P0 LAB',x:78,y:344,go:'project0',un:()=>S.facility>=7,hint:'Own the Project 0 Facility'},
+ {id:'empirehq',label:'EMPIRE HQ',x:200,y:344,go:'empire',tab:'facilities',un:()=>S.facility>=8,hint:'Own the Cultivation Empire'}
 ];
 function empireHubSVG(){
-  let s='<svg class="hub-map" viewBox="0 0 400 320" role="img" aria-label="Empire compound map">';
+  let s='<svg class="hub-map" viewBox="0 0 400 392" role="img" aria-label="Empire compound map">';
   s+='<defs><radialGradient id="hubgl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff3b3b" stop-opacity="0.28"/><stop offset="1" stop-color="#ff3b3b" stop-opacity="0"/></radialGradient></defs>';
   s+='<rect x="0" y="0" width="400" height="320" fill="#0b090a"/>';
-  s+='<path d="M200 56 L200 128 M200 128 L78 128 M200 128 L322 128 M78 128 L78 200 M322 128 L322 200 M78 200 L200 200 L322 200 M78 200 L78 272 M200 200 L200 272 M322 200 L322 272" stroke="#2c2c30" stroke-width="7" fill="none"/>';
-  s+='<path d="M200 56 L200 128 M200 128 L78 128 M200 128 L322 128 M78 128 L78 200 M322 128 L322 200 M78 200 L200 200 L322 200 M78 200 L78 272 M200 200 L200 272 M322 200 L322 272" stroke="#e02020" stroke-width="1.2" opacity="0.4" fill="none"/>';
+  s+='<path d="M200 56 L200 128 M200 128 L78 128 M200 128 L322 128 M78 128 L78 200 M322 128 L322 200 M78 200 L200 200 L322 200 M78 200 L78 272 M200 200 L200 272 M322 200 L322 272 M78 272 L78 344 M200 272 L200 344" stroke="#2c2c30" stroke-width="7" fill="none"/>';
+  s+='<path d="M200 56 L200 128 M200 128 L78 128 M200 128 L322 128 M78 128 L78 200 M322 128 L322 200 M78 200 L200 200 L322 200 M78 200 L78 272 M200 200 L200 272 M322 200 L322 272 M78 272 L78 344 M200 272 L200 344" stroke="#e02020" stroke-width="1.2" opacity="0.4" fill="none"/>';
   HUB_AREAS.forEach(a=>{
     const open=a.un(), w=106, hh=46, x=a.x-w/2, y=a.y-hh/2;
     const words=a.label.split(' ');
@@ -963,8 +1058,11 @@ const FAC_TIERS=[
  {name:'PRESERVATION VAULT',lights:4,rows:4,rich:4,vault:true},
  {name:'SHOCKER OWNZ EMPIRE',lights:6,rows:5,rich:5,vault:true}
 ];
-const FAC_TIER_MAP=[0,2,4,3,5,7]; /* S.facility index -> visual tier */
-function facTierIdx(){ return FAC_TIER_MAP[clamp(int(S.facility,0),0,5)]; }
+/* P3-W4: extended additively — indices 0-5 keep their original visual tiers.
+   6 Breeding Lab -> BREEDING FACILITY, 7 Project 0 Facility -> PRESERVATION VAULT,
+   8 Cultivation Empire -> SHOCKER OWNZ EMPIRE. */
+const FAC_TIER_MAP=[0,2,4,3,5,7,6,7,8]; /* S.facility index -> visual tier */
+function facTierIdx(){ return FAC_TIER_MAP[clamp(int(S.facility,0),0,FAC_TIER_MAP.length-1)]; }
 function avgEquip(){ const q=S.equipment,ks=Object.keys(q); return ks.reduce((a,k)=>a+num(q[k],1),0)/Math.max(1,ks.length); }
 /* parameterized facility scene: equipment visibly changes the room */
 function facilitySceneSVG(tier){
@@ -1023,7 +1121,7 @@ function facilityUnlockCine(prevT,newT,name){
    '<div class="fac-before"><span>BEFORE</span>'+facilitySceneSVG(prevT)+'<b>'+esc(FAC_TIERS[prevT].name)+'</b></div>'+
    '<div class="fac-arrow">\u2192</div>'+
    '<div class="fac-after"><span>NOW</span>'+facilitySceneSVG(newT)+'<b>'+esc(name)+'</b></div>'+
-   '<p class="muted">+'+FACILITIES[clamp(int(S.facility,0),0,5)].slots+' grow slots</p></div>',
+   '<p class="muted">+'+FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].slots+' grow slots</p></div>',
    'cine-facility',3600);
   return back;
 }
@@ -1192,7 +1290,11 @@ function cineOverlay(inner,cls,ms){
   back.classList.add('is-open');
   if(ms!==0) setTimeout(()=>{ back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),450); }, ms||4200);
   /* only close when the backdrop itself is tapped — never on bubbled content taps */
-  back.addEventListener('click',(e)=>{ if(e&&e.target!==back) return; back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),300); });
+  back.addEventListener('click',(e)=>{ if(e&&e.target!==back) return; back.classList.add('cine-out'); back.classList.remove('is-open');
+    /* W4: backdrop dismiss is a real dismissal — run the registered hook after
+       removal (same ordering as the Android back path; queue pumps must not
+       see the still-attached node). */
+    setTimeout(()=>{ try{ back.remove(); }catch(_){} try{ if(typeof back.__geOnDismiss==='function') back.__geOnDismiss(); }catch(_){} },300); });
   const stage=back.querySelector('.cine-stage');
   if(stage) stage.addEventListener('click',(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); });
   return back;
@@ -1340,6 +1442,9 @@ function gainRep(n){
 }
 function addP0(track,n){
   let p0Before=0; try{ p0Before=p0Level(track); }catch(e){}
+  /* P3-W4: Project 0 Facility preservation lab — +25% P0 points on the preservation track */
+  try{ if(typeof P3W4_p0Mult==='function') n=Math.ceil(n*P3W4_p0Mult(track)); }catch(e){}
+  try{ if(typeof P3W5_p0Mult==='function') n=Math.ceil(n*P3W5_p0Mult()); }catch(e){} /* P3-W5: Archivist's Trust (P0 Rep unlock) */
   S.project0.tracks[track]=Math.min(200,(S.project0.tracks[track]||0)+n);
   S.project0.points+=n;
   try{ const p0After=p0Level(track); if(p0After>p0Before) NT_onP0Level(track,p0After); }catch(e){} /* P1.6: P0 level -> teaser (read-only) */
@@ -1684,7 +1789,7 @@ function TU_nextGeneticTease(){
     if(!st.lock||!S.lockedStrains.includes(st.id)) return;
     const l=st.lock; let gap=Infinity,txt='';
     if(l.t==='rep'){ gap=Math.max(0,int(l.v,0)-int(S.reputation,0)); txt=st.name+': reach '+int(l.v,0)+' rep'+(gap>0?' ('+gap+' to go)':''); }
-    else if(l.t==='cash'){ const c=st.seed*3; gap=Math.max(0,c-num(S.cash,0))/100; txt=st.name+': save '+fmt$(c)+' for the genetics'; }
+    else if(l.t==='cash'){ const c=st.seed*3; gap=Math.max(0,c-num(S.cash,0))/100; txt=st.name+(gap>0?': save '+fmt$(c)+' for the genetics':': ready to buy in the Genetics Lab'); }
     else { gap=50; txt=strainDisplayName(st)+': unlock via Project 0 missions'; }
     if(!best||gap<best.gap) best={gap:gap,text:txt};
   });
@@ -1736,6 +1841,11 @@ function newGame(diff){
   freshStart();
   const D=DIFFS[diff];
   S.difficulty=diff; S.cash=D.cash; S.started=true;
+  /* W6 deploy-path QA: new players watched ~$100/day vanish with no explanation.
+     One-time, dismissible card — missions fund the early game until first harvest. */
+  try{ NT_queue('nt-opex-day1',{ico:'cash',title:'The empire burns cash daily',
+    body:'Rent, power, equipment upkeep and licensing cost you <b>every day</b> — even before your first harvest. <b>Missions pay the bills</b> early on, and the <b>FINANCES</b> card on the Empire Dashboard shows the full daily breakdown.',
+    go:'dashboard',cta:'VIEW DASHBOARD'}); }catch(e){}
   show('home'); updateHUD(); save();
   toast(icon('crown','ge-ic-md')+' Welcome to the Empire, '+D.name+'!');
 }
@@ -1980,6 +2090,9 @@ RENDER.breeding=function(){
   if(!breedB||!getStrain(breedB)) breedB=avail[1]?avail[1].id:breedA;
   const A=getStrain(breedA), B=getStrain(breedB);
   let html='<div class="ge-screen">'+screenHead('breeding','BREEDING LAB');
+  /* W6 deploy-path QA: the lab opened straight into mechanics with no WHY.
+     One static intro line — no state, no rewards, no flow change. */
+  html+='<div class="ge-card ge-card-flat"><p class="ge-body ge-muted">'+icon('dna','ge-ic-sm')+' <b>WHY BREED?</b> Fuse two parents into a strain that is <b>yours</b> — chase potency, yield, rare traits. Grow the seeds, hunt the standout phenotype, crown it a keeper, and it lives in your vault forever.</p></div>';
   html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>PARENT A</h3></div><div class="ge-breed-parent">'+(A?flowerSVG(strainSeed(A),'breed-flower'):'')+breedPickList('breed-a',breedA)+'</div></div>';
   html+='<div class="ge-breed-vs">×</div>';
   html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>PARENT B</h3></div><div class="ge-breed-parent">'+(B?flowerSVG(strainSeed(B),'breed-flower'):'')+breedPickList('breed-b',breedB)+'</div></div>';
@@ -1994,7 +2107,7 @@ RENDER.breeding=function(){
     html+='<div class="ge-card"><div class="ge-card-head">'+icon('inspect','ge-ic-md')+'<h3>PREDICTED OFFSPRING</h3></div>'+
       traits.map(t=>'<div class="ge-progress-meta"><span>'+esc(t.n)+'</span><b>'+Math.round(num(t.v,0))+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(t.v,0)),0,100)+'%"></i></div>').join('')+'</div>';
     html+='<div class="ge-card card"><div class="ge-card-head">'+icon('star','ge-ic-md')+'<h3>NAME YOUR CROSS</h3></div>'+
-      '<input type="text" id="cross-name" class="ge-input" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
+      '<input type="text" id="cross-name" enterkeyhint="done" class="ge-input" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
       '<p class="ge-caption">Breeding fee: $150'+(S.crew.breeder?' (breeder bonus: more stable)':'')+'</p>'+
       '<button class="ge-btn ge-btn-primary ge-btn-block" id="btn-cross">'+icon('dna','ge-ic-md')+'CREATE CROSS</button></div>';
     html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>SELF POLLINATE (S1)</h3></div>'+
@@ -2002,7 +2115,9 @@ RENDER.breeding=function(){
       '<button class="ge-btn ge-btn-block" id="btn-self">'+icon('dna','ge-ic-md')+'SELF (S1)</button></div>';
   }
   html+='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>YOUR CROSSES</h3><span class="ge-spread ge-num ge-muted">'+S.customStrains.length+'</span></div>'+
-    (S.customStrains.length?S.customStrains.map(s=>'<div class="ge-datarow"><span>'+esc(s.name)+'<br><span class="ge-caption ge-muted">'+esc(s.lineage)+'</span></span><span class="ge-badge">R'+Math.round(s.resin)+'</span></div>').join(''):'<p class="ge-muted">No custom crosses yet.</p>')+'</div>';
+    (S.customStrains.length?S.customStrains.map(s=>'<div class="ge-datarow"><span>'+esc(s.name)+'<br><span class="ge-caption ge-muted">'+esc(s.lineage)+'</span></span><span class="ge-badge">R'+Math.round(s.resin)+'</span></div>'+
+     '<div class="ge-btn-row ge-btn-row-tight"><button type="button" class="ge-btn ge-btn-sm ge-btn-ghost" data-p3w2-stable="'+esc(s.id)+'">'+icon('crown-gold','ge-ic-sm')+'DECLARE STABLE</button>'+
+     '<button type="button" class="ge-btn ge-btn-sm ge-btn-ghost" data-p3w2-lin="'+esc(s.id)+'">'+icon('dna','ge-ic-sm')+'LINEAGE</button></div>').join(''):'<p class="ge-muted">No custom crosses yet.</p>')+'</div>';
   html+='</div>';
   r.innerHTML=html;
   $('breed-a').onchange=e=>{ breedA=e.target.value; RENDER.breeding(); };
@@ -2011,28 +2126,40 @@ RENDER.breeding=function(){
   if(btn) btn.onclick=()=>{ const nm=($('cross-name').value||'Untitled Cross'); createCross(nm); };
   const btnS=$('btn-self');
   if(btnS) btnS.onclick=()=>{ const inp=$('cross-name'); selfCross(inp&&inp.value?inp.value:undefined); };
+  /* P3-W2: per-cross stable/lineage actions */
+  r.querySelectorAll('[data-p3w2-stable]').forEach(b=>b.onclick=()=>{ if(P3W2_declareStable(b.dataset.p3w2Stable)&&current==='breeding') RENDER.breeding(); });
+  r.querySelectorAll('[data-p3w2-lin]').forEach(b=>b.onclick=()=>P3W2_lineageSheet(b.dataset.p3w2Lin));
   try{ if(typeof GX_wireBreeding==='function') GX_wireBreeding(r); }catch(e){}
 };
 
 function createCross(name){
+  if(!P3W2_validateLineage(breedA,breedB)){ toast(icon('x','ge-ic-md')+' Select two parents.'); return false; } /* P3-W2: lineage integrity — unknown parents rejected */
   const A2=getStrain(breedA), B2=getStrain(breedB);
-  if(!A2||!B2){ toast(icon('x','ge-ic-md')+' Select two parents.'); return false; }
   if(breedA===breedB){ toast(icon('x','ge-ic-md')+' Select two different parents.'); return false; } /* QA GE-201 */
   if(!isUnlocked(breedA)||!isUnlocked(breedB)){ toast(icon('lock','ge-ic-md')+' Genetics locked.'); return false; } /* QA GE-202 */
   if(S.cash<150){ toast(icon('x','ge-ic-md')+' Need $150 breeding fee.'); return false; }
   S.cash-=150;
-  const breederBonus=S.crew.breeder?6:0;
-  const blend=(a,b)=>clamp(Math.round((a+b)/2+rnd(-8-breederBonus/2,8)),10,100);
   const nm=(String(name||'Untitled Cross')).trim().slice(0,28)||'Untitled Cross';
-  const cross={ id:'custom-'+Date.now(), name:nm, custom:true,
-    yld:blend(A2.yld,B2.yld), pot:blend(A2.pot,B2.pot), terp:blend(A2.terp,B2.terp),
-    ft:Math.round((A2.ft+B2.ft)/2+rnd(-3,3)),
-    stab:clamp(Math.round((A2.stab+B2.stab)/2-4+breederBonus),10,100),
-    resin:blend(A2.resin,B2.resin), vigor:blend(A2.vigor,B2.vigor),
+  /* P3-W1 deep breeding: elite pheno pre-selection (Phase 2 session hint) makes the
+     mother inherit from the pheno's actual 18-trait record; otherwise strain averages */
+  const hintA=P3B_takePhenoHint(breedA);
+  const inh=P3B_inherit(A2,B2,{hintA:hintA,selfing:false});
+  const cross=Object.assign({ id:'custom-'+Date.now(), name:nm, custom:true,
+    yld:inh.traits.yld, pot:inh.traits.pot, terp:inh.traits.terp,
+    ft:inh.traits.ft,
+    stab:inh.stab,
+    resin:inh.traits.resin, vigor:inh.traits.vigor,
     tags:Array.from(new Set([pick(A2.tags),pick(B2.tags),'Custom'])),
-    seed:120, lineage:A2.name+' × '+B2.name };
+    seed:120, lineage:A2.name+' × '+B2.name }, P3B_trackingFields(A2,B2,inh), P3W2_fields());
+  /* P3-W4: Breeding Lab precision — lab-grade crosses hold +5 stability */
+  try{ const sb=(typeof P3W4_breedStabBonus==='function')?P3W4_breedStabBonus():0; if(sb>0) cross.stab=clamp(num(cross.stab,0)+sb,5,100); }catch(e){}
+  /* P3-W5: Breeder on staff — slight stability lift on new crosses */
+  try{ if(typeof P3W5_breederStab==='function') cross.stab=clamp(num(cross.stab,0)+P3W5_breederStab(),5,100); }catch(e){}
   S.customStrains.push(cross);
+  try{ if(typeof P3W5_onCrossBred==='function') P3W5_onCrossBred(cross); }catch(e){} /* P3-W5: stable crosses build Breeder Rep */
   try{ if(typeof GX_enrichCross==='function') GX_enrichCross(cross,A2,B2); }catch(e){}
+  try{ P3W2_parentStabilize(breedA); if(breedB!==breedA) P3W2_parentStabilize(breedB); }catch(e){} /* P3-W2: selection pressure on parental lines */
+  try{ P3W2_maybeCeremony(cross,'stabilized'); }catch(e){} /* P3-W2: >=90 at birth -> NEW GENETIC ceremony */
   /* P2-W2 Living Codex: breeding -> parent cross counts + child generation-history note */
   try{ codexOnBreedParent(breedA,nm); if(breedB!==breedA) codexOnBreedParent(breedB,nm); }catch(e){}
   try{ codexOnAcquired(cross.id); }catch(e){} /* bred = acquired for customs */
@@ -2040,6 +2167,7 @@ function createCross(name){
     codexNote(cross.id,'Created: '+(A2.name||'?')+' \u00d7 '+(B2.name||'?')+(gl&&gl.label?' ('+gl.label+')':'')); }catch(e){}
   S.stats.crosses++;
   try{ ME_first('custom',{id:cross.id,name:cross.name,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+  try{ if(typeof MS_onCross==='function') MS_onCross(cross); }catch(e){} /* P3-W6 milestones: FIRST CROSS / F2 / STABILIZED */
   if(A2.custom||B2.custom) S.stats.secondGenCrosses++;
   try{ P24_breedingDiscovery(cross,A2,B2); }catch(e){} /* P2-4: breeding discovery moment */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
@@ -2054,28 +2182,37 @@ function createCross(name){
    identical parents as 'S1', which is what mission tybr-s1 ('Self Made') requires. */
 function selfCross(name){
   const A2=getStrain(breedA);
-  if(!A2){ toast(icon('x','ge-ic-md')+' Select a parent.'); return false; }
+  if(!A2||!P3W2_validateLineage(breedA,breedA)){ toast(icon('x','ge-ic-md')+' Select a parent.'); return false; } /* P3-W2: lineage integrity */
   if(!isUnlocked(breedA)){ toast(icon('lock','ge-ic-md')+' Genetics locked.'); return false; } /* QA GE-202 parity */
   if(S.cash<150){ toast(icon('x','ge-ic-md')+' Need $150 breeding fee.'); return false; }
   S.cash-=150;
-  const breederBonus=S.crew.breeder?6:0;
-  const blend=(a,b)=>clamp(Math.round((a+b)/2+rnd(-8-breederBonus/2,8)),10,100);
   const nm=(String(name||(A2.name+' S1'))).trim().slice(0,28)||(A2.name+' S1');
-  const cross={ id:'custom-'+Date.now(), name:nm, custom:true,
-    yld:blend(A2.yld,A2.yld), pot:blend(A2.pot,A2.pot), terp:blend(A2.terp,A2.terp),
-    ft:Math.round(A2.ft+rnd(-3,3)),
-    stab:clamp(Math.round(A2.stab-4+breederBonus),10,100),
-    resin:blend(A2.resin,A2.resin), vigor:blend(A2.vigor,A2.vigor),
+  /* P3-W1 deep breeding: selfing preserves the line - variance shrinks with selfing depth */
+  const hintSelf=P3B_takePhenoHint(breedA);
+  const inhS=P3B_inherit(A2,A2,{hintA:hintSelf,hintB:hintSelf,selfing:true});
+  const cross=Object.assign({ id:'custom-'+Date.now(), name:nm, custom:true,
+    yld:inhS.traits.yld, pot:inhS.traits.pot, terp:inhS.traits.terp,
+    ft:inhS.traits.ft,
+    stab:inhS.stab,
+    resin:inhS.traits.resin, vigor:inhS.traits.vigor,
     tags:Array.from(new Set([pick(A2.tags),pick(A2.tags),'Custom','S1'])),
-    seed:120, lineage:A2.name+' (S1 self)' };
+    seed:120, lineage:A2.name+' (S1 self)' }, P3B_trackingFields(A2,A2,inhS), P3W2_fields());
+  /* P3-W4: Breeding Lab precision — lab-grade crosses hold +5 stability */
+  try{ const sb=(typeof P3W4_breedStabBonus==='function')?P3W4_breedStabBonus():0; if(sb>0) cross.stab=clamp(num(cross.stab,0)+sb,5,100); }catch(e){}
+  /* P3-W5: Breeder on staff — slight stability lift on new crosses */
+  try{ if(typeof P3W5_breederStab==='function') cross.stab=clamp(num(cross.stab,0)+P3W5_breederStab(),5,100); }catch(e){}
   S.customStrains.push(cross);
+  try{ if(typeof P3W5_onCrossBred==='function') P3W5_onCrossBred(cross); }catch(e){} /* P3-W5: stable crosses build Breeder Rep */
   try{ if(typeof GX_enrichCross==='function') GX_enrichCross(cross,A2,A2); }catch(e){}
+  try{ P3W2_parentStabilize(breedA); }catch(e){} /* P3-W2: selection pressure on the parental line */
+  try{ P3W2_maybeCeremony(cross,'stabilized'); }catch(e){} /* P3-W2: >=90 at birth -> NEW GENETIC ceremony */
   /* P2-W2 Living Codex: S1 selfing -> parent cross count + child note */
   try{ codexOnBreedParent(breedA,nm); }catch(e){}
   try{ codexOnAcquired(cross.id); }catch(e){} /* bred = acquired for customs */
   try{ codexNote(cross.id,'Created: S1 self of '+(A2.name||'?')); }catch(e){}
   S.stats.crosses++;
   try{ ME_first('custom',{id:cross.id,name:cross.name,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+  try{ if(typeof MS_onCross==='function') MS_onCross(cross); }catch(e){} /* P3-W6 milestones: FIRST CROSS / F2 / STABILIZED */
   if(A2.custom) S.stats.secondGenCrosses++;
   try{ P24_breedingDiscovery(cross,A2,A2); }catch(e){} /* P2-4: breeding discovery moment */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
@@ -2084,6 +2221,971 @@ function selfCross(name){
   if(current==='breeding') RENDER.breeding();
   return true;
 }
+
+
+/* ============================================================
+   P3 WAVE 1 — DEEP BREEDING: real inheritance model
+   Replaces the flat +/-8 midpoint blend inside createCross()/selfCross()
+   with a generation-aware inheritance engine. Call signatures of
+   createCross(name)/selfCross(name) are UNCHANGED, and every downstream
+   hook (GX_enrichCross, TY_crossHook, codex, missions, NX breed goal)
+   still fires exactly as before. Economy untouched.
+   MODEL (documented probabilities):
+   - Per-trait value starts at the parental midpoint (or a BX/selfing
+     adjusted mean), then takes per-trait variance. Variance half-width
+     scales with parental stability: high-stability parents -> tighter
+     offspring, low-stability parents -> wider spread.
+   - RECESSIVE EXPRESSION: P3B_REC_PROB (8%) chance per trait that the
+     offspring expresses the LOWER parent's trait region instead of the
+     mean (a modest, documented "recessive surprise").
+   - F2 SEGREGATION: F2 populations get a 1.6x variance multiplier
+     (F1 = uniform first cross; F2 = segregation; F3+ = 1.25x).
+   - SELECTION -> STABILIZATION: breeding back toward the same parent
+     (BX / selfing) records per-line selection history on the cross.
+     Each generation narrows variance toward the selected parent and
+     raises stability (+3%/gen, capped at +15). History compounds.
+   - BACKCROSSING: the trait mean is pulled toward the RECURRENT parent
+     by the standard recurrent-parent proportion 1-(1/2)^(bxDepth+1):
+     BX1 = 75%, BX2 = 87.5%, BX3 = 93.75%, blended with variance.
+   - SELFING: variance shrinks with depth (S1 0.6x, S2 0.4x, S3+ 0.3x),
+     recessive exposure rises slightly (+2%/gen, capped at 20%), and a
+     small vigor penalty applies at S3+ (inbreeding depression).
+   - ELITE PHENO: when the Phase 2 session hint carries a selected
+     pheno's 18-trait genetics record, that parent inherits from the
+     PHENO's traits, not the strain average. Fallback: strain values.
+   ============================================================ */
+const P3B_TRAITS=['yld','pot','terp','resin','stab','vigor','ft'];
+const P3B_BASE_W=8;      /* legacy blend half-width, kept as the F1 baseline */
+const P3B_REC_PROB=0.08; /* per-trait recessive-expression probability */
+
+/* sanitize an 18-trait pheno genetics record (PHENO_KEYS); null if unusable */
+function P3B_sanitizePhenoGenetics(g){
+  if(!g||typeof g!=='object') return null;
+  try{
+    const out={}; let any=false;
+    PHENO_KEYS.forEach(k=>{ const v=num(g[k],NaN); if(Number.isFinite(v)){ out[k]=clamp(Math.round(v),5,100); any=true; } });
+    return any?out:null;
+  }catch(e){ return null; }
+}
+/* one-shot consume of the Phase 2 elite-pheno session hint (window.__breedPhenoHint).
+   Returns the pheno genetics record only when it targets this parent; the hint is
+   cleared on a match so later crosses fall back to strain averages. */
+function P3B_takePhenoHint(strainId){
+  try{
+    const h=(typeof window!=='undefined'&&window.__breedPhenoHint)||null;
+    if(h&&h.strainId&&String(h.strainId)===String(strainId)&&h.genetics){
+      const g=P3B_sanitizePhenoGenetics(h.genetics);
+      try{ window.__breedPhenoHint=null; }catch(e2){}
+      return g;
+    }
+  }catch(e){}
+  return null;
+}
+/* map an 18-trait pheno record onto strain-level heritable traits.
+   flowerSpeed inverts phenoBase exactly: flowerSpeed=100-(ft-50)*2.5. */
+function P3B_phenoToTraits(g){
+  g=g||{};
+  const c=(k,d)=>clamp(Math.round(num(g[k],d)),5,100);
+  return { yld:c('yieldPot',50), pot:c('potencyPot',50), terp:c('terpenePot',50),
+    resin:c('resinPot',50), stab:c('stability',50), vigor:c('vigor',50),
+    ft:clamp(Math.round(50+(100-num(g.flowerSpeed,50))/2.5),40,110),
+    hermRisk:c('hermRisk',50) };
+}
+/* effective heritable traits of a parent: elite pheno record wins over strain average */
+function P3B_parentTraits(st,hintGen){
+  if(hintGen) return P3B_phenoToTraits(hintGen);
+  st=st||{};
+  return { yld:num(st.yld,50), pot:num(st.pot,50), terp:num(st.terp,50),
+    resin:num(st.resin,50), stab:num(st.stab,50), vigor:num(st.vigor,50), ft:num(st.ft,60) };
+}
+/* which parent of the new cross is the recurrent one (true backcross)? null otherwise */
+function P3B_recurrentOf(A,B){
+  try{
+    const lin=S&&S.gx&&S.gx.lineage;
+    if(!lin||!A||!B||!A.id||!B.id) return null;
+    const isChild=(c,p)=>lin[c]&&(lin[c].a===p||lin[c].b===p);
+    if(isChild(A.id,B.id)) return {rec:B,oth:A};
+    if(isChild(B.id,A.id)) return {rec:A,oth:B};
+  }catch(e){}
+  return null;
+}
+function P3B_breederName(){
+  try{ if(typeof NX_activeProfile==='function'){ const p=NX_activeProfile(); if(p&&p.grower) return String(p.grower).slice(0,24); } }catch(e){}
+  return 'GUEST';
+}
+function P3B_terpeneProfile(A,B){
+  try{
+    const tag=st=>{ const ts=Array.isArray(st&&st.tags)?st.tags.filter(t=>t&&t!=='Custom'&&t!=='S1'):[]; return ts.length?String(ts[0]):null; };
+    const tA=P3B_parentTraits(A,null), tB=P3B_parentTraits(B,null);
+    return tag(tA.terp>=tB.terp?A:B)||'Balanced';
+  }catch(e){ return 'Balanced'; }
+}
+/* Core inheritance engine. Returns trait values + full tracking payload.
+   opts: {hintA, hintB (sanitized pheno genetics or null), selfing (bool)} */
+function P3B_inherit(A,B,opts){
+  opts=opts||{};
+  const selfing=!!opts.selfing;
+  const tA=P3B_parentTraits(A,opts.hintA||null);
+  const tB=selfing?P3B_parentTraits(A,opts.hintB||null):P3B_parentTraits(B,opts.hintB||null);
+  const stabA=num(tA.stab,50), stabB=num(tB.stab,50), avgStab=(stabA+stabB)/2;
+  const breederBonus=(typeof S!=='undefined'&&S&&S.crew&&S.crew.breeder)?6:0;
+  /* generation context */
+  let label='F1', bxDepth=0, selfDepth=0, rec=null;
+  try{
+    if(selfing){ selfDepth=int(A&&A.selfHist&&A.selfHist.depth,0)+1; label='S'+selfDepth; }
+    else{
+      const gl=(typeof TY_genLabelOf==='function')?TY_genLabelOf({},A,B):null;
+      if(gl&&gl.label) label=String(gl.label);
+      const m=/^BX(\d+)$/.exec(label); if(m) bxDepth=Math.max(1,int(m[1],1));
+      rec=P3B_recurrentOf(A,B);
+      if(rec&&!bxDepth) bxDepth=1;
+    }
+  }catch(e){}
+  /* per-line selection history: repeated breeding toward the same parent compounds */
+  let selHist=null, selfHist=null;
+  if(selfing){
+    selfHist={rootId:(A&&A.id)||null,depth:selfDepth};
+    selHist={targetId:(A&&A.id)||null,depth:selfDepth,kind:'self'};
+  }else if(rec){
+    const prev=(rec.oth&&rec.oth.selHist)||null;
+    const depth=(prev&&prev.targetId===(rec.rec&&rec.rec.id))?int(prev.depth,0)+1:1;
+    selHist={targetId:(rec.rec&&rec.rec.id)||null,depth:depth,kind:'bx'};
+  }
+  /* generation-aware variance multiplier */
+  let genMult=1.0;
+  if(selfing) genMult=selfDepth<=1?0.6:(selfDepth===2?0.4:0.3);
+  else if(bxDepth>0) genMult=0.9;
+  else{ const fm=/^F(\d+)$/.exec(label), fn=fm?int(fm[1],1):1; genMult=fn<=1?1.0:(fn===2?1.6:1.25); }
+  /* stability: legacy -4 penalty + breeder bonus preserved; selection stabilizes */
+  const selBonus=selHist?Math.min(int(selHist.depth,0)*3,15):0;
+  const stab=clamp(Math.round(avgStab-4+breederBonus+selBonus),10,100);
+  const traits={}, traitsInherited={}, dominantTraits=[], recessiveTraits=[];
+  let wSum=0;
+  P3B_TRAITS.forEach(t=>{
+    const a=num(tA[t],t==='ft'?60:50), b=num(tB[t],t==='ft'?60:50);
+    const hi=Math.max(a,b), lo=Math.min(a,b);
+    let mean, src, note;
+    if(selfing){
+      mean=a; src='self'; note='S'+selfDepth+' self of '+(A&&A.name?A.name:'parent')+' (homozygosity rises)';
+    }else if(rec){
+      const pull=1-Math.pow(0.5,bxDepth+1); /* standard recurrent-parent proportion */
+      const rT=(rec.rec===A)?a:b, oT=(rec.rec===A)?b:a;
+      mean=pull*rT+(1-pull)*oT; src='recurrent';
+      note='BX'+bxDepth+' pull '+(Math.round(pull*1000)/10)+'% toward '+(rec.rec&&rec.rec.name?rec.rec.name:'recurrent parent');
+    }else{
+      mean=(a+b)/2; src=(a===b)?'self':'midpoint';
+      note=label+' midpoint '+Math.round(mean)+' of '+(A&&A.name?A.name:'?')+' / '+(B&&B.name?B.name:'?');
+    }
+    /* variance: stability-modulated, generation-aware, selection-narrowed */
+    let w=P3B_BASE_W*(1.5-avgStab/100)*genMult*(breederBonus?0.92:1);
+    if(selHist) w*=Math.pow(0.88,Math.min(int(selHist.depth,0),6));
+    wSum+=w;
+    /* recessive expression: modest chance of the lower parent's region */
+    let pRec=P3B_REC_PROB;
+    if(selfing) pRec=Math.min(0.20,pRec+0.02*Math.max(0,selfDepth-1));
+    const recessive=Math.random()<pRec;
+    let v;
+    if(recessive){ v=lo+rnd(-2,2); src='recessive'; note='recessive surprise: lower-parent region ('+Math.round(lo)+')'; }
+    else v=mean+rnd(-w,w);
+    if(selfing&&selfDepth>=3&&t==='vigor') v-=3*(selfDepth-2); /* inbreeding depression at S3+ */
+    v=(t==='ft')?clamp(Math.round(v),40,110):clamp(Math.round(v),10,100);
+    traits[t]=v;
+    traitsInherited[t]={src:src,note:note};
+    if(recessive||Math.abs(v-lo)<Math.abs(v-hi)) recessiveTraits.push(t); else dominantTraits.push(t);
+  });
+  const avgW=wSum/P3B_TRAITS.length;
+  const uniformity=clamp(Math.round(112-avgW*5),5,100);
+  /* herm risk: elite pheno record wins; otherwise mirror phenoBase (42 - stab*0.3) */
+  let hermRisk=null;
+  try{
+    const hg=opts.hintA||(selfing?opts.hintB:null);
+    if(hg&&Number.isFinite(num(hg.hermRisk,NaN))) hermRisk=clamp(Math.round(num(hg.hermRisk)),5,95);
+  }catch(e){}
+  if(hermRisk===null) hermRisk=clamp(Math.round(42-stab*0.3),5,95);
+  return { traits:traits, stab:stab, uniformity:uniformity, hermRisk:hermRisk,
+    traitsInherited:traitsInherited, dominantTraits:dominantTraits, recessiveTraits:recessiveTraits,
+    selHist:selHist, selfHist:selfHist, label:label, bxDepth:bxDepth, selfDepth:selfDepth, avgW:avgW };
+}
+/* requirement-8 tracking fields for a new custom strain (genLabel/createdDay come
+   from TY_crossHook/GX_enrichCross as before and are NOT duplicated here) */
+function P3B_trackingFields(A,B,inh){
+  const v=inh.traits;
+  return {
+    motherId:(A&&A.id)||null, motherName:(A&&A.name)||'?',
+    fatherId:(B&&B.id)||null, fatherName:(B&&B.name)||'?',
+    breederName:P3B_breederName(),
+    phenosEvaluated:0,
+    traitsInherited:inh.traitsInherited,
+    dominantTraits:inh.dominantTraits.slice(), recessiveTraits:inh.recessiveTraits.slice(),
+    stabilityPct:inh.stab, uniformityPct:inh.uniformity, hermRiskPct:inh.hermRisk,
+    yieldPot:v.yld, potencyPot:v.pot,
+    terpeneProfile:P3B_terpeneProfile(A,B),
+    structureScore:clamp(Math.round(inh.stab*0.6+v.vigor*0.4),5,100),
+    floweringTime:v.ft,
+    envTolerance:clamp(Math.round(inh.stab*0.65+v.vigor*0.35),5,100),
+    stressResistance:clamp(Math.round(inh.stab*0.6+v.vigor*0.4),5,100),
+    selHist:inh.selHist, selfHist:inh.selfHist
+  };
+}
+/* migration-safe defaults for custom strains bred before this wave.
+   Never overwrites values already present. */
+function P3B_backfillCustom(s){
+  if(!s||typeof s!=='object') return s;
+  const d=(k,v)=>{ if(s[k]===undefined||s[k]===null) s[k]=v; };
+  const stab=num(s.stab,50), vigor=num(s.vigor,50);
+  d('motherId',null); d('motherName','?'); d('fatherId',null); d('fatherName','?');
+  d('breederName','GUEST');
+  d('phenosEvaluated',0);
+  d('traitsInherited',{}); d('dominantTraits',[]); d('recessiveTraits',[]);
+  d('stabilityPct',clamp(Math.round(stab),5,100));
+  d('uniformityPct',clamp(Math.round(stab),5,100));
+  d('hermRiskPct',clamp(Math.round(42-stab*0.3),5,95));
+  d('yieldPot',num(s.yld,50)); d('potencyPot',num(s.pot,50));
+  d('terpeneProfile','Balanced');
+  d('structureScore',clamp(Math.round(stab*0.6+vigor*0.4),5,100));
+  d('floweringTime',num(s.ft,60));
+  d('envTolerance',clamp(Math.round(stab*0.65+vigor*0.35),5,100));
+  d('stressResistance',clamp(Math.round(stab*0.6+vigor*0.4),5,100));
+  if(s.selHist===undefined) s.selHist=null;
+  if(s.selfHist===undefined) s.selfHist=null;
+  if(!s.genLabel&&s.generation) s.genLabel=s.generation;
+  if(s.createdDay===undefined||s.createdDay===null) s.createdDay=1;
+  return s;
+}
+
+/* ============================================================
+   P3 WAVE 2 — CUSTOM STRAINS + GENETIC VAULT
+   Extends Wave 1 (P3B_ inheritance engine + P3B_trackingFields) and the
+   keeper-vault screen. Additive only: no Phase 1/2 system is redesigned,
+   economy untouched (customs sell through existing pricePerOz /
+   WX_sellMult paths — no new pricing, no new sale paths).
+   ============================================================ */
+const P3W2_STABLE_BAR=90; /* stabilization threshold: stabilityPct crossing */
+
+/* Per-cross Wave-2 fields. P3B_trackingFields (Wave 1) is untouched;
+   these ride alongside it in createCross()/selfCross(). */
+function P3W2_fields(){
+  return {
+    creationDay:Math.max(1,int(S.day,1)),
+    ceremonyFired:false,   /* NEW GENETIC ceremony — exactly-once flag */
+    declaredStable:false,  /* player chose DECLARE STABLE */
+    p0Submitted:false,     /* submitted to Project 0 via the ceremony */
+    lineageSaved:false,    /* SAVE LINEAGE persisted the selection history */
+    autoName:null          /* pre-ceremony name, kept when the player renames */
+  };
+}
+/* Migration-safe defaults for customs bred before this wave.
+   ceremonyFired backfills TRUE: pre-wave customs never had a ceremony and
+   must not all fire one on first load after the update. Never overwrites. */
+function P3W2_backfillCustom(s){
+  if(!s||typeof s!=='object') return s;
+  const d=(k,v)=>{ if(s[k]===undefined||s[k]===null) s[k]=v; };
+  d('creationDay',Math.max(1,int(s.createdDay,1)));
+  d('ceremonyFired',true);
+  d('declaredStable',false);
+  d('p0Submitted',false);
+  d('lineageSaved',false);
+  d('autoName',null);
+  return s;
+}
+/* Lineage integrity: a custom can only be created from known parents.
+   Unknown parent ids are rejected — no orphan customs. */
+function P3W2_validateLineage(aId,bId){
+  try{
+    if(!aId) return false;
+    const A=getStrain(aId); if(!A) return false;
+    if(bId&&bId!==aId){ const B=getStrain(bId); if(!B) return false; }
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---- line stabilization: using a custom as a parent applies selection
+   pressure (+2 stabilityPct, +1 uniformityPct, capped). When the line
+   crosses P3W2_STABLE_BAR the NEW GENETIC ceremony fires (exactly once).
+   Only Wave-1 tracking fields move — the P3B inheritance engine reads
+   .stab, which is never touched here. ---- */
+function P3W2_parentStabilize(id){
+  try{
+    const p=getStrain(id);
+    if(!p||!p.custom) return false;
+    const before=num(p.stabilityPct,50);
+    p.stabilityPct=clamp(Math.round(before+2),5,100);
+    p.uniformityPct=clamp(Math.round(num(p.uniformityPct,50)+1),5,100);
+    if(before<P3W2_STABLE_BAR&&p.stabilityPct>=P3W2_STABLE_BAR) P3W2_maybeCeremony(p,'stabilized');
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---- ceremony queue: exactly-once per custom, never stacked ---- */
+let P3W2_cq=[];
+function P3W2_maybeCeremony(c,reason){
+  try{
+    if(!c||!c.custom||c.ceremonyFired) return false;
+    if(reason!=='declared'&&num(c.stabilityPct,0)<P3W2_STABLE_BAR) return false;
+    if(P3W2_cq.indexOf(c.id)<0) P3W2_cq.push(c.id);
+    P3W2_pumpCeremony();
+    return true;
+  }catch(e){ return false; }
+}
+function P3W2_pumpCeremony(){
+  try{
+    if(!P3W2_cq.length) return;
+    if(document.querySelector('#modal-root .cine-back')) return; /* one ceremony at a time */
+    const id=P3W2_cq.shift();
+    const c=getStrain(id);
+    if(!c||!c.custom||c.ceremonyFired){ P3W2_pumpCeremony(); return; }
+    P3W2_showCeremony(c);
+  }catch(e){}
+}
+/* player-chosen DECLARE STABLE — fires the ceremony regardless of the bar */
+function P3W2_declareStable(id){
+  try{
+    const c=getStrain(id);
+    if(!c||!c.custom) return false;
+    if(c.ceremonyFired){ toast(icon('check','ge-ic-md')+' Already honored — this genetic had its ceremony.'); return false; }
+    c.declaredStable=true;
+    try{ codexNote(id,'Declared STABLE by the breeder.'); }catch(e){}
+    try{ save(); }catch(e){}
+    P3W2_maybeCeremony(c,'declared');
+    return true;
+  }catch(e){ return false; }
+}
+
+/* SAVE LINEAGE: persist the full selection history into the Living Codex */
+function P3W2_saveLineage(c){
+  try{
+    if(!c) return false;
+    const chain=P3W2_selChain(c.id);
+    const desc=chain.map(n=>((n.genLabel||n.generation||'?')+' \u201c'+(n.name||n.id)+'\u201d '+Math.round(num(n.stabilityPct,num(n.stab,50)))+'%')).join(' \u2192 ');
+    try{ codexNote(c.id,'LINEAGE SAVED: '+desc); }catch(e){}
+    c.lineageSaved=true;
+    try{ save(); }catch(e){}
+    toast(icon('scroll','ge-ic-md')+' Lineage saved to the Living Codex.');
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---- NEW GENETIC CREATED ceremony ----
+   Industrial Shocker OwnZ presentation: black/charcoal/crimson/burnt
+   orange, smoke + scan-line restraint, haptics. NOT casino.
+   Fires exactly once per custom (ceremonyFired is set before any UI). */
+function P3W2_showCeremony(c){
+  try{
+    if(!c||!c.custom||c.ceremonyFired) return false;
+    c.ceremonyFired=true; /* exactly-once: set BEFORE any UI can fail */
+    try{ save(); }catch(e){}
+    const gen=c.genLabel||c.generation||'F1';
+    const lin=c.lineage||((c.motherName||'?')+' \u00d7 '+(c.fatherName||'?'));
+    const rows=[['STABILITY',Math.round(num(c.stabilityPct,0))+'%'],['UNIFORMITY',Math.round(num(c.uniformityPct,0))+'%'],
+                ['GENERATION',gen],['CREATED','DAY '+Math.max(1,int(c.creationDay||c.createdDay,1))]];
+    const inner=
+     '<div class="gen-stage"><div class="pr-smoke" aria-hidden="true"></div><div class="pr-scan" aria-hidden="true"></div>'+
+     '<div class="gen-kicker">'+icon('gasmask','ge-ic-sm')+'<span>SHOCKER OWNZ // GENETIC STABILIZED</span></div>'+
+     '<div class="gen-art">'+dnaSVG('gen-dna')+'</div>'+
+     '<div class="ge-display gen-title pr-glitch" data-text="NEW GENETIC CREATED">NEW GENETIC CREATED</div>'+
+     '<div class="gen-name" id="gen-cname">'+esc(c.name)+'</div>'+
+     '<div class="gen-lin">'+icon('dna','ge-ic-sm')+'<span>'+esc(lin)+'</span></div>'+
+     '<div class="gen-grid">'+rows.map((t,i)=>'<div class="gen-cell" style="animation-delay:'+(0.4+i*0.2).toFixed(2)+'s"><span>'+t[0]+'</span><b>'+esc(String(t[1]))+'</b></div>').join('')+'</div>'+
+     '<div class="gen-sub">A stabilized line. Name it, log it, hunt it \u2014 the archive remembers.</div>'+
+     '<div class="gen-namerow" id="gen-namerow" hidden><input type="text" id="gen-namein" enterkeyhint="done" class="ge-input" maxlength="28" value="'+esc(c.name)+'" aria-label="Genetic name">'+
+     '<button type="button" class="ge-btn ge-btn-gold" id="gen-nameok">SET</button></div>'+
+     '<div class="ge-btn-grid">'+
+      '<button type="button" class="ge-btn ge-btn-gold" id="gen-name">'+icon('star','ge-ic-md')+'NAME GENETIC</button>'+
+      '<button type="button" class="ge-btn ge-btn-ghost" id="gen-saveline">'+icon('scroll','ge-ic-md')+'SAVE LINEAGE</button>'+
+      '<button type="button" class="ge-btn ge-btn-primary" id="gen-breed">'+icon('dna','ge-ic-md')+'CONTINUE BREEDING</button>'+
+      '<button type="button" class="ge-btn ge-btn-ghost" id="gen-hunt">'+icon('hunt','ge-ic-md')+'BEGIN PHENO HUNT</button>'+
+      '<button type="button" class="ge-btn ge-btn-ghost" id="gen-p0">'+icon('project0','ge-ic-md')+'SUBMIT TO PROJECT 0</button>'+
+     '</div></div>';
+    const back=cineOverlay(inner,'cine-genetic',0); /* no auto-dismiss: the player chooses */
+    /* W4: Android back / backdrop dismiss must pump the ceremony queue too
+       (button dismiss already does via dismiss(); bare removal stalled it,
+       stranding every ceremony queued behind the dismissed one). */
+    if(back){ back.__geOnDismiss=function(){ try{ P3W2_pumpCeremony(); }catch(e){} }; }
+    const q=s=>back.querySelector(s);
+    const dismiss=()=>{ try{ back.classList.add('cine-out'); back.classList.remove('is-open'); }catch(e){}
+      setTimeout(()=>{ try{ back.remove(); }catch(e){} P3W2_pumpCeremony(); },300); };
+    const bn=q('#gen-name'); if(bn) bn.onclick=()=>{ const nr=q('#gen-namerow'); if(nr){ nr.hidden=!nr.hidden; const inp=q('#gen-namein'); if(inp&&!nr.hidden){ try{inp.focus();}catch(e){} } } };
+    const ok=q('#gen-nameok'); if(ok) ok.onclick=()=>{
+      const inp=q('#gen-namein'); const nm=inp?String(inp.value||'').trim().slice(0,28):'';
+      if(nm&&nm!==c.name){ if(!c.autoName) c.autoName=c.name; const old=c.name; c.name=nm;
+        try{ codexNote(c.id,'Renamed \u201c'+old+'\u201d \u2192 \u201c'+nm+'\u201d (lineage kept: \u201c'+(c.lineage||'?')+'\u201d)'); }catch(e){}
+        const cn=q('#gen-cname'); if(cn) cn.textContent=nm;
+        toast(icon('star','ge-ic-md')+' Genetic named: <b>'+esc(nm)+'</b>'); }
+      const nr=q('#gen-namerow'); if(nr) nr.hidden=true;
+      try{ save(); }catch(e){}
+    };
+    const sl=q('#gen-saveline'); if(sl) sl.onclick=()=>{ P3W2_saveLineage(c); sl.disabled=true; };
+    const br=q('#gen-breed'); if(br) br.onclick=()=>{ dismiss(); try{ show('breeding'); }catch(e){} };
+    const hu=q('#gen-hunt'); if(hu) hu.onclick=()=>{ dismiss(); try{ startPhenoHunt(c.id); }catch(e){} };
+    const p0=q('#gen-p0'); if(p0){ if(c.p0Submitted) p0.disabled=true;
+      p0.onclick=()=>{ if(c.p0Submitted) return;
+        c.p0Submitted=true; try{ addP0('genetics',5); }catch(e){}
+        try{ codexNote(c.id,'Submitted to PROJECT 0 \u2014 the preservation archive.'); }catch(e){}
+        try{ if(typeof P0T_sweep==='function') P0T_sweep(); }catch(e){} /* P3-W3: submit -> preservation pipeline */
+        try{ save(); }catch(e){}
+        p0.disabled=true;
+        toast(icon('project0','ge-ic-md')+' <b>'+esc(c.name)+'</b> submitted to Project 0. The genetics are preserved.'); }; }
+    back.addEventListener('click',e=>{ if(e&&e.target===back) setTimeout(P3W2_pumpCeremony,350); });
+    /* haptics: heavy pulse then two beats — CAP bridge first, navigator.vibrate fallback */
+    try{ PR_haptic('alert'); }catch(e){}
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },350);
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },700);
+    try{ if(typeof TY_notify==='function') TY_notify(icon('dna','ge-ic-md')+' <b>NEW GENETIC CREATED:</b> '+esc(c.name),'good'); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---- selection history: walk the Wave-1 selHist.targetId selection line
+   (selfing / backcross depth), oldest generation first ---- */
+function P3W2_selChain(id){
+  const nodes=[]; let cur=null;
+  try{ cur=getStrain(id); }catch(e){}
+  let guard=0;
+  while(cur&&guard<6){
+    nodes.push(cur); guard++;
+    let tid=null;
+    try{ tid=cur.selHist&&cur.selHist.targetId; }catch(e){}
+    let nxt=null;
+    try{ nxt=tid?getStrain(tid):null; }catch(e){}
+    if(!nxt||nxt.id===cur.id) break;
+    cur=nxt;
+  }
+  return nodes.reverse();
+}
+function P3W2_selChainHTML(id){
+  try{
+    const chain=P3W2_selChain(id);
+    const last=getStrain(id);
+    const terminal=last&&last.custom?((last.ceremonyFired||last.declaredStable)?'STABLE':(last.p0Submitted?'PROJECT 0':'SELECTED')):'LINE';
+    if(chain.length<2)
+      return '<p class="ge-caption ge-muted">Foundation selection \u2014 no recorded selection line yet. Breed toward a target to build one.</p>'+
+        '<div class="w2-selchain"><span class="ge-badge ge-badge-gold">'+esc(terminal)+'</span></div>';
+    const chips=chain.map(n=>{
+      /* P3-W2: prefer the Wave-1 selfing depth for the label — TY_genLabelOf
+         always stamps identical-parent crosses 'S1', but selfHist tracks the
+         true S-depth (S2, S3...). Display only; the engine is untouched. */
+      const lbl=(n.selfHist&&int(n.selfHist.depth,0)>1)?('S'+int(n.selfHist.depth,1)):(n.genLabel||n.generation||'F1');
+      const sh=n.selHist||{};
+      const sub=sh.kind==='self'?'SELF \u00d7'+int(sh.depth,1):(sh.kind==='bx'?'BX \u00d7'+int(sh.depth,1):'');
+      const stb=Math.round(num(n.stabilityPct,num(n.stab,50)));
+      return '<button type="button" class="ge-chip" data-w2-lin="'+esc(n.id)+'"><b>'+esc(lbl)+'</b>'+
+        (sub?'<span>'+esc(sub)+'</span>':'')+'<span class="ge-muted">'+stb+'% STAB</span>'+
+        '<span class="ge-truncate">'+esc(n.name||n.id)+'</span></button>';
+    });
+    return '<div class="w2-selchain">'+chips.join('<span class="w2-sel-arrow" aria-hidden="true">\u2192</span>')+
+      '<span class="w2-sel-arrow" aria-hidden="true">\u2192</span><span class="ge-badge ge-badge-gold">'+esc(terminal)+'</span></div>'+
+      '<p class="ge-caption ge-muted">Tap a generation to recenter the tree.</p>';
+  }catch(e){ return ''; }
+}
+
+/* ---- generic bottom-sheet stack (mobile focus-sheet pattern). The plant
+   focus sheet keeps its own path; vault lineage sheets register here so the
+   Android back button (CAP_backHandler) closes the topmost sheet first. ---- */
+function GE_openSheet(id,titleHTML,bodyHTML){
+  try{
+    GE_closeSheet(id,true);
+    const bd=document.createElement('div'); bd.id=id+'-back'; bd.className='focus-back';
+    bd.onclick=()=>GE_closeSheet(id);
+    const sh=document.createElement('div'); sh.id=id; sh.className='focus-sheet ge-focus';
+    sh.innerHTML='<div class="focus-handle"></div><div class="ge-sheet-head"><h3>'+titleHTML+'</h3>'+
+      '<button type="button" class="ge-btn ge-btn-sm ge-btn-ghost" data-sheet-x="'+id+'">'+icon('x','ge-ic-sm')+'CLOSE</button></div>'+
+      '<div class="ge-sheet-body">'+bodyHTML+'</div>';
+    document.body.appendChild(bd); document.body.appendChild(sh);
+    try{ requestAnimationFrame(()=>sh.classList.add('open')); }catch(e){ sh.classList.add('open'); }
+    const st=window.__geSheetStack||(window.__geSheetStack=[]);
+    if(st.indexOf(id)<0) st.push(id);
+    sh.querySelectorAll('[data-sheet-x]').forEach(b=>b.onclick=()=>GE_closeSheet(b.dataset.sheetX));
+    return sh;
+  }catch(e){ return null; }
+}
+function GE_closeSheet(id){
+  try{
+    const sh=document.getElementById(id); if(sh) sh.remove();
+    const bd=document.getElementById(id+'-back'); if(bd) bd.remove();
+    const st=window.__geSheetStack||[];
+    const i=st.lastIndexOf(id); if(i>=0) st.splice(i,1);
+  }catch(e){}
+}
+function GE_closeTopSheet(){
+  try{
+    const st=window.__geSheetStack||[];
+    if(!st.length) return false;
+    GE_closeSheet(st[st.length-1]);
+    return true;
+  }catch(e){ return false; }
+}
+/* Full lineage tree + selection history in a focus sheet. Tappable ancestors
+   via the existing GX lineage infra (GX_lineageHTML + GX_wireLineage). */
+function P3W2_lineageSheet(id){
+  try{
+    const st=getStrain(id); if(!st) return false;
+    const tree=(typeof GX_lineageHTML==='function')?GX_lineageHTML(id):'<p class="ge-muted">Lineage unavailable.</p>';
+    const body='<div class="ge-card ge-card-flat"><div class="ge-card-head">'+icon('scroll','ge-ic-md')+'<h3>SELECTION HISTORY</h3></div>'+
+      P3W2_selChainHTML(id)+'</div><div id="w2-linbox">'+tree+'</div>';
+    const sh=GE_openSheet('w2-linsheet',icon('dna','ge-ic-md')+' '+esc(String(st.name||id)).toUpperCase().slice(0,34),body);
+    if(!sh) return false;
+    const box=sh.querySelector('#w2-linbox');
+    if(box){ try{ GX_wireLineage(box); }catch(e){} }
+    sh.querySelectorAll('[data-w2-lin]').forEach(b=>b.onclick=()=>{
+      const nid=b.dataset.w2Lin, tgt=getStrain(nid);
+      if(!tgt||!box) return;
+      try{ box.innerHTML=GX_lineageHTML(nid); GX_wireLineage(box); }catch(e){}
+    });
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---- GENETIC VAULT tabs (extend the keeper-vault screen — never forked) ---- */
+function P3W2_p0Genetics(){
+  const base=[], subs=[];
+  try{
+    allStrains().forEach(s=>{
+      if(s.custom){ if(s.p0Submitted) subs.push(s); return; }
+      if(s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.indexOf('Keeper')>=0)) base.push(s);
+    });
+  }catch(e){}
+  return {base:base,subs:subs};
+}
+function P3W2_linBtn(id){ return '<button type="button" class="ge-btn ge-btn-sm ge-btn-ghost" data-w2-lin-open="'+esc(id)+'">'+icon('dna','ge-ic-sm')+'LINEAGE</button>'; }
+
+function P3W2_seedsHtml(){
+  const all=allStrains();
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('grow','ge-ic-md')+'<h3>SEED STOCK</h3><span class="ge-spread ge-num ge-muted">'+all.length+' GENETICS</span></div>'+
+    '<p class="ge-caption ge-muted">Every genetic in the library with seed cost and stock status. In-house customs are owned on creation.</p></div>';
+  all.forEach(st=>{
+    const locked=!isUnlocked(st.id);
+    const owned=!!st.custom||!!(S.strainOwned&&S.strainOwned[st.id]);
+    html+='<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+flowerSVG(strainSeed(st),'seed-flower')+'</div>'+
+     '<div class="ge-spec-main"><div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(st.name)+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
+     '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Seed cost</span><b class="ge-num">'+fmt$(num(st.seed,0))+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('box','ge-ic-sm')+'Stock</span><b>'+(locked?'LOCKED':(owned?'IN STOCK':'AVAILABLE'))+'</b></div>'+
+     '<div class="ge-btn-row">'+(locked?'':'<button type="button" class="ge-btn ge-btn-sm ge-btn-primary" data-w2-grow="'+esc(st.id)+'">'+icon('grow','ge-ic-sm')+'GROW</button>')+
+     P3W2_linBtn(st.id)+'</div></div></div>';
+  });
+  return html;
+}
+
+function P3W2_customsHtml(){
+  const list=S.customStrains||[];
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>CUSTOM GENETICS</h3><span class="ge-spread ge-num ge-muted">'+list.length+' BRED</span></div>'+
+    '<p class="ge-caption ge-muted">Your stabilized lines. Declare a line stable to hold its naming ceremony.</p></div>';
+  if(!list.length)
+    return html+'<div class="ge-card ge-empty"><div>'+icon('dna','ge-ic-xl')+'</div><h3>NO CUSTOM GENETICS YET</h3><p>Breed two parents in the Breeding Lab to create your first line.</p></div>';
+  list.forEach(c=>{
+    const bars=[['Stability',num(c.stabilityPct,0)],['Uniformity',num(c.uniformityPct,0)],['Herm risk',num(c.hermRiskPct,0)]];
+    const honored=!!c.ceremonyFired;
+    html+='<div class="ge-card ge-spec-card r-'+(c.rarity||'common')+'"><div class="ge-spec-art">'+flowerSVG(strainSeed(c),'strain-flower')+'</div>'+
+     '<div class="ge-spec-main">'+
+     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(c.name)+' <span class="ge-badge">CUSTOM</span>'+(honored?' <span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'STABLE</span>':'')+'</h3></div>'+
+     '<div class="ge-spec-badges"><span class="ge-pill ge-pill-neutral">'+esc(c.genLabel||c.generation||'F1')+'</span>'+
+      (c.autoName?'<span class="ge-pill ge-pill-neutral">BORN &ldquo;'+esc(c.autoName)+'&rdquo;</span>':'')+
+      (c.p0Submitted?'<span class="ge-badge ge-badge-legendary">'+icon('project0','ge-ic-sm')+'PROJECT 0</span>':'')+'</div>'+
+     '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span class="ge-truncate">'+esc(c.lineage||((c.motherName||'?')+' \u00d7 '+(c.fatherName||'?')))+'</span></div>'+
+     '<div class="ge-datarow"><span>'+icon('terp','ge-ic-sm')+'Terpenes</span><b>'+esc(c.terpeneProfile||'Balanced')+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Breeder</span><b>'+esc(c.breederName||'GUEST')+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Created</span><b class="ge-num">DAY '+Math.max(1,int(c.creationDay||c.createdDay,1))+'</b></div>'+
+     bars.map(b=>'<div class="ge-progress-meta"><span>'+b[0]+'</span><b>'+Math.round(num(b[1],0))+'%</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+clamp(Math.round(num(b[1],0)),0,100)+'%"></i></div>').join('')+
+     '<div class="ge-btn-row">'+
+      (honored?'':'<button type="button" class="ge-btn ge-btn-sm ge-btn-gold" data-w2-stable="'+esc(c.id)+'">'+icon('crown-gold','ge-ic-sm')+'DECLARE STABLE</button>')+
+      '<button type="button" class="ge-btn ge-btn-sm ge-btn-primary" data-w2-grow="'+esc(c.id)+'">'+icon('grow','ge-ic-sm')+'GROW</button>'+
+      '<button type="button" class="ge-btn ge-btn-sm ge-btn-ghost" data-w2-hunt="'+esc(c.id)+'">'+icon('hunt','ge-ic-sm')+'HUNT</button>'+
+      P3W2_linBtn(c.id)+'</div></div></div>';
+  });
+  return html;
+}
+
+function P3W2_archiveHtml(){
+  const list=S.phenoArchive||[];
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('box','ge-ic-md')+'<h3>ARCHIVED GENETICS</h3><span class="ge-spread ge-num ge-muted">'+list.length+'/200</span></div>'+
+    '<p class="ge-caption ge-muted">Preserved phenotype snapshots. The archive never forgets.</p></div>';
+  if(!list.length)
+    return html+'<div class="ge-card ge-empty"><div>'+icon('box','ge-ic-xl')+'</div><h3>ARCHIVE EMPTY</h3><p>Archive phenotypes from the harvest report to preserve them here.</p></div>';
+  list.forEach(a=>{
+    html+='<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-main">'+
+     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(a.strainName||'?')+' <span class="ge-num">#'+int(a.phenoNum,0)+'</span></h3></div>'+
+     '<div class="ge-spec-badges">'+rarityBadge({rarity:a.rarity||'common'})+(a.isClone?' <span class="ge-badge ge-badge-mother">'+icon('clone','ge-ic-sm')+'CLONE</span>':'')+'</div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Overall</span><b class="ge-num">'+Math.round(num(a.overall,0))+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Archived</span><b class="ge-num">DAY '+Math.max(1,int(a.day,1))+'</b></div>'+
+     '<div class="ge-btn-row">'+(a.strainId?P3W2_linBtn(a.strainId):'')+'</div></div></div>';
+  });
+  return html;
+}
+
+function P3W2_p0Row(s,tag){
+  return '<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+flowerSVG(strainSeed(s),'strain-flower')+'</div>'+
+   '<div class="ge-spec-main"><div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(s.name)+(s.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
+   '<div class="ge-spec-badges"><span class="ge-badge ge-badge-legendary">'+icon('project0','ge-ic-sm')+tag+'</span></div>'+
+   '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span class="ge-truncate">'+esc(s.lineage||'Foundation genetics')+'</span></div>'+
+   '<div class="ge-btn-row">'+P3W2_linBtn(s.id)+'</div></div></div>';
+}
+function P3W2_p0Html(){
+  const g=P3W2_p0Genetics();
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('project0','ge-ic-md')+'<h3>PROJECT 0 GENETICS</h3><span class="ge-spread ge-num ge-muted">'+(g.base.length+g.subs.length)+'</span></div>'+
+    '<p class="ge-caption ge-muted">Preservation lines and your submitted customs. It&rsquo;s never about the money \u2014 only the genetics.</p></div>';
+  if(!g.base.length&&!g.subs.length)
+    return html+'<div class="ge-card ge-empty"><div>'+icon('project0','ge-ic-xl')+'</div><h3>NO PROJECT 0 GENETICS</h3><p>Submit a stabilized custom from its ceremony to preserve it here.</p></div>';
+  g.subs.forEach(s=>{ html+=P3W2_p0Row(s,'YOUR SUBMISSION'); });
+  g.base.forEach(s=>{ html+=P3W2_p0Row(s,'PRESERVATION LINE'); });
+  return html;
+}
+
+/* wire the vault tab buttons (called from wireKeepers — additive) */
+function P3W2_wireVault(r){
+  if(!r) return;
+  r.querySelectorAll('[data-w2-lin-open]').forEach(b=>b.onclick=()=>P3W2_lineageSheet(b.dataset.w2LinOpen));
+  r.querySelectorAll('[data-w2-stable]').forEach(b=>b.onclick=()=>{ if(P3W2_declareStable(b.dataset.w2Stable)&&current==='keepers') RENDER.keepers(); });
+  r.querySelectorAll('[data-w2-grow]').forEach(b=>b.onclick=()=>{ const st=getStrain(b.dataset.w2Grow); if(st&&plantSeed(st.id)){ toast(icon('grow','ge-ic-md')+' Planted '+esc(st.name)); if(current==='keepers') RENDER.keepers(); } });
+  r.querySelectorAll('[data-w2-hunt]').forEach(b=>b.onclick=()=>startPhenoHunt(b.dataset.w2Hunt));
+}
+
+
+
+/* ============================================================
+   P3 WAVE 3 — PROJECT 0 PRESERVATION TIERS
+   P0 as a true preservation PROGRAM, not another XP bar. Per-genetic
+   preservation tiers, tracked per strain/custom id in S.p0vault
+   (migration-safe, additive). The existing 8-track P0 points system
+   (tracks grant points as before) is untouched — tiers are per-genetic
+   and separate.
+     CANDIDATE -> DOCUMENTED -> VERIFIED -> PRESERVED -> LEGACY
+   Every requirement reads existing tracked state; the only new
+   tracking is per-genetic stress-test evidence (stamped at harvest),
+   which genuinely did not exist per genetic. PRESERVED is granted via
+   an explicit player action (the "effort paid"); tiers 1, 2 and 4
+   advance automatically when their requirements are genuinely met.
+   Perks are non-economic by design: no cash, no multipliers — only a
+   tiny capped breeder-rep nod, a codex distinction, and a permanent
+   place of honor. "IT'S NEVER ABOUT THE MONEY — ONLY THE GENETICS."
+   ============================================================ */
+const P0T_TIERS=['CANDIDATE','DOCUMENTED','VERIFIED','PRESERVED','LEGACY'];
+const P0T_DOC_PHENOS=3;    /* DOCUMENTED: phenotypes evaluated */
+const P0T_VER_HARVESTS=3;  /* VERIFIED: successful harvests of the genetic */
+const P0T_PRES_HARVESTS=5; /* PRESERVED: harvests of the genetic */
+const P0T_PRES_CLONES=2;   /* PRESERVED (base): keeper-line clone runs */
+const P0T_LEG_HARVESTS=10; /* LEGACY: verified harvests */
+const P0T_LEG_DAYS=30;     /* LEGACY: game-days since PRESERVED */
+const P0T_PERK_REP=2;      /* PRESERVED perk: +breeder rep per genetic */
+const P0T_PERK_CAP=20;     /* ...capped across all genetics (economy-neutral) */
+
+function P0T_name(gid){
+  try{ const st=getStrain(gid); if(st&&st.name) return st.name; }catch(e){}
+  try{ const e=S.p0vault&&S.p0vault[gid]; if(e&&e.gname) return e.gname; }catch(e){}
+  return String(gid);
+}
+/* get-or-create a vault entry (migration-safe; never throws) */
+function P0T_entry(gid,create){
+  try{
+    if(!gid||typeof S==='undefined'||!S) return null;
+    if(!S.p0vault||typeof S.p0vault!=='object') S.p0vault={};
+    let e=S.p0vault[gid];
+    if((!e||typeof e!=='object')&&create){
+      e=S.p0vault[gid]={tier:0,day:{0:Math.max(1,int(S.day,1))},vCine:false,
+        stressTested:false,stressTestDay:0,perkGranted:false,gname:P0T_name(gid)};
+    }
+    return (e&&typeof e==='object')?e:null;
+  }catch(e2){ return null; }
+}
+function P0T_stampTier(e,t){
+  try{ if(!e.day||typeof e.day!=='object') e.day={}; if(!e.day[t]) e.day[t]=Math.max(1,int(S.day,1)); }catch(e2){}
+  /* P3-W5: preservation tier-ups build Project 0 Rep — once per genetic per tier, ever.
+     Legacy saves grandfather earned tiers on first sweep; each grants once, modestly. */
+  try{ if(typeof P3W5_onP0Tier==='function') P3W5_onP0Tier(t); }catch(e3){}
+}
+/* candidacy evidence — the existing flag paths, never invented */
+function P0T_isCandidate(gid){
+  if(!gid) return false;
+  try{
+    /* (1) the staged reveal's P0 CANDIDATE banner (per-pheno moment keys) */
+    const seen=(S.disc&&S.disc.seen)||{};
+    const pre='p0cand-'+gid+'#';
+    for(const k in seen){ if(k.indexOf(pre)===0) return true; }
+  }catch(e){}
+  try{ if((S.keepers||[]).some(k=>k&&k.strainId===gid)) return true; }catch(e){} /* (2) keeper selection */
+  try{ const c=(S.customStrains||[]).find(x=>x&&x.id===gid); if(c&&c.p0Submitted) return true; }catch(e){} /* (3) Wave-2 ceremony submit */
+  return false;
+}
+/* every genetic currently in (or eligible for) the pipeline */
+function P0T_knownIds(){
+  const ids={};
+  try{ Object.keys(S.p0vault||{}).forEach(k=>{ ids[k]=1; }); }catch(e){}
+  try{ (S.customStrains||[]).forEach(c=>{ if(c&&c.id&&c.p0Submitted) ids[c.id]=1; }); }catch(e){}
+  try{ (S.keepers||[]).forEach(k=>{ if(k&&k.strainId) ids[k.strainId]=1; }); }catch(e){}
+  try{
+    const seen=(S.disc&&S.disc.seen)||{};
+    Object.keys(seen).forEach(k=>{
+      if(k.indexOf('p0cand-')===0){ const rest=k.slice(7), h=rest.indexOf('#'); if(h>0) ids[rest.slice(0,h)]=1; }
+    });
+  }catch(e){}
+  return Object.keys(ids).filter(id=>{ try{ return !!getStrain(id); }catch(e){ return false; } });
+}
+/* ---- requirement sets (all read existing tracked state) ---- */
+function P0T_docReqs(gid){
+  const st=getStrain(gid);
+  const ph=((S.phenoHistory||{})[gid])||{};
+  const tested=int(ph.tested,0);
+  let linMet=false, linLabel='Lineage documented';
+  if(st&&st.custom){ linMet=!!(st.motherId&&st.fatherId); linLabel='Lineage documented (parents recorded)'; }
+  else { linMet=!!st; linLabel='Catalog lineage (strain registry)'; } /* base strains are canonical registry genetics */
+  let notes=0; try{ const hx=codexHist(gid); notes=hx&&Array.isArray(hx.genNotes)?hx.genNotes.length:0; }catch(e){}
+  return [
+    {id:'phenos',label:'Phenotypes evaluated',cur:tested,need:P0T_DOC_PHENOS,met:tested>=P0T_DOC_PHENOS},
+    {id:'lineage',label:linLabel,met:linMet},
+    {id:'notes',label:'Trait notes recorded',cur:notes,need:1,met:notes>=1}
+  ];
+}
+function P0T_verReqs(gid){
+  const st=getStrain(gid);
+  const keepers=(S.keepers||[]).filter(k=>k&&k.strainId===gid);
+  let cloneVer=false;
+  try{ for(const k of keepers){ if(int((S.keeperCloneRuns||{})[k.id],0)>=1){ cloneVer=true; break; } } }catch(e){}
+  /* clone verification reads the REAL clone-harvest ledger (only written by
+     harvestPlant's clone branch) — it cannot be faked by flags alone. */
+  let stabMet=false, stabLabel='Stability proven';
+  if(st&&st.custom){ const v=Math.round(num(st.stabilityPct,0)); stabMet=v>=P3W2_STABLE_BAR; stabLabel='Stability '+v+'% / '+P3W2_STABLE_BAR+'% bar'; }
+  else { try{ const hx=codexHist(gid); stabMet=!!(hx&&hx.keeperPheno); }catch(e){} stabLabel='Keeper documented in the codex'; }
+  const harv=int((((S.stats||{}).strainGrown||{})[gid]||{}).count,0);
+  return [
+    {id:'keeper',label:'Keeper selected',cur:keepers.length,need:1,met:keepers.length>=1},
+    {id:'clonever',label:'Clone verification (keeper clone grown to harvest)',met:cloneVer},
+    {id:'stab',label:stabLabel,met:stabMet},
+    {id:'harv',label:'Successful harvests',cur:harv,need:P0T_VER_HARVESTS,met:harv>=P0T_VER_HARVESTS}
+  ];
+}
+function P0T_presReqs(gid){
+  const st=getStrain(gid);
+  let genMet=false, genLabel='Line advanced';
+  if(st&&st.custom){
+    const desc=(S.customStrains||[]).some(c=>c&&c.id!==gid&&(c.motherId===gid||c.fatherId===gid));
+    const f2=num(st.genNum,1)>=2;
+    genMet=desc||f2;
+    genLabel=desc?'Line advanced (descendant bred)':(f2?'F2+ generation grown':'F2+ generation grown');
+  }else{
+    let runs=0;
+    (S.keepers||[]).forEach(k=>{ if(k&&k.strainId===gid) runs=Math.max(runs,int(k.clonesGrown,0)); });
+    genMet=runs>=P0T_PRES_CLONES; genLabel='Keeper line maintained ('+runs+'/'+P0T_PRES_CLONES+' clone runs)';
+  }
+  const harv=int((((S.stats||{}).strainGrown||{})[gid]||{}).count,0);
+  const e=P0T_entry(gid,false);
+  return [
+    {id:'gen',label:genLabel,met:genMet},
+    {id:'harv',label:'Harvests of this genetic',cur:harv,need:P0T_PRES_HARVESTS,met:harv>=P0T_PRES_HARVESTS},
+    {id:'stress',label:'Stress test passed',met:!!(e&&e.stressTested)},
+    {id:'effort',label:'Seal it in the vault (your call)',met:false} /* informational: granted via explicit action */
+  ];
+}
+function P0T_legReqs(gid){
+  const e=P0T_entry(gid,false);
+  const presDay=e&&e.day?int(e.day[3],0):0;
+  const daysSince=presDay?Math.max(0,int(S.day,1)-presDay):0;
+  const harv=int((((S.stats||{}).strainGrown||{})[gid]||{}).count,0);
+  let rank=false; try{ rank=p0Level('preservation')>=3; }catch(e2){}
+  return [
+    {id:'tier',label:'Genetic PRESERVED',met:!!(e&&int(e.tier,0)>=3)},
+    {id:'days',label:'Preserved across time',cur:daysSince,need:P0T_LEG_DAYS,met:daysSince>=P0T_LEG_DAYS},
+    {id:'harv',label:'Verified harvests',cur:harv,need:P0T_LEG_HARVESTS,met:harv>=P0T_LEG_HARVESTS},
+    {id:'rank',label:'Project 0 preservation rank 3+',met:rank}
+  ];
+}
+function P0T_reqsMet(reqs){ return Array.isArray(reqs)&&reqs.length>0&&reqs.every(r=>r&&r.met); }
+function P0T_nextReqs(gid,tier){
+  if(tier===0) return P0T_docReqs(gid);
+  if(tier===1) return P0T_verReqs(gid);
+  if(tier===2) return P0T_presReqs(gid);
+  if(tier===3) return P0T_legReqs(gid);
+  return [];
+}
+/* ---- the sweep: advance tiers when requirements are genuinely met.
+   Tier 3 (PRESERVED) is NEVER auto-granted — it requires the player's
+   explicit SEAL action (the "effort paid"). No tier can be skipped:
+   each step's full requirement set is checked in order. ---- */
+function P0T_sweep(opts){
+  opts=opts||{};
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.p0vault||typeof S.p0vault!=='object') S.p0vault={};
+    P0T_knownIds().forEach(gid=>P0T_entry(gid,true));
+    Object.keys(S.p0vault).forEach(gid=>{
+      const e=S.p0vault[gid]; if(!e||typeof e!=='object') return;
+      let t=clamp(int(e.tier,0),0,4), guard=0;
+      while(guard++<6){
+        if(t===0&&P0T_reqsMet(P0T_docReqs(gid))){ t=1; P0T_stampTier(e,1); }
+        else if(t===1&&P0T_reqsMet(P0T_verReqs(gid))){
+          t=2; P0T_stampTier(e,2);
+          if(opts.silent){ e.vCine=true; } /* grandfathered on load: no popup, moment kept */
+          else P0T_verifiedCeremony(gid);
+        }
+        else if(t===3&&P0T_reqsMet(P0T_legReqs(gid))){
+          t=4; P0T_stampTier(e,4);
+          if(!opts.silent){ try{ toast(icon('crown-gold','ge-ic-md')+' <b>PROJECT 0 LEGACY</b> \u2014 '+esc(P0T_name(gid))+' enters the permanent archive.'); }catch(e2){} }
+        }
+        else break;
+      }
+      e.tier=t;
+    });
+    if(!opts.silent){ try{ save(); }catch(e){} }
+  }catch(e){}
+}
+/* harvest hook: stamp stress-test evidence, then sweep.
+   A "documented harvest under recorded stress" = minHealth<=65 while
+   quality held >=70. Per-genetic evidence did not exist before this. */
+function P0T_onHarvest(gid,minHealth,quality){
+  try{
+    if(!gid||typeof S==='undefined'||!S||!S.p0vault) return;
+    if(!P0T_isCandidate(gid)) return;
+    const e=P0T_entry(gid,true); if(!e) return;
+    if(!e.stressTested&&num(minHealth,100)<=65&&num(quality,0)>=70){
+      e.stressTested=true; e.stressTestDay=Math.max(1,int(S.day,1));
+      try{ codexNote(gid,'STRESS TEST PASSED \u2014 held quality through a rough run.'); }catch(e2){}
+    }
+    P0T_sweep();
+  }catch(e){}
+}
+/* ---- PROJECT 0 VERIFIED: a major Shocker OwnZ moment.
+   Industrial presentation (black/charcoal/crimson/burnt orange, scan +
+   smoke, gas-mask influence — the underground-lab seal), subtle haptics
+   via the CAP bridge with navigator.vibrate fallback (PR_haptic).
+   Idempotent: vCine is set BEFORE any UI, so exactly one ceremony per
+   genetic no matter how often the sweep re-checks. Reuses cineOverlay
+   (the elite-expression / Wave-2 ceremony infra) — no new modal system. */
+function P0T_verifiedCeremony(gid){
+  try{
+    const e=P0T_entry(gid,false);
+    if(!e||e.vCine) return false;
+    e.vCine=true; /* exactly-once: set BEFORE any UI can fail */
+    try{ if(typeof MS_onP0Verified==='function') MS_onP0Verified(); }catch(e2){} /* P3-W6 milestone: FIRST P0 VERIFIED GENETIC */
+    const nm=P0T_name(gid);
+    cineOverlay(
+     '<div class="p0v-stage"><div class="pr-smoke" aria-hidden="true"></div><div class="pr-scan" aria-hidden="true"></div>'+
+     '<div class="p0v-mask">'+gasmaskSVG('p0v-mask-ic')+'</div>'+
+     '<div class="p0v-kicker">'+icon('project0','ge-ic-sm')+'<span>SHOCKER OWNZ // PRESERVATION VAULT</span></div>'+
+     '<div class="ge-display p0v-title pr-glitch" data-text="GENETIC VERIFIED">GENETIC VERIFIED</div>'+
+     '<div class="p0v-name">'+esc(nm)+'</div>'+
+     '<div class="p0v-tiers">'+P0T_TIERS.slice(0,3).map((t,i)=>'<span class="p0v-tier'+(i<2?' done':' now')+'">'+t+'</span>').join('<span class="p0v-arrow">\u2192</span>')+'</div>'+
+     '<div class="p0v-sub">Keeper confirmed. Clone run verified. Stability proven.<br>This genetic is under Project 0 protection.</div>'+
+     '<button type="button" class="ge-btn ge-btn-gold ge-btn-block" id="p0v-ok">'+icon('project0','ge-ic-md')+'SEAL THE RECORD</button></div>',
+     'cine-p0verified',0);
+    const back=document.querySelector('#modal-root .cine-back.cine-p0verified');
+    if(back){
+      const btn=back.querySelector('#p0v-ok');
+      if(btn) btn.onclick=()=>{ back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),300); };
+    }
+    try{ PR_haptic('alert'); }catch(e2){}
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e2){} },350);
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e2){} },700);
+    try{ save(); }catch(e2){}
+    return true;
+  }catch(e){ return false; }
+}
+/* ---- PRESERVED: the explicit player commitment ("effort paid").
+   Perks are non-economic by design: a tiny capped breeder-rep nod
+   (documented below), a codex distinction — no cash, no multipliers. */
+function P0T_perkTotal(){
+  let n=0;
+  try{ Object.keys(S.p0vault||{}).forEach(gid=>{ const e=S.p0vault[gid]; if(e&&e.perkGranted) n+=P0T_PERK_REP; }); }catch(e){}
+  return Math.min(n,P0T_PERK_CAP);
+}
+function P0T_preserve(gid){
+  try{
+    const e=P0T_entry(gid,false);
+    if(!e||int(e.tier,0)!==2) return false;
+    const reqs=P0T_presReqs(gid).filter(r=>r.id!=='effort');
+    if(!P0T_reqsMet(reqs)){ try{ toast(icon('lock','ge-ic-md')+' Not ready \u2014 the vault keeps its standards.'); }catch(e2){} return false; }
+    const nm=P0T_name(gid);
+    confirmModal('SEAL IN THE VAULT',
+      'Commit \u201c'+nm+'\u201d to the Project 0 vault as PRESERVED? This is permanent \u2014 the genetic joins the preservation archive. Perk: +'+P0T_PERK_REP+' breeder rep (capped at +'+P0T_PERK_CAP+' total). No cash, no multipliers \u2014 it\u2019s never about the money.',
+      ()=>{
+        e.tier=3; P0T_stampTier(e,3);
+        if(!e.perkGranted){
+          e.perkGranted=true;
+          const room=P0T_PERK_CAP-P0T_perkTotal();
+          if(room>0){ try{ gainRep(Math.min(P0T_PERK_REP,room)); }catch(e2){} }
+        }
+        try{ codexNote(gid,'PRESERVED \u2014 sealed in the Project 0 vault. It\u2019s never about the money \u2014 only the genetics.'); }catch(e2){}
+        try{ PR_haptic('achievement'); }catch(e2){}
+        try{ toast(icon('project0','ge-ic-md')+' <b>'+esc(nm)+'</b> PRESERVED in the Project 0 vault.'); }catch(e2){}
+        try{ save(); }catch(e2){}
+        try{ if(current==='project0') RENDER.project0(); }catch(e2){}
+      });
+    return true;
+  }catch(e){ return false; }
+}
+/* ---- migration: sane defaults for legacy saves. Candidate entries are
+   created from real flag evidence; tiers are computed honestly from
+   tracked state; the VERIFIED cinematic is grandfathered (no popup on
+   load); PRESERVED/LEGACY are never auto-granted here. ---- */
+function P0T_backfill(){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.p0vault||typeof S.p0vault!=='object') S.p0vault={};
+    Object.keys(S.p0vault).forEach(gid=>{
+      const e=S.p0vault[gid];
+      if(!e||typeof e!=='object'){ delete S.p0vault[gid]; return; }
+      e.tier=clamp(int(e.tier,0),0,4);
+      if(!e.day||typeof e.day!=='object') e.day={};
+      e.vCine=!!e.vCine; e.stressTested=!!e.stressTested; e.perkGranted=!!e.perkGranted;
+      e.stressTestDay=Math.max(0,int(e.stressTestDay,0));
+      if(typeof e.gname!=='string') e.gname=P0T_name(gid);
+    });
+    P0T_knownIds().forEach(gid=>P0T_entry(gid,true));
+    P0T_sweep({silent:true});
+  }catch(e){}
+}
+/* ---- P0 screen: the preservation pipeline ---- */
+function P0T_reqRow(r){
+  const rhs=(r.need!==undefined&&r.need!==null)
+    ?'<b class="ge-num">'+int(r.cur,0)+'/'+r.need+'</b>'
+    :'<b class="ge-num">'+(r.met?'MET':'\u2014')+'</b>';
+  return '<div class="ge-datarow p0t-req'+(r.met?' is-met':'')+'"><span>'+icon(r.met?'check':'x','ge-ic-sm')+esc(r.label)+'</span>'+rhs+'</div>';
+}
+function P0T_pipelineHTML(){
+  const ids=P0T_knownIds();
+  let html='<div class="ge-section-title">'+icon('project0','ge-ic-sm')+'PRESERVATION PIPELINE<span class="ge-spread ge-num ge-muted">'+ids.length+' GENETICS</span></div>';
+  if(!ids.length)
+    return html+'<div class="ge-card ge-empty"><div>'+icon('project0','ge-ic-xl')+'</div><h3>NO GENETICS IN THE PIPELINE</h3><p class="ge-muted">Flag a phenotype for Project 0, crown a keeper, or submit a custom from its ceremony \u2014 the preservation program starts there.</p></div>';
+  const groups=[[],[],[],[],[]];
+  ids.forEach(gid=>{ const e=P0T_entry(gid,false); groups[clamp(int(e?e.tier:0,0),0,4)].push(gid); });
+  P0T_TIERS.forEach((tname,ti)=>{
+    const g=groups[ti]; if(!g.length) return;
+    html+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon(ti>=4?'crown-gold':'project0','ge-ic-md')+tname+'</h3><span class="ge-spread ge-num ge-muted">'+g.length+'</span></div>';
+    g.forEach(gid=>{
+      html+='<div class="p0t-row"><div class="p0t-rowhead"><b>'+esc(P0T_name(gid))+'</b>'+
+        '<span class="ge-badge '+(ti>=4?'ge-badge-legendary':ti===3?'ge-badge-legendary':ti===2?'ge-badge-keeper':'ge-badge')+'">'+tname+'</span></div>';
+      if(ti<4){
+        const reqs=P0T_nextReqs(gid,ti), metN=reqs.filter(r=>r.met).length;
+        html+='<div class="ge-progress-meta"><span class="ge-label">NEXT: '+P0T_TIERS[ti+1]+'</span><b class="ge-num">'+metN+'/'+reqs.length+'</b></div>'+
+          '<div class="ge-progress'+(ti>=2?' ge-progress-gold':'')+'"><i style="width:'+Math.round(metN/Math.max(1,reqs.length)*100)+'%"></i></div>'+
+          reqs.map(P0T_reqRow).join('');
+        if(ti===2&&P0T_reqsMet(reqs.filter(r=>r.id!=='effort'))){
+          html+='<button type="button" class="ge-btn ge-btn-gold ge-btn-block" data-p0t-seal="'+esc(gid)+'">'+icon('project0','ge-ic-md')+'SEAL IN THE VAULT</button>';
+        }
+      }else{
+        html+='<p class="ge-caption ge-muted">'+icon('crown-gold','ge-ic-sm')+' Permanent place of honor \u2014 this genetic is Project 0 history.</p>';
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+function P0T_wirePipeline(r){
+  if(!r) return;
+  r.querySelectorAll('[data-p0t-seal]').forEach(b=>{ b.onclick=()=>{ P0T_preserve(b.dataset.p0tSeal); }; });
+}
+/* ---- profile: LEGACY place of honor ---- */
+function P0T_legacyHTML(){
+  const ids=P0T_knownIds().filter(gid=>{ const e=P0T_entry(gid,false); return e&&int(e.tier,0)>=4; });
+  if(!ids.length) return '';
+  return '<div class="ge-section-title">'+icon('crown-gold','ge-ic-sm')+'PROJECT 0 LEGACY<span class="ge-spread ge-num">'+ids.length+'</span></div>'+
+   '<div class="ge-card ge-card-flat"><p class="ge-caption ge-muted">Genetics preserved for the ages. It\u2019s never about the money \u2014 only the genetics.</p>'+
+   ids.map(gid=>'<div class="ge-datarow"><span>'+icon('crown-gold','ge-ic-sm')+esc(P0T_name(gid))+'</span><b class="ge-num ge-gold-text">LEGACY</b></div>').join('')+
+   /* P3-W6 endgame cross-link: a LEGACY genetic is never a dead end -
+      its lineage lives on in the codex and the breeding lab. */
+   '<p class="ge-caption ge-muted">Lineage secured. Next: complete '+(ids.length===1?'its':'their')+
+   ' Living Codex entr'+(ids.length===1?'y':'ies')+' or breed the line forward.</p>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="genetics">CODEX</button>'+
+   '<button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="breeding">BREEDING LAB</button></div></div>';
+}
+
 
 
 /* ============================================================
@@ -2113,9 +3215,9 @@ const RARITY_META={
  elite:{label:'ELITE',ico:'trophy',cls:'r-elite'},
  legendary:{label:'LEGENDARY',ico:'crown-gold',cls:'r-legendary'}
 };
-const KEEPER_CAPS=[3,5,10,20,50];
-const KEEPER_CAP_COSTS=[0,2500,12000,45000,120000];
-const MOTHER_CAP_COSTS=[0,5000,15000,40000];
+const KEEPER_CAPS=[3,5,10,20,50,80]; /* P3-W4: level 5 (80 slots) needs the Breeding Lab */
+const KEEPER_CAP_COSTS=[0,2500,12000,45000,120000,250000];
+const MOTHER_CAP_COSTS=[0,5000,15000,40000,80000,150000]; /* P3-W4: slots 5-6 need the Breeding Lab */
 
 /* per-strain pheno history + mission helpers */
 function phist(strainId){
@@ -2126,6 +3228,7 @@ function phist(strainId){
 function maxPhenoTested(s){ let m=0; Object.values(s.phenoHistory||{}).forEach(h=>{ m=Math.max(m,num(h.tested,0)); }); return m; }
 function keeperStrainCount(s){ return new Set((s.keepers||[]).map(k=>k.strainId)).size; }
 function keeperCapGate(lvl){
+  if(lvl>=5) return S.facility>=6?null:'Requires the Breeding Lab facility'; /* P3-W4 */
   if(lvl>=4) return S.facility>=5?null:'Requires the Preservation Vault facility';
   if(lvl>=3) return S.facility>=3?null:'Requires the Warehouse facility';
   return null;
@@ -2574,9 +3677,15 @@ function INV_add(item){
 /* ---------------- Harvest ---------------- */
 function harvestPlant(p){
   if(!p||p.harvested) return; /* QA GE-303: idempotency — already harvested (flag survives detached refs) */
-  p.harvested=true;
   const st=getStrain(p.strainId);
+  /* GE-DP-500b: unknown/tampered strain bails before ANY mutation — st.ft and
+     genPheno(st) below would throw on undefined, bricking the plant. */
+  if(!st){ try{ toast(icon('x','ge-ic-md')+' Unknown genetics — cannot harvest.'); }catch(e){} return; }
   if(stageOf(p)<5){ toast(icon('clock','ge-ic-md')+' Not ready yet \u2014 '+stageName(stageOf(p))+'.'); return; }
+  /* W4: flag is set AFTER the ready gate. Marking it before bricked unready
+     plants (marked harvested, never removed, never harvestable again). The
+     re-entrancy guard still holds: it is set before any grant code below. */
+  p.harvested=true;
   if(!p.pheno){ p.pheno=genPheno(st); p.pheno.num=nextPhenoNum(p.strainId); }
   const ph=p.pheno;
   sanitizePheno(ph);
@@ -2597,8 +3706,16 @@ function harvestPlant(p){
   let quality=(G.pot*0.25+G.terp*0.15+G.resin*0.15+G.stab*0.1);
   quality=quality*0.5 + (p.health*0.3) + (ev*20);
   quality+=q.drycure*3 + q.sensors*2 - p.stress*0.15;
+  /* P3-W4: Project 0 Facility dry & cure rooms — +5 final harvest quality */
+  try{ if(typeof P3W4_cureQualBonus==='function') quality+=P3W4_cureQualBonus(); }catch(e){}
+  /* P3-W5: Master Grower on staff — slight final-quality lift, hard-capped by clamp below */
+  try{ if(typeof P3W5_masterGrowerBonus==='function') quality+=P3W5_masterGrowerBonus(); }catch(e){}
   if(p.day>st.ft+7) quality-=10; // harvested late
   quality=clamp(quality*D.qualityMult*legQualB,5,100); /* P1.0: legacy prestige bonus, capped +24% */
+  /* WAVE 0 FIX (a): consume one-harvest goodEvent/mutation boosts at the advertised "+quality"
+     magnitude, then clear so they cannot stack or persist; hard-capped by clamp */
+  quality=clamp(quality+num(p.terpBoost,0)+num(p.resinBoost,0),5,100);
+  p.terpBoost=0; p.resinBoost=0;
   const potency=clamp(G.pot*0.6+quality*0.4,5,100);
   const terpenes=clamp(G.terp*0.6+quality*0.4,5,100);
   const bagAppeal=clamp(ph.bagAppeal*0.5+quality*0.5,5,100);
@@ -2608,6 +3725,7 @@ function harvestPlant(p){
     bagAppeal:Math.round(bagAppeal), resin:Math.round(resin), type:'flower', custom:!!st.custom });
   S.plants=S.plants.filter(x=>x.id!==p.id);
   const oz=Math.round(yieldOz*10)/10, qq=Math.round(quality);
+  try{ if(typeof P3W5_onHarvestRep==='function') P3W5_onHarvestRep(qq); }catch(e){} /* P3-W5: elite harvests build Grower Rep */
   /* ---- expansion: deep harvest grading (Builder B) + perfect-grow note (Builder C) ---- */
   try{ if(typeof EX_harvestNote==='function') EX_harvestNote(qq,p.minHealth); }catch(e){}
   try{ if(typeof TY_harvestHook==='function') TY_harvestHook(st,qq,oz,p); }catch(e){}
@@ -2625,6 +3743,8 @@ function harvestPlant(p){
   }catch(e){}
   const sg=S.stats.strainGrown[st.id]||{count:0,best:0,yield:0};
   sg.count++; sg.best=Math.max(sg.best,qq); sg.yield=Math.max(num(sg.yield,0),num(oz,0)); S.stats.strainGrown[st.id]=sg;
+  /* P3-W3: stress-test evidence + preservation-tier sweep (additive) */
+  try{ if(typeof P0T_onHarvest==='function') P0T_onHarvest(st.id,p.minHealth,qq); }catch(e){}
   /* P2-W2 Living Codex: harvest -> harvested + best records */
   try{ codexOnHarvest(st.id,{yieldOz:oz,potency:Math.round(potency),terpenes:Math.round(terpenes),resin:Math.round(resin)}); }catch(e){}
   try{ if(ph&&ph.num) codexNote(st.id,'Harvested pheno #'+int(ph.num,0)+' \u2014 Q'+qq+', '+fmtW(oz)); }catch(e){}
@@ -2634,6 +3754,7 @@ function harvestPlant(p){
   S.stats.bestBagAppeal=Math.max(S.stats.bestBagAppeal,Math.round(bagAppeal));
   S.stats.biggestHarvest=Math.max(S.stats.biggestHarvest,oz);
   try{ ME_first('harvest',{strainId:st.id,strainName:st.name,oz:oz,quality:qq,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory: first */
+  try{ if(typeof MS_onHarvest==='function') MS_onHarvest(); }catch(e){} /* P3-W6 milestone: FIRST HARVEST */
   try{ ME_recordHarvest(st,oz,potency,terpenes,resin); }catch(e){} /* P2.5 player memory: records */
   if(qq>=80) S.stats.q80Harvests++;
   if(p.health>=90) S.stats.highHealthHarvests++;
@@ -2716,7 +3837,17 @@ function harvestPlant(p){
       }
     }catch(e){}
   }catch(e){} };
-  if(eliteCinePending){ try{ eliteExpressionCeremony(st,ph); }catch(e){} setTimeout(showReport,4400); }
+  /* W4: if the player dismisses the elite ceremony via Android back / backdrop,
+     show the harvest report AT ONCE instead of letting it pop up 4.4s later
+     (auto-dismiss and LOG IT keep the staged timing). */
+  if(eliteCinePending){
+    let __eliteBack=null;
+    try{ eliteExpressionCeremony(st,ph); __eliteBack=document.querySelector('#modal-root .cine-back.cine-elite'); }catch(e){}
+    let __fired=false;
+    const __fire=()=>{ if(__fired) return; __fired=true; showReport(); };
+    if(__eliteBack) __eliteBack.__geOnDismiss=__fire;
+    setTimeout(__fire,4400);
+  }
   else showReport();
 }
 
@@ -2921,18 +4052,21 @@ function TU_cloneKeeper(keeperId){
    The lab is strain-level; the source pheno is stashed as a session hint and
    displayed on the breeding screen. */
 function TU_breedFromReport(report){
-  try{ if(!report) return; TU_breedFromStrain(report.strainId,report.strainName,report.phenoNum,report.overall,report.rarity); }catch(e){}
+  try{ if(!report) return; TU_breedFromStrain(report.strainId,report.strainName,report.phenoNum,report.overall,report.rarity,report.genetics); }catch(e){}
 }
 function TU_breedFromKeeper(keeperId){
   try{
     const k=(S.keepers||[]).find(x=>x.id===keeperId); if(!k) return;
-    TU_breedFromStrain(k.strainId,k.strainName,k.phenoNum,k.overall,k.rarity);
+    TU_breedFromStrain(k.strainId,k.strainName,k.phenoNum,k.overall,k.rarity,k.genetics);
   }catch(e){}
 }
-function TU_breedFromStrain(strainId,strainName,phenoNum,overall,rarity){
+/* P3-W1: the session hint now also carries the pheno's full 18-trait genetics record,
+   so the breeding lab can inherit from the PHENO's actual traits (not the strain average).
+   The 6th arg is optional - older call sites keep working. */
+function TU_breedFromStrain(strainId,strainName,phenoNum,overall,rarity,genetics){
   if(!strainId) return;
   try{ breedA=strainId; }catch(e){}
-  try{ window.__breedPhenoHint={strainId:strainId,strainName:String(strainName||strainId),phenoNum:int(phenoNum,0),overall:int(overall,0),rarity:rarity||'common'}; }catch(e){}
+  try{ window.__breedPhenoHint={strainId:strainId,strainName:String(strainName||strainId),phenoNum:int(phenoNum,0),overall:int(overall,0),rarity:rarity||'common',genetics:P3B_sanitizePhenoGenetics(genetics)}; }catch(e){}
   show('breeding');
 }
 
@@ -3129,6 +4263,8 @@ function advanceDay(){
   gainXP(5);
   save(); updateHUD();
   checkMissions(); checkAchievements();
+  try{ if(typeof P0T_sweep==='function') P0T_sweep(); }catch(e){} /* P3-W3: LEGACY day-requirement ticks with time */
+  try{ if(typeof MS_sweep==='function') MS_sweep(); }catch(e){} /* P3-W6: milestone backstop (money milestones, save edits) */
   expansionTick();
   const queue=rollEvents();
   refreshGrowUI();
@@ -3414,7 +4550,7 @@ RENDER.dispensary=function(){
     const it=S.inventory.find(x=>x.id===+b.dataset.proc); if(!it) return;
     const m=modal('<h3 class="ge-h2">'+icon('flask','ge-ic-lg')+'PROCESS '+esc(it.strainName)+'</h3>'+
      '<p class="ge-body ge-muted">'+it.amount+' oz available.</p>'+
-     '<label class="ge-label" for="proc-amt">Amount (oz)</label><input class="ge-dp-input" type="number" id="proc-amt" min="1" max="'+it.amount+'" value="1">'+
+     '<label class="ge-label" for="proc-amt">Amount (oz)</label><input class="ge-dp-input" type="number" inputmode="numeric" enterkeyhint="done" id="proc-amt" min="1" max="'+it.amount+'" value="1">'+
      '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="proc-conc">CONCENTRATE<br><span class="ge-caption ge-muted">→18%/oz $20</span></button>'+
      '<button class="ge-btn ge-btn-gold" id="proc-ed">EDIBLES<br><span class="ge-caption ge-muted">→6u/oz $25 • LAB LV2+</span></button></div>'+
      '<button class="ge-btn ge-btn-ghost ge-btn-block" id="proc-x">'+icon('x','ge-ic-md')+'CANCEL</button>');
@@ -3472,9 +4608,13 @@ function buyerModal(invId){
 
 function sellToBuyer(invId,buyerId){
   const it=S.inventory.find(x=>x.id===invId); if(!it) return;
+  /* GE-DP-502: commit-time guard — tampered in-memory amounts/fields must never
+     reach cash math (negative amounts deducted cash; NaN amounts poisoned it). */
+  if(!(it.amount>0)) return;
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
   const wxm=(typeof WX_sellMult==='function')?WX_sellMult(it.strainId,it,by.id):1;
   const total=pricePerOz(it)*it.amount*wxm;
+  if(!Number.isFinite(total)||total<0) return;
   const ntPreSale=(typeof NT_affordSig==='function')?NT_affordSig():'';
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   try{ NT_onSale(total,ntPreSale); }catch(e){} /* P1.6: big sale -> upgrade nudge (read-only) */
@@ -3534,6 +4674,7 @@ RENDER.empire=function(){
     if(S.cash<f.cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(f.cost)+'.'); return; }
     const prevT=facTierIdx();
     S.cash-=f.cost; S.facility=i; gainXP(150); gainRep(20);
+    try{ if(typeof MS_onFacility==='function') MS_onFacility(i); }catch(e){} /* P3-W6 milestone: FIRST WAREHOUSE */
     const newT=facTierIdx();
     save(); updateHUD(); checkMissions(); RENDER.empire();
     EM_facilityUnlockCine(prevT,newT,f.name);
@@ -3556,6 +4697,8 @@ RENDER.empire=function(){
   });
   r.querySelectorAll('[data-fire]').forEach(b=>b.onclick=()=>{ fireCrew(b.dataset.fire); }); /* QA GE-405 */
   r.querySelectorAll('[data-buymother]').forEach(b=>b.onclick=()=>{
+    const capMax=(typeof P3W4_motherCapMax==='function')?P3W4_motherCapMax():4; /* P3-W4 */
+    if(int(S.motherCapacity,0)>=capMax){ toast(icon('lock','ge-ic-md')+' Mother room maxed. Slots 5–6 need the Breeding Lab facility.'); return; }
     const cost=MOTHER_CAP_COSTS[S.motherCapacity];
     if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
     S.cash-=cost; S.motherCapacity++; gainXP(80);
@@ -3565,6 +4708,11 @@ RENDER.empire=function(){
   r.querySelectorAll('[data-ge-auto]').forEach(b=>b.onclick=()=>show('automation'));
   wireCompete(r);
   try{ if(typeof EX_wireEmpire==='function') EX_wireEmpire(); }catch(e){}
+  /* P3-W6: wire endgame cross-link buttons (e.g. max-facility -> records) */
+  r.querySelectorAll('[data-ex-go]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.exTab) empireTab=b.dataset.exTab;
+    show(b.dataset.exGo);
+  });
 };
 
 
@@ -3672,6 +4820,7 @@ RENDER.project0=function(){
    P0V_tracksHTML()+
    '<div class="ge-section-title">'+icon('trophy','ge-ic-sm')+'TRACK REWARDS</div>'+
    '<div class="ge-card ge-card-flat ge-p0-rewards">'+P0V_rewardsHTML()+'</div>'+
+   (typeof P0T_pipelineHTML==='function'?P0T_pipelineHTML():'')+
    '<div class="ge-section-title">'+icon('dna','ge-ic-sm')+'HOW TO EARN</div>'+
    '<div class="ge-card ge-card-flat">'+
     '<div class="ge-datarow"><span>'+icon('genetics','ge-ic-md')+'Breeding</span></div>'+
@@ -3685,6 +4834,7 @@ RENDER.project0=function(){
    '</div>';
   r.innerHTML=html;
   try{ if(typeof EX_wireP0==='function') EX_wireP0(); }catch(e){}
+  try{ if(typeof P0T_wirePipeline==='function') P0T_wirePipeline(r); }catch(e){} /* P3-W3: SEAL buttons */
 };
 
 
@@ -3811,6 +4961,15 @@ function confirmKeeper(report){
     /* duplicate prevention: same strain + pheno number */
     const dupe=S.keepers.find(k=>k.strainId===strainId&&int(k.phenoNum,0)===phenoNum);
     if(dupe){ toast(icon('crown','ge-ic-md')+' Already a keeper: <b>'+esc(String(report.strainName||dupe.strainName))+' #'+phenoNum+'</b>'); return false; }
+    /* GE-DP-501: capacity re-checked at COMMIT time. markKeeper only validated
+       when the ceremony opened; the vault could fill behind the modal, and the
+       confirm then overflowed it. Mirror markKeeper's full-vault path. */
+    if(S.keepers.length>=S.keeperCapacity){
+      S.stats.vaultFilledOnce=int(S.stats.vaultFilledOnce,0)+1;
+      try{ save(); }catch(e){}
+      vaultFullModal(report);
+      return false;
+    }
     const g=report.genetics&&typeof report.genetics==='object'?report.genetics:{};
     const hv=report.harvest&&typeof report.harvest==='object'?report.harvest:{};
     let geneticsCopy={};
@@ -3840,6 +4999,7 @@ function confirmKeeper(report){
     S.keepers.push(k);
     S.stats.keepersFound=int(S.stats.keepersFound,0)+1;
     try{ ME_first('keeper',{strainId:strainId,strainName:k.strainName,phenoNum:k.phenoNum,rarity:k.rarity,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+    try{ if(typeof MS_onKeeper==='function') MS_onKeeper(); }catch(e){} /* P3-W6 milestone: FIRST KEEPER */
     try{ codexOnKeeper(strainId,k); codexNote(strainId,'Keeper selected: '+k.strainName+' #'+k.phenoNum+' ('+(k.rarity||'common')+')'); }catch(e){} /* P2-W2: keeper -> keeper ref */
     try{ const h=phist(strainId); if(h) h.keepers=int(h.keepers,0)+1; }catch(e){}
     try{
@@ -3853,6 +5013,7 @@ function confirmKeeper(report){
     toast(icon('crown-gold','ge-ic-md')+' KEEPER SELECTED<br><b>'+esc(k.strainName)+' — PHENO #'+k.phenoNum+'</b><br>ELITE GENETICS PRESERVED');
     try{ if(typeof TY_keeperHook==='function') TY_keeperHook(report); }catch(e){}
     save(); updateHUD(); checkMissions(); checkAchievements();
+    try{ if(typeof P0T_sweep==='function') P0T_sweep(); }catch(e){} /* P3-W3: keeper -> preservation pipeline */
     if(current==='keepers') RENDER.keepers();
     try{ NT_onKeeper(k); }catch(e){} /* P1.6: keeper -> clone CTA (read-only) */
     return true;
@@ -3961,11 +5122,16 @@ function pickComparePartner(idA){
 }
 
 /* ---- mothers & clones ---- */
+/* WAVE 0 FIX (b): collision-proof mother IDs — monotonic per-session counter + timestamp.
+   No two calls in the same tick can collide, even if Date.now() is frozen/mocked in tests.
+   IDs are generated once and persisted on the mother object, so save/load keeps them stable. */
+let motherSeq=0;
+function nextMotherId(){ return 'm'+Date.now().toString(36)+'-'+(motherSeq++).toString(36); }
 function promoteMother(keeperId){
   const k=S.keepers.find(x=>x.id===keeperId); if(!k) return;
   if(S.mothers.length>=S.motherCapacity){ toast(icon('leaf','ge-ic-md')+' Mother room full! Upgrade capacity in EMPIRE.'); return; }
   if(S.mothers.some(mm=>mm.keeperId===keeperId)){ toast('Already a mother plant.'); return; }
-  S.mothers.push({id:'m'+Date.now()+rndi(100,999),keeperId:k.id,strainId:k.strainId,strainName:k.strainName,
+  S.mothers.push({id:nextMotherId(),keeperId:k.id,strainId:k.strainId,strainName:k.strainName,
     phenoNum:k.phenoNum,genetics:JSON.parse(JSON.stringify(k.genetics)),traits:k.traits.slice(),
     rarity:k.rarity,legendaryTrait:k.legendaryTrait||null,dayCreated:S.day,clonesTaken:0,
     runs:0,bestQ:0,bestY:0,qualities:[],yields:[],awards:[]});
@@ -4062,12 +5228,28 @@ const KEEPER_SORTS=[['overall','OVERALL'],['resinPot','RESIN'],['terpenePot','TE
 RENDER.keepers=function(){
   const r=$('keepers-root');
   let html='<div class="ge-screen">'+screenHead('keepers','KEEPER VAULT')+'<div class="ge-tabs" role="tablist">'+
-   [['vault','KEEPERS ('+S.keepers.length+'/'+S.keeperCapacity+')','keepers'],['mothers','MOTHERS ('+S.mothers.length+'/'+S.motherCapacity+')','mothers']]
+   [['vault','KEEPERS ('+S.keepers.length+'/'+S.keeperCapacity+')','keepers'],['mothers','MOTHERS ('+S.mothers.length+'/'+S.motherCapacity+')','mothers'],
+    ['seeds','SEED STOCK','grow'],['customs','CUSTOMS ('+(S.customStrains||[]).length+')','dna'],
+    ['archive','ARCHIVE ('+(S.phenoArchive||[]).length+')','box'],['project0','PROJECT 0','project0']]
    .map(t=>'<button class="ge-tab'+(keeperTab===t[0]?' is-active':'')+'" data-ktab="'+t[0]+'" role="tab" aria-selected="'+(keeperTab===t[0])+'">'+icon(t[2],'ge-ic-sm')+t[1]+'</button>').join('')+'</div>'+(S.keepers.length?npcBlurb('archive'):'');
-  html+='<div class="vault-shelf">'+(keeperTab==='vault'?keepersVaultHtml():mothersHtml())+'</div>';
+  /* P3-W2: keeper-vault screen extended with breeder library tabs (never forked) */
+  let shelf;
+  if(keeperTab==='vault') shelf=keepersVaultHtml();
+  else if(keeperTab==='mothers') shelf=mothersHtml();
+  else if(keeperTab==='seeds') shelf=P3W2_seedsHtml();
+  else if(keeperTab==='customs') shelf=P3W2_customsHtml();
+  else if(keeperTab==='archive') shelf=P3W2_archiveHtml();
+  else if(keeperTab==='project0') shelf=P3W2_p0Html();
+  else { keeperTab='vault'; shelf=keepersVaultHtml(); }
+  html+='<div class="vault-shelf">'+shelf+'</div>';
   html+='</div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-ktab]').forEach(t=>t.onclick=()=>{ keeperTab=t.dataset.ktab; keeperPage=0; RENDER.keepers(); });
+  /* P3-W6: wire endgame cross-link buttons (e.g. maxed-vault -> Project 0) */
+  r.querySelectorAll('[data-ex-go]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.exTab) empireTab=b.dataset.exTab;
+    show(b.dataset.exGo);
+  });
   wireKeepers(r);
 };
 
@@ -4090,7 +5272,10 @@ function keepersVaultHtml(){
     const cost=KEEPER_CAP_COSTS[next], gate=keeperCapGate(next);
     html+='<div class="ge-datarow"><span>'+icon('plus','ge-ic-sm')+'Next: '+KEEPER_CAPS[next]+' slots</span><b class="ge-num">'+fmt$(cost)+'</b></div>'+
      (gate?'<p class="ge-caption">'+icon('lock','ge-ic-sm')+' '+esc(gate)+'</p>':'<button class="ge-btn ge-btn-gold" id="cap-up">'+icon('plus','ge-ic-sm')+'UPGRADE VAULT</button>');
-  } else html+='<p class="ge-caption">'+icon('check','ge-ic-sm')+' Vault maxed at '+S.keeperCapacity+' slots.</p>';
+  } else html+='<p class="ge-caption">'+icon('check','ge-ic-sm')+' Vault maxed at '+S.keeperCapacity+' slots.</p>'+
+   /* P3-W6 endgame cross-link: a full vault points at preservation, not at stopping. */
+   '<p class="ge-caption ge-muted">Every keeper has a home. The frontier now: push a line through the Project 0 tiers to LEGACY.</p>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="project0">PROJECT 0</button></div>';
   html+='</div>';
   if(!S.keepers.length){
     return html+'<div class="ge-card ge-empty"><div>'+icon('keepers','ge-ic-xl')+'</div><h3>NO KEEPERS YET</h3><p>Harvest plants, review the phenotype report, and keep the exceptional ones.</p></div>';
@@ -4169,6 +5354,7 @@ function wireKeepers(r){
   r.querySelectorAll('[data-delk]').forEach(b=>b.onclick=()=>removeKeeper(b.dataset.delk));
   r.querySelectorAll('[data-clone]').forEach(b=>b.onclick=()=>takeClone(b.dataset.clone));
   r.querySelectorAll('[data-delm]').forEach(b=>b.onclick=()=>removeMother(b.dataset.delm));
+  try{ P3W2_wireVault(r); }catch(e){} /* P3-W2: vault tab buttons */
 }
 
 /* ============================================================
@@ -5053,6 +6239,7 @@ function WX_marketPanel(){
      '<b class="ge-num">×'+r.mult.toFixed(2)+'</b><span class="ge-caption ge-muted">'+r.days+'d</span></div>';
   });
   html+='<p class="ge-caption ge-muted">Sell high, hold low — demand shifts every few days.</p></div>';
+  try{ if(typeof P3W5_condsHTML==='function') html+=P3W5_condsHTML(); }catch(e){} /* P3-W5: market conditions panel */
   return html;
 }
 
@@ -5065,6 +6252,7 @@ function WX_sellMult(strainId,item,buyerId){
     var by=BUYERS.find(function(x){ return x&&x.id===buyerId; });
     if(by&&typeof by.mult==='function'){ try{ b=num(by.mult(item||{}),1); }catch(e){ b=1; } }
   }
+  try{ if(typeof P3W5_marketMult==='function') m*=P3W5_marketMult(strainId,item); }catch(e){} /* P3-W5: market conditions */
   return m*loc*b;
 }
 /* ---- supplier sale discount: 1.0 normally, 0.6–0.75 during sale ---- */
@@ -5982,7 +7170,8 @@ function EX_normalizeEx(){
     skill:Math.max(1,num(e.skill,5)), salary:Math.max(1,num(e.salary,10)),
     assigned:e.assigned!==false,
     pers:String(e.pers||''), morale:clamp(num(e.morale,70),0,100), loyalty:clamp(num(e.loyalty,40),0,100),
-    mistakes:Math.max(0,int(e.mistakes,0)), raises:Math.max(0,int(e.raises,0)), promo:!!e.promo
+    mistakes:Math.max(0,int(e.mistakes,0)), raises:Math.max(0,int(e.raises,0)), promo:!!e.promo,
+    daysWorked:Math.max(0,int(e.daysWorked,0)) /* P3-W5: experience tenure; backfills 0 */
   }));
   if(!Array.isArray(x.pool)) x.pool=[];
   x.pday=Math.max(1,int(x.pday,int(S.day,1)));
@@ -6159,7 +7348,13 @@ const EX_ROLES=[
  {id:'assistant',name:'GROW ASSISTANT',desc:'Extra hands. Small boost to plant growth.',salaryBase:25},
  {id:'irritech',name:'IRRIGATION TECH',desc:'Water systems run smoother. Less water waste.',salaryBase:35},
  {id:'trimmer',name:'TRIMMER',desc:'Faster harvests. Better bag appeal.',salaryBase:30},
- {id:'dispmgr',name:'DISPENSARY MANAGER',desc:'Runs the shop floor. Happier customers.',salaryBase:65}
+ {id:'dispmgr',name:'DISPENSARY MANAGER',desc:'Runs the shop floor. Happier customers.',salaryBase:65},
+ /* P3-W5: wave-5 crew expansion — Irrigation Technician / Trimmer / Breeder / Manager
+    already exist above (irritech / trimmer / breeding / manager); these four are new. */
+ {id:'growtech',name:'GROW TECHNICIAN',desc:'Steady hands. Plants recover health and shake stress faster.',salaryBase:40},
+ {id:'processtech',name:'PROCESSING TECHNICIAN',desc:'Runs the lab line. More processing capacity and output.',salaryBase:45},
+ {id:'dispworker',name:'DISPENSARY WORKER',desc:'Floor staff. More customers served per budtender shift.',salaryBase:35},
+ {id:'mastergrower',name:'MASTER GROWER',desc:'A living legend. Lifts final harvest quality.',salaryBase:90}
 ];
 const EX_RARITY={
  common:{name:'COMMON',mult:1,cls:'ex-r-com'},
@@ -6258,8 +7453,11 @@ function EX_payrollTick(){
 /* Cross-builder interface: summed, capped bonus for a role (assigned staff only). */
 function EX_employeeBonus(role){
   if(!EX_ready()) return 0;
-  const eff={grower:0.4,geneticist:0.3,budtender:0.15,processor:0.2,manager:0.1,breeding:0.5,tech:0.2};
-  const cap={grower:40,geneticist:30,budtender:25,processor:30,manager:15,breeding:50,tech:30};
+  /* P3-W5: wave-5 crew specialties — appended, never rebalanced. New roles only. */
+  const eff={grower:0.4,geneticist:0.3,budtender:0.15,processor:0.2,manager:0.1,breeding:0.5,tech:0.2,
+    growtech:0.3,processtech:0.25,dispworker:0.2,mastergrower:0.15,irritech:0.2,trimmer:0.2};
+  const cap={grower:40,geneticist:30,budtender:25,processor:30,manager:15,breeding:50,tech:30,
+    growtech:30,processtech:30,dispworker:25,mastergrower:20,irritech:25,trimmer:25};
   if(!(role in eff)) return 0;
   let t=0;
   S.ex.employees.forEach(e=>{ if(e.assigned&&e.role===role) t+=num(e.skill,0); });
@@ -6276,6 +7474,7 @@ function EX_empCard(e){
   return '<div class="ge-card ge-ecard'+(e.assigned?'':' ge-benched')+'">'+
    '<div class="ge-card-head"><h3>'+esc(e.name)+'</h3><span class="'+EM_rarCls(e.rarity)+'">'+rar.name+'</span></div>'+
    '<p class="ge-caption ge-muted">'+esc(r.name)+' • Lv '+int(e.lvl,1)+' • Skill '+int(e.skill,0)+'</p>'+
+   (typeof P3W5_empSpecHTML==='function'?P3W5_empSpecHTML(e):'')+ /* P3-W5: specialty + tenure */
    '<div class="ge-progress-meta"><span>XP to next level</span><b class="ge-num">'+Math.round(num(e.xp,0))+' / '+need+'</b></div>'+
    '<div class="ge-progress"><i style="width:'+pct+'%"></i></div>'+
    '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Salary</span><b class="ge-num">'+fmt$(e.salary)+'/day</b></div>'+
@@ -6818,7 +8017,7 @@ function EX_nextUnlock(){
     if(!st.lock||!S.lockedStrains.includes(st.id)) return;
     const l=st.lock; let gap=Infinity,txt='';
     if(l.t==='rep'){ gap=Math.max(0,int(l.v,0)-int(S.reputation,0)); txt=st.name+': reach '+int(l.v,0)+' rep'+(gap>0?' ('+gap+' to go)':''); }
-    else if(l.t==='cash'){ const c=st.seed*3; gap=Math.max(0,c-num(S.cash,0))/100; txt=st.name+': save '+fmt$(c)+' for the genetics'; }
+    else if(l.t==='cash'){ const c=st.seed*3; gap=Math.max(0,c-num(S.cash,0))/100; txt=st.name+(gap>0?': save '+fmt$(c)+' for the genetics':': ready to buy in the Genetics Lab'); }
     else { gap=50; txt=strainDisplayName(st)+': unlock via Project 0 missions'; }
     if(!best||gap<best.gap) best={gap:gap,text:txt,go:'genetics',tab:null};
   });
@@ -6986,7 +8185,7 @@ function P14_nearestGenetic(){
       if(!st.lock||!((S.lockedStrains||[]).includes(st.id))) return;
       const l=st.lock; let rel=1, needText='', closeText='';
       if(l.t==='rep'){ const v=int(l.v,0), gap=Math.max(0,v-rep); rel=v>0?gap/v:1; needText=v+' rep'; closeText=gap>0?(gap+' rep to go'):'requirement met'; }
-      else if(l.t==='cash'){ const c=num(st.seed,0)*3, gap=Math.max(0,c-cash); rel=c>0?gap/c:1; needText='save '+fmt$(c); closeText=gap>0?(fmt$(gap)+' to go'):'requirement met'; }
+      else if(l.t==='cash'){ const c=num(st.seed,0)*3, gap=Math.max(0,c-cash); rel=c>0?gap/c:1; needText=gap>0?('save '+fmt$(c)):('buy it in the Genetics Lab'); closeText=gap>0?(fmt$(gap)+' to go'):'requirement met'; }
       else { rel=1; needText='unlock via Project 0'; closeText='earn it through Project 0'; }
       if(!best||rel<best.rel) best={st:st,rel:rel,needText:needText,closeText:closeText,pct:Math.round((1-Math.min(1,rel))*100)};
     });
@@ -7062,6 +8261,9 @@ function P14_candidates(){
       });
     }catch(e){}
   }catch(e){}
+  /* 6. P3-W6 big-purchase goals: Wave 4/5 additions with real affordability math.
+     Prices are surfaced, never changed. */
+  try{ P14_wave6().forEach(c=>out.push(c)); }catch(e){}
   out.sort((a,b)=>a.rel-b.rel);
   return out.slice(0,4);
 }
@@ -7138,7 +8340,8 @@ RENDER.home=function(){
    '<button class="ge-metric-tile ge-card-tap" data-ex-go="breeding"><span class="ge-metric-value ge-num">'+S.customStrains.length+'</span><span class="ge-metric-label">CUSTOM STRAINS</span></button>'+
    '<button class="ge-metric-tile ge-card-tap" data-ex-go="empire" data-ex-tab="staff"><span class="ge-metric-value ge-num">'+S.ex.employees.length+'</span><span class="ge-metric-label">STAFF</span></button>'+
    '<button class="ge-metric-tile ge-card-tap" data-ex-go="leaderboards"><span class="ge-metric-value ge-num">'+S.ex.trophies.length+'</span><span class="ge-metric-label">TROPHIES</span></button>'+
-   '<button class="ge-metric-tile ge-card-tap" data-ex-go="locations"><span class="ge-metric-value ge-truncate">'+esc(EX_locById(S.ex.locations.current).name.split(' ')[0])+'</span><span class="ge-metric-label">TERRITORY</span></button></div>';
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="locations"><span class="ge-metric-value ge-truncate">'+esc(EX_locById(S.ex.locations.current).name.split(' ')[0])+'</span><span class="ge-metric-label">TERRITORY</span></button></div>'+
+  '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold ge-btn-block ge-card-tap" data-ex-go="dashboard">'+icon('empire','ge-ic-md')+'OPEN EMPIRE DASHBOARD</button></div>';
   try{ html+=TY_dashNewsFeed(); }catch(e){}
   if(recentCrosses.length){
     html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('breeding','ge-ic-md')+'RECENT CROSSES</h3></div>'+
@@ -7164,6 +8367,7 @@ RENDER.home=function(){
 function EX_tick(){
   if(!EX_init()) return;
   EX_payrollTick();
+  try{ if(typeof P3W5_dayTick==='function') P3W5_dayTick(); }catch(e){} /* P3-W5: crew specialties + tenure */
   S.ex.employees.forEach(e=>{ e.xp=num(e.xp,0)+8; EX_empLevelCheck(e,false); });
   if(int(S.day,1)-int(S.ex.pday,1)>=3) EX_genPool();
   EX_upkeepTick();
@@ -7308,6 +8512,7 @@ function TY_repProfileHTML(){
        '<div class="ge-progress"><i style="width:'+clamp(v/30,0,100)+'%"></i></div>';
   });
   h+='<p class="ge-body ge-muted">Reputation moves customers, prices, applicants, contracts and unlocks.</p></div>';
+  try{ if(typeof P3W5_repUnlocksHTML==='function') h+=P3W5_repUnlocksHTML(); }catch(e){} /* P3-W5: category unlocks */
   return h;
 }
 
@@ -7693,6 +8898,7 @@ const TY_PRODUCTS=[
 function TY_procCap(){ /* oz-equivalents per day */
   let cap=4+TY_buildingLevelSafe('processing')*3;
   try{ if(typeof EX_employeeBonus==='function') cap+=num(EX_employeeBonus('processor'),0)*0.4; }catch(e){}
+  try{ if(typeof P3W5_processBoost==='function') cap+=num(P3W5_processBoost(),0)*0.4; }catch(e){} /* P3-W5: trimmer + processing tech capacity */
   (S.ty.locFac?Object.keys(S.ty.locFac):[]).forEach(l=>{ cap+=int(S.ty.locFac[l].proc,0)*8; });
   if(TY_rankIdx()>=10) cap*=2;
   return Math.max(2,Math.round(cap));
@@ -7747,7 +8953,9 @@ function TY_startProcess(invId,ptypeId){
   if(src){ src.amount=Math.round((src.amount-ozIn)*10)/10; if(src.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==src.id); }
   let days=pt.days;
   if(TY_hasPerk('labauto')&&pt.id==='premium') days=Math.max(1,days-1);
-  const eff=0.85+TY_buildingLevelSafe('processing')*0.04+num((typeof EX_employeeBonus==='function'?EX_employeeBonus('processor'):0),0)*0.004;
+  try{ if(typeof P3W5_trimDays==='function') days=Math.max(1,days-num(P3W5_trimDays(),0)); }catch(e){} /* P3-W5: trimmer speeds processing */
+  const eff=0.85+TY_buildingLevelSafe('processing')*0.04+num((typeof EX_employeeBonus==='function'?EX_employeeBonus('processor'):0),0)*0.004
+    +num((typeof P3W5_processBoost==='function'?P3W5_processBoost():0),0)*0.004; /* P3-W5: trimmer + processing tech output */
   const qBonus=TY_buildingLevelSafe('processing')*1.5;
   S.ty.proc.push({id:S.ty.nextProcId++,strainId:st?st.id:'unknown',strainName:st?st.name:'Unknown',
     ptype:pt.id,ozIn:ozIn,daysLeft:days,daysTotal:days,eff:clamp(eff,0.8,1.4),qBonus:qBonus,
@@ -7834,10 +9042,12 @@ function TY_prodBuyerModal(pid){
 
 function TY_sellProduct(pid,buyerId){
   const p=S.ty.prod.find(x=>x.id===pid); if(!p) return;
+  if(!(p.amount>0)) return; /* GE-DP-502: tampered product amounts must not reach cash math */
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
   const item={quality:p.quality,potency:p.potency,terpenes:p.terpenes,bagAppeal:p.bagAppeal,resin:p.resin,custom:p.custom,type:'flower',ptype:p.ptype};
   const wxm=(typeof WX_sellMult==='function')?WX_sellMult(p.strainId,item,by.id):1;
   const total=TY_prodPrice(p)*p.amount*wxm;
+  if(!Number.isFinite(total)||total<0) return; /* GE-DP-502 */
   const ntPreSale=(typeof NT_affordSig==='function')?NT_affordSig():'';
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   try{ NT_onSale(total,ntPreSale); }catch(e){} /* P1.6: big sale -> upgrade nudge (read-only) */
@@ -7916,18 +9126,22 @@ function TY_procPick(ptypeId){
 
 /* ---------------- WORKING DISPENSARY: customer sim ---------------- */
 const TY_CUST_TYPES=[
- {id:'casual',name:'Casual',wt:30,budget:[40,120],qualExp:55,priceSens:0.7,loyal:0.2},
- {id:'medical',name:'Medical',wt:15,budget:[60,160],qualExp:65,priceSens:0.4,loyal:0.5},
- {id:'conn',name:'Connoisseur',wt:12,budget:[120,320],qualExp:85,priceSens:0.25,loyal:0.4},
- {id:'bulk',name:'Bulk Buyer',wt:8,budget:[300,800],qualExp:60,priceSens:0.8,loyal:0.3},
- {id:'tourist',name:'Tourist',wt:14,budget:[50,140],qualExp:60,priceSens:0.6,loyal:0.05},
- {id:'regular',name:'Regular',wt:12,budget:[60,180],qualExp:65,priceSens:0.5,loyal:0.8},
- {id:'premium',name:'Premium',wt:6,budget:[200,500],qualExp:90,priceSens:0.15,loyal:0.5},
- {id:'budget',name:'Budget',wt:13,budget:[25,70],qualExp:50,priceSens:0.95,loyal:0.15}
+ /* P3-W5: pref = taste archetype driving trait-based selection (selection only — never price).
+    budget=bargain hunter, potency=THC chaser, terpene=flavor hunter, indica/sativa=effect buyer,
+    collector=rare-genetics hunter, medical=relief buyer, connoisseur=terps+quality over raw potency. */
+ {id:'casual',name:'Casual',wt:30,budget:[40,120],qualExp:55,priceSens:0.7,loyal:0.2,pref:'sativa'},
+ {id:'medical',name:'Medical',wt:15,budget:[60,160],qualExp:65,priceSens:0.4,loyal:0.5,pref:'medical'},
+ {id:'conn',name:'Connoisseur',wt:12,budget:[120,320],qualExp:85,priceSens:0.25,loyal:0.4,pref:'connoisseur'},
+ {id:'bulk',name:'Bulk Buyer',wt:8,budget:[300,800],qualExp:60,priceSens:0.8,loyal:0.3,pref:'collector'},
+ {id:'tourist',name:'Tourist',wt:14,budget:[50,140],qualExp:60,priceSens:0.6,loyal:0.05,pref:'terpene'},
+ {id:'regular',name:'Regular',wt:12,budget:[60,180],qualExp:65,priceSens:0.5,loyal:0.8,pref:'indica'},
+ {id:'premium',name:'Premium',wt:6,budget:[200,500],qualExp:90,priceSens:0.15,loyal:0.5,pref:'potency'},
+ {id:'budget',name:'Budget',wt:13,budget:[25,70],qualExp:50,priceSens:0.95,loyal:0.15,pref:'budget'}
 ];
 function TY_custCount(){
   let n=6+TY_buildingLevelSafe('dispensary')*4;
   try{ n+=Math.round(num((typeof EX_employeeBonus==='function'?EX_employeeBonus('budtender'):0),0)*0.5); }catch(e){}
+  try{ if(typeof P3W5_retailDrawBonus==='function') n+=P3W5_retailDrawBonus(); }catch(e){} /* P3-W5: Business Rep unlock */
   if(TY_hasPerk('marketing')) n+=Math.round(n*0.25);
   n+=Math.round(TY_repCat('service')/25)+Math.round(TY_repCat('quality')/40);
   Object.keys(S.ty.locFac||{}).forEach(l=>{ n+=int(S.ty.locFac[l].disp,0)*5; });
@@ -7943,6 +9157,7 @@ function TY_makeCustomer(){
     type:t.id,typeName:t.name,
     budget:Math.round(rnd(t.budget[0],t.budget[1])*(1+TY_rankIdx()*0.06)*(1+num(S.ty.weekendBoost,0))),
     qualExp:t.qualExp+rndi(-8,8), priceSens:t.priceSens, loyal:t.loyal,
+    pref:(typeof P3W5_custPref==='function'?P3W5_custPref(t):(t.pref||'balanced')), /* P3-W5: taste archetype */
     prefPtype:pick(['flower','flower','premium','edible','conc','preroll']),
     favStrain:strains.length?pick(strains).id:null,
     regular:Math.random()<t.loyal*0.3
@@ -7953,14 +9168,16 @@ function TY_custTick(){
   const st=t.cust.stats;
   const n=TY_custCount();
   let budCap=8+TY_buildingLevelSafe('dispensary')*6;
+  try{ if(typeof P3W4_budCapBonus==='function') budCap+=P3W4_budCapBonus(); }catch(e){} /* P3-W4: Cultivation Empire dispensary flagship */
   try{ budCap+=Math.round(num((typeof EX_employeeBonus==='function'?EX_employeeBonus('budtender'):0),0)*0.6); }catch(e){}
+  try{ budCap+=Math.round(num((typeof EX_employeeBonus==='function'?EX_employeeBonus('dispworker'):0),0)*0.6); }catch(e){} /* P3-W5: dispensary worker */
   const served=Math.min(n,budCap);
   let rev=0,sat=0,satN=0,lost=0,sales=0,short=0,repeat=0;
   const log=[];
   /* sellable stock: finished products + flower inventory */
   const stock=[];
-  (t.prod||[]).forEach(p=>{ if(p.packaged) stock.push({kind:'prod',ref:p,ptype:p.ptype==='preroll'?'preroll':p.ptype,quality:p.quality,price:TY_prodPrice(p),name:p.pname+' — '+p.strainName,strainId:p.strainId}); });
-  (S.inventory||[]).forEach(it=>{ if(it.amount>0) stock.push({kind:'inv',ref:it,ptype:TY_ptypeOf(it),quality:it.quality,price:pricePerOz(it),name:it.strainName,strainId:it.strainId}); });
+  (t.prod||[]).forEach(p=>{ if(p.packaged) stock.push(P3W5_stockEntry({kind:'prod',ref:p,ptype:p.ptype==='preroll'?'preroll':p.ptype,quality:p.quality,price:TY_prodPrice(p),name:p.pname+' — '+p.strainName,strainId:p.strainId})); });
+  (S.inventory||[]).forEach(it=>{ if(it.amount>0) stock.push(P3W5_stockEntry({kind:'inv',ref:it,ptype:TY_ptypeOf(it),quality:it.quality,price:pricePerOz(it),name:it.strainName,strainId:it.strainId})); });
   for(let i=0;i<served;i++){
     const c=TY_makeCustomer();
     /* GE-B: stock entries go stale mid-tick — re-check LIVE amount every customer,
@@ -7968,8 +9185,7 @@ function TY_custTick(){
     const afford=stock.filter(s=>s.price<=c.budget&&s.quality>=c.qualExp-15&&num(s.ref.amount,0)>0);
     if(!afford.length){ short++; lost++; continue; }
     afford.sort((a,b)=>{
-      const sa=(a.strainId===c.favStrain?30:0)+(a.ptype===c.prefPtype?20:0)+a.quality-a.price*c.priceSens*0.05;
-      const sb=(b.strainId===c.favStrain?30:0)+(b.ptype===c.prefPtype?20:0)+b.quality-b.price*c.priceSens*0.05;
+      const sa=P3W5_custScore(c,a), sb=P3W5_custScore(c,b); /* P3-W5: base score + taste preference */
       return sb-sa;
     });
     const pick1=afford[0];
@@ -7996,6 +9212,7 @@ function TY_custTick(){
   if(rev>0){
     S.cash+=rev; S.stats.lifetimeRevenue+=rev; S.stats.sales+=sales;
     TY_gainRep('service',Math.round(sales*0.4));
+    try{ if(typeof P3W5_onDispensarySales==='function') P3W5_onDispensarySales(rev,sales); }catch(e){} /* P3-W5: sales build Business Rep */
     if(satN&&sat/satN>=75) TY_gainRep('quality',2);
   }
   if(short>served*0.4) TY_notify(icon('box','ge-ic-md')+' Inventory shortages lost you '+short+' customers today','warn',true);
@@ -8923,7 +10140,7 @@ function GT_filterBar(){
   try{
     counts.seeds=all.filter(s=>!s.custom).length;
     counts.breeding=all.filter(s=>s.custom).length;
-    counts.p0=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper'))).length;
+    counts.p0=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper'))||(s.custom&&s.p0Submitted)).length; /* P3-W2: submitted customs */
     counts.keepers=all.filter(s=>{ try{return (S.phenoHistory[s.id]&&int(S.phenoHistory[s.id].keepers,0)>0)||(S.keepers||[]).some(k=>k.strainId===s.id);}catch(e){return false;} }).length;
     counts.mothers=all.filter(s=>{ try{return (S.mothers||[]).some(m=>m.strainId===s.id);}catch(e){return false;} }).length;
   }catch(e){}
@@ -8931,7 +10148,7 @@ function GT_filterBar(){
   const sorts=[['name','Name'],['potency','Potency'],['yield','Yield'],['stability','Stability'],['rarity','Rarity'],['popularity','Popularity'],['demand','Market Demand'],['best','Best Score']];
   return '<div class="ge-card ge-card-flat ge-filterbar"><div class="ge-tabs" role="tablist">'+
     filters.map(f=>'<button class="ge-tab'+(genFilter===f[0]?' is-active':'')+'" data-gfilter="'+f[0]+'" role="tab" aria-selected="'+(genFilter===f[0])+'">'+icon(f[2],'ge-ic-sm')+f[1]+'<span class="ge-tab-count">'+counts[f[0]]+'</span></button>').join('')+
-    '</div><div class="ge-filter-row"><div class="ge-search-wrap">'+icon('search','ge-ic-md')+'<input type="text" id="gt-search" class="ge-search" placeholder="SEARCH THE ARCHIVE" value="'+esc(genSearch)+'" maxlength="40" aria-label="Search genetics"></div>'+
+    '</div><div class="ge-filter-row"><div class="ge-search-wrap">'+icon('search','ge-ic-md')+'<input type="text" id="gt-search" inputmode="search" enterkeyhint="search" class="ge-search" placeholder="SEARCH THE ARCHIVE" value="'+esc(genSearch)+'" maxlength="40" aria-label="Search genetics"></div>'+
     '<select id="gt-sort" class="ge-select" aria-label="Sort genetics">'+sorts.map(s=>'<option value="'+s[0]+'"'+(genSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select></div></div>';
 }
 
@@ -8952,7 +10169,7 @@ function GT_filteredStrains(){
   else if(genFilter==='keepers') all=all.filter(s=>{ try{return (S.phenoHistory[s.id]&&int(S.phenoHistory[s.id].keepers,0)>0)||(S.keepers||[]).some(k=>k.strainId===s.id);}catch(e){return false;} });
   else if(genFilter==='mothers') all=all.filter(s=>{ try{return (S.mothers||[]).some(m=>m.strainId===s.id);}catch(e){return false;} });
   else if(genFilter==='breeding') all=all.filter(s=>s.custom);
-  else if(genFilter==='p0') all=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper')));
+  else if(genFilter==='p0') all=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper'))||(s.custom&&s.p0Submitted)); /* P3-W2: submitted customs */
   if(genSearch){ const q=genSearch.toLowerCase(); all=all.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.id||'').toLowerCase().includes(q)); }
   const rW={common:0,rare:1,elite:2,legendary:3};
   all.sort((a,b)=>{
@@ -9194,7 +10411,9 @@ RENDER.strain=function(){
     (locked?'<p class="ge-caption">'+icon('lock','ge-ic-md')+' Locked genetics.</p>':
     '<button class="ge-btn ge-btn-primary" id="sd-grow">'+icon('grow','ge-ic-md')+'GROW THIS</button>'+
     '<button class="ge-btn ge-btn-ghost" id="sd-hunt">'+icon('hunt','ge-ic-md')+'START PHENO HUNT</button>'+
-    '<button class="ge-btn ge-btn-ghost" id="sd-phenos">'+icon('hunt','ge-ic-md')+'VIEW PHENOTYPES</button>')+
+    '<button class="ge-btn ge-btn-ghost" id="sd-phenos">'+icon('hunt','ge-ic-md')+'VIEW PHENOTYPES</button>'+
+    (st.custom&&!st.ceremonyFired?'<button class="ge-btn ge-btn-gold" id="sd-stable">'+icon('crown-gold','ge-ic-md')+'DECLARE STABLE</button>':'')+
+    (st.custom&&st.ceremonyFired?'<p class="ge-caption">'+icon('crown-gold','ge-ic-sm')+' Honored genetic \u2014 ceremony complete.</p>':''))+
     '<button class="ge-btn ge-btn-ghost" onclick="show(\'genetics\')">BACK TO VAULT</button></div></div>';
   html+='</div>';
   r.innerHTML=html;
@@ -9204,6 +10423,7 @@ RENDER.strain=function(){
   $('sd-phenos').onclick=()=>GT_phenoListModal(st);
   $('sd-keepers').onclick=()=>{ keeperFilter=st.id; keeperPage=0; show('keepers'); };
   const sb=$('sd-breed'); if(sb) sb.onclick=()=>{ try{ breedA=st.id; }catch(e){} show('breeding'); };
+  const sds=$('sd-stable'); if(sds) sds.onclick=()=>{ if(P3W2_declareStable(st.id)&&current==='strain') RENDER.strain(); };
   const sl=$('sd-lineage'); if(sl) sl.onclick=()=>{
     if(typeof GX_lineageHTML==='function'){
       const m=modal('<div class="ge-modal-head">'+icon('dna','ge-ic-md')+'<h3>LINEAGE TREE</h3></div><div class="ge-modal-body"><div id="gx-lin-box">'+GX_lineageHTML(st.id)+'</div></div><div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="gx-lin-x">CLOSE</button></div>');
@@ -9283,63 +10503,114 @@ function AM_hasS(){ try{ return (typeof S!=='undefined')&&!!S; }catch(e){ return
 /* ---------------- system definitions ---------------------------------------
    rankGate = minimum TY_RANKS index (0 STREET ROOKIE … 5 LOCAL BOSS …
    7 DISPENSARY BOSS, 8 BREEDER, 9 SUPPLIER, 10 INDUSTRY BOSS, 11 MOGUL,
-   12 LEGEND).                                                        */
+   12 LEGEND).
+   P3-W4 TECH TREE: systems are ordered as an earned chain — each tier
+   requires the previous tier installed (AM_chainPrev). Beyond the rank
+   gate, every tier carries a REAL combination of gates: lvl (player
+   level), rep (reputation), fac (facility tier index), mission (mission
+   id that must be complete), plus the cash cost. AM_SYSTEMS key order
+   matches the chain: BASIC TIMERS is the entry point.                        */
 const AM_SYSTEMS={
+  timers:{
+    name:'Basic Timers', ico:'timer',
+    desc:'Scheduled micro-watering on a timer — the first machine. Weaker than a real rig, but it never sleeps.',
+    rankGate:2, lvl:1, rep:0, fac:0, mission:null,
+    cost:1500, dailyCost:12, power:2, capacity:48,
+    efficiency:0.85, reliability:0.98
+  },
   water:{
     name:'Auto-Irrigation Rig', ico:'water',
     desc:'Drip lines keep the canopy hydrated around the clock.',
-    rankGate:5, cost:7500, dailyCost:35, power:8, capacity:24,
+    rankGate:5, lvl:3, rep:25, fac:0, mission:null,
+    cost:7500, dailyCost:35, power:8, capacity:24,
     efficiency:0.92, reliability:0.95
   },
   feed:{
     name:'Nutrient Doser', ico:'feed',
     desc:'Precision fertigation keeps every plant fed, never burned.',
-    rankGate:7, cost:18000, dailyCost:60, power:6, capacity:32,
+    rankGate:7, lvl:6, rep:100, fac:1, mission:null,
+    cost:18000, dailyCost:60, power:6, capacity:32,
     efficiency:0.90, reliability:0.94
+  },
+  envctrl:{
+    name:'Environment Controller', ico:'hvac',
+    desc:'Holds the room at a fixed 76°F / 55% RH around the clock. No custom targets — that is what the Climate Hub is for.',
+    rankGate:8, lvl:8, rep:200, fac:2, mission:null,
+    cost:22000, dailyCost:70, power:25, capacity:40,
+    efficiency:0.88, reliability:0.94
+  },
+  irrctrl:{
+    name:'Irrigation Controller', ico:'irrigation',
+    desc:'High-capacity precision irrigation — deeper watering, more plants, smarter scheduling.',
+    rankGate:8, lvl:10, rep:300, fac:3, mission:'em-warehouse',
+    cost:35000, dailyCost:95, power:12, capacity:48,
+    efficiency:0.94, reliability:0.96
   },
   light:{
     name:'Smart Light Array', ico:'light',
     desc:'Tracks each strain\u2019s sweet spot and rides the dimmer for you.',
-    rankGate:8, cost:30000, dailyCost:85, power:40, capacity:40,
+    rankGate:8, lvl:11, rep:400, fac:3, mission:null,
+    cost:30000, dailyCost:85, power:40, capacity:40,
     efficiency:0.93, reliability:0.96
   },
   climate:{
     name:'Climate Control Hub', ico:'temp',
     desc:'Holds your target temperature and humidity against the weather.',
-    rankGate:8, cost:45000, dailyCost:120, power:55, capacity:48,
+    rankGate:8, lvl:12, rep:500, fac:4, mission:null,
+    cost:45000, dailyCost:120, power:55, capacity:48,
     efficiency:0.91, reliability:0.95
   },
   processing:{
     name:'Processing Line', ico:'jar',
     desc:'A second shift in the lab — jobs cure and finish faster.',
-    rankGate:9, cost:60000, dailyCost:150, power:25, capacity:12,
+    rankGate:9, lvl:13, rep:650, fac:4, mission:null,
+    cost:60000, dailyCost:150, power:25, capacity:12,
     efficiency:0.95, reliability:0.97
   },
   restock:{
     name:'Auto-Restock Runner', ico:'dispensary',
     desc:'Finished product gets packaged and moved to dispensary shelves.',
-    rankGate:10, cost:95000, dailyCost:200, power:4, capacity:20,
+    rankGate:10, lvl:14, rep:800, fac:5, mission:'p0-vault',
+    cost:95000, dailyCost:200, power:4, capacity:20,
     efficiency:0.97, reliability:0.98
   },
   manager:{
     name:'Facility Manager AI', ico:'crew',
     desc:'Assign a hired employee to supervise every system — boosts efficiency.',
-    rankGate:11, cost:150000, dailyCost:300, power:10, capacity:64,
+    rankGate:11, lvl:16, rep:1000, fac:5, mission:null,
+    cost:150000, dailyCost:300, power:10, capacity:64,
+    efficiency:1.00, reliability:0.99
+  },
+  growai:{
+    name:'Advanced Grow AI', ico:'aicore',
+    desc:'The capstone. Coordinates every installed system (+5% fleet efficiency) and runs daily diagnostics. It advises — it never decides.',
+    rankGate:12, lvl:18, rep:1500, fac:7, mission:'em-p0fac',
+    cost:250000, dailyCost:450, power:15, capacity:128,
     efficiency:1.00, reliability:0.99
   }
 };
-const AM_ORDER=['water','feed','light','climate','processing','restock','manager'];
+/* P3-W4: the tech-tree chain — render, migration, purchase and day-tick order. */
+const AM_ORDER=['timers','water','feed','envctrl','irrctrl','light','climate','processing','restock','manager','growai'];
+/* P3-W4: no-skip — each tier requires the previous tier installed. */
+function AM_chainPrev(id){
+  var i=AM_ORDER.indexOf(id);
+  return i>0?AM_ORDER[i-1]:null;
+}
 
 /* ---------------- state ---------------------------------------------------- */
 function AM_defaultAm(){
   return {
+    timers:{owned:false,on:false},
     water:{owned:false,on:false},
     feed:{owned:false,on:false},
+    envctrl:{owned:false,on:false},
+    irrctrl:{owned:false,on:false},
     light:{owned:false,on:false},
     climate:{owned:false,on:false,tempTarget:76,rhTarget:55},
     processing:{owned:false,on:false},
     restock:{owned:false,on:false},
     manager:{owned:false,on:false,empId:null},
+    growai:{owned:false,on:false},
     lastCost:0,
     notes:[]
   };
@@ -9369,6 +10640,54 @@ function AM_rankMet(id){
   var sys=AM_SYSTEMS[id]; if(!sys) return false;
   return AM_rankIdx()>=sys.rankGate;
 }
+/* ---------------- P3-W4: earned-gate inspection ---------------------------
+   Every tier's requirements as data: rank, previous tree tier, player
+   level, reputation, facility tier, mission completion, cash. Drives
+   AM_buy enforcement and the WHAT I WANT / WHAT I NEED / HOW CLOSE UI. */
+function AM_gateList(id){
+  var sys=AM_SYSTEMS[id]; if(!sys) return [];
+  var out=[];
+  function pct(have,need){ need=AM_num(need,0); if(need<=0) return 100; return AM_clamp(Math.round(AM_num(have,0)/need*100),0,100); }
+  var r=AM_rankIdx();
+  out.push({key:'rank',label:'Rank',need:AM_rankName(sys.rankGate),have:AM_rankName(r),met:r>=AM_num(sys.rankGate,0),pct:pct(r,sys.rankGate)});
+  var prev=AM_chainPrev(id);
+  if(prev){
+    var ps=(typeof S!=='undefined'&&S&&S.am&&S.am[prev])||{};
+    out.push({key:'prev',label:'Previous tier',need:AM_SYSTEMS[prev]?AM_SYSTEMS[prev].name:prev,have:ps.owned?'Installed':'Not installed',met:!!ps.owned,pct:ps.owned?100:0,prev:prev});
+  }
+  var lvl=0, rep=0, fac=0;
+  try{ lvl=Math.max(1,parseInt(S.level,10)||1); }catch(e){}
+  try{ rep=parseInt(S.reputation,10)||0; }catch(e){}
+  try{ fac=parseInt(S.facility,10)||0; }catch(e){}
+  out.push({key:'level',label:'Player level',need:AM_num(sys.lvl,1),have:lvl,met:lvl>=AM_num(sys.lvl,1),pct:pct(lvl,sys.lvl)});
+  out.push({key:'rep',label:'Reputation',need:AM_num(sys.rep,0),have:rep,met:rep>=AM_num(sys.rep,0),pct:pct(rep,sys.rep)});
+  var facName='Starter Tent';
+  try{ facName=(typeof FACILITIES!=='undefined'&&FACILITIES[AM_num(sys.fac,0)])?FACILITIES[AM_num(sys.fac,0)].name:('Tier '+sys.fac); }catch(e){}
+  out.push({key:'facility',label:'Facility',need:facName,have:(function(){ try{ return (typeof FACILITIES!=='undefined'&&FACILITIES[fac])?FACILITIES[fac].name:'Tier '+fac; }catch(e2){ return 'Tier '+fac; } })(),met:fac>=AM_num(sys.fac,0),pct:pct(fac,sys.fac)});
+  if(sys.mission){
+    var mDone=false, mName=sys.mission;
+    try{ mDone=(typeof P3W4_missionDone==='function')?P3W4_missionDone(sys.mission):false; }catch(e){}
+    try{ mName=(typeof P3W4_missionName==='function')?P3W4_missionName(sys.mission):sys.mission; }catch(e){}
+    out.push({key:'mission',label:'Mission',need:mName,have:mDone?'Complete':'Incomplete',met:!!mDone,pct:mDone?100:0});
+  }
+  var cash=0; try{ cash=AM_num(S.cash,0); }catch(e){}
+  out.push({key:'cash',label:'Cash',need:AM_fmt(sys.cost),have:AM_fmt(cash),met:cash>=AM_num(sys.cost,0),pct:pct(cash,sys.cost)});
+  return out;
+}
+function AM_gatesMet(id){
+  var gates=AM_gateList(id);
+  var bad=gates.filter(function(g){ return !g.met; });
+  return {ok:bad.length===0, missing:bad, gates:gates};
+}
+/* Nearest locked tier in the tree — for the Almost-There-style panel. */
+function AM_nextLocked(){
+  if(!AM_migrate()) return null;
+  for(var i=0;i<AM_ORDER.length;i++){
+    var k=AM_ORDER[i], st=S.am[k];
+    if(st&&!st.owned) return k;
+  }
+  return null;
+}
 function AM_sysState(id){
   if(!AM_migrate()) return null;
   return S.am[id]||null;
@@ -9380,8 +10699,22 @@ function AM_buy(id){
   if(!AM_migrate()) return false;
   var st=S.am[id];
   if(st.owned){ AM_toast('Already installed.'); return false; }
-  if(!AM_rankMet(id)){
-    AM_toast(AM_icon('lock','ge-ic-md')+' Requires rank: <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b>. You are '+AM_esc(AM_rankName(AM_rankIdx()))+'.');
+  /* P3-W4: no-skip — each tech-tree tier requires the previous tier installed.
+     Saves that own later tiers without the earlier ones are grandfathered:
+     this only gates NEW purchases. */
+  var prev=AM_chainPrev(id);
+  if(prev){
+    var ps=S.am[prev];
+    if(!ps||!ps.owned){
+      AM_toast(AM_icon('lock','ge-ic-md')+' Tech tree builds in order — install <b>'+AM_esc(AM_SYSTEMS[prev].name)+'</b> first.');
+      return false;
+    }
+  }
+  /* P3-W4: earned gates — rank + level + reputation + facility + mission. */
+  var g=AM_gatesMet(id);
+  if(!g.ok){
+    var m0=g.missing[0];
+    AM_toast(AM_icon('lock','ge-ic-md')+' '+AM_esc(sys.name)+' locked: '+AM_esc(m0.label)+' — need <b>'+AM_esc(String(m0.need))+'</b> (have '+AM_esc(String(m0.have))+').');
     return false;
   }
   if(AM_num(S.cash,0)<sys.cost){
@@ -9439,9 +10772,13 @@ function AM_dayTick(){
   var active=AM_ORDER.filter(function(k){ var s=S.am[k]; return s.owned&&s.on; });
   if(!active.length) return;
 
-  /* --- operating cost: must be covered or everything pauses this tick --- */
+  /* --- operating cost: must be covered or everything pauses this tick ---
+     P3-W4: Cultivation Empire's Automation Nexus cuts operating costs 15%. */
   var total=0;
   active.forEach(function(k){ total+=AM_num(AM_SYSTEMS[k].dailyCost,0); });
+  var costMult=1;
+  try{ if(typeof P3W4_autoCostMult==='function') costMult=P3W4_autoCostMult(); }catch(e){}
+  total=Math.round(total*costMult);
   if(AM_num(S.cash,0)<total){
     S.am.notes.push('\u23F8\uFE0F Automation PAUSED — need '+AM_fmt(total)+' operating cash, systems stay armed.');
     try{ AM_toast('\u23F8\uFE0F Automation paused: insufficient operating cash.'); }catch(e){}
@@ -9461,7 +10798,11 @@ function AM_dayTick(){
 
   function effOf(k){
     var base=AM_num(AM_SYSTEMS[k].efficiency,0.9);
-    var e=Math.min(0.99,base+mgr.pct);
+    /* P3-W4: Advanced Grow AI coordinates the fleet — +5% efficiency aura
+       on every other active system. It advises; it never decides. */
+    var aura=0;
+    try{ var gs=S.am.growai; if(gs&&gs.owned&&gs.on&&k!=='growai') aura=0.05; }catch(e){}
+    var e=Math.min(0.99,base+mgr.pct+aura);
     /* daily reliability roll — efficiency is the proxy: higher tier = more reliable */
     var ok=Math.random()<e;
     return {e:ok?e:e*0.35, ok:ok};
@@ -9469,6 +10810,17 @@ function AM_dayTick(){
   function noteFail(k){
     S.am.notes.push('\u26A0\uFE0F '+AM_esc(AM_SYSTEMS[k].name)+' sputtered today — running weak. Schedule maintenance.');
   }
+
+  /* --- timers (P3-W4): scheduled micro-watering — weaker than a real rig,
+         but it trims the daily manual grind --- */
+  (function(){
+    var st=S.am.timers; if(!st.owned||!st.on) return;
+    try{
+      var r=effOf('timers'); if(!r.ok) noteFail('timers');
+      var n=Math.min(AM_SYSTEMS.timers.capacity,live.length);
+      for(var i=0;i<n;i++){ var p=live[i]; p.water=AM_clamp(AM_num(p.water,0)+6*r.e,0,92); p.nutrition=AM_clamp(AM_num(p.nutrition,0)+6*r.e,0,90); }
+    }catch(e){}
+  })();
 
   /* --- autoWater: maintain hydration --- */
   (function(){
@@ -9487,6 +10839,29 @@ function AM_dayTick(){
       var r=effOf('feed'); if(!r.ok) noteFail('feed');
       var n=Math.min(AM_SYSTEMS.feed.capacity,live.length);
       for(var i=0;i<n;i++){ var p=live[i]; p.nutrition=AM_clamp(AM_num(p.nutrition,0)+20*r.e,0,90); }
+    }catch(e){}
+  })();
+
+  /* --- envctrl (P3-W4): fixed-target environment hold — 76°F / 55% RH.
+         No custom targets; the Climate Control Hub is the upgrade. --- */
+  (function(){
+    var st=S.am.envctrl; if(!st.owned||!st.on) return;
+    try{
+      if(!S.env||typeof S.env!=='object') return;
+      var r=effOf('envctrl'); if(!r.ok) noteFail('envctrl');
+      var k=(r.ok?0.25:0.08)*r.e;
+      S.env.temp=AM_clamp(AM_num(S.env.temp,76)+(76-AM_num(S.env.temp,76))*k,40,110);
+      S.env.humidity=AM_clamp(AM_num(S.env.humidity,55)+(55-AM_num(S.env.humidity,55))*k,5,100);
+    }catch(e){}
+  })();
+
+  /* --- irrctrl (P3-W4): high-capacity precision irrigation --- */
+  (function(){
+    var st=S.am.irrctrl; if(!st.owned||!st.on) return;
+    try{
+      var r=effOf('irrctrl'); if(!r.ok) noteFail('irrctrl');
+      var n=Math.min(AM_SYSTEMS.irrctrl.capacity,live.length);
+      for(var i=0;i<n;i++){ var p=live[i]; p.water=AM_clamp(AM_num(p.water,0)+32*r.e,0,94); }
     }catch(e){}
   })();
 
@@ -9570,6 +10945,19 @@ function AM_dayTick(){
     }catch(e){}
   })();
 
+  /* --- growai (P3-W4): daily diagnostics — read-only warnings, never
+         decisions. No auto-selling, no keeper picks, no breeding calls. --- */
+  (function(){
+    var st=S.am.growai; if(!st.owned||!st.on) return;
+    try{
+      var r=effOf('growai'); if(!r.ok) noteFail('growai');
+      var weak=0;
+      for(var i=0;i<live.length;i++){ if(AM_num(live[i].health,100)<40) weak++; }
+      if(weak>0) S.am.notes.push('Grow AI diagnostics: '+weak+' plant'+(weak===1?'':'s')+' below 40% health — check the grow room.');
+      else S.am.notes.push('Grow AI: fleet nominal, all systems coordinated (+5% efficiency aura).');
+    }catch(e){}
+  })();
+
   AM_save();
 }
 
@@ -9622,14 +11010,24 @@ function AM_cardHTML(id){
   h+=PF_kv('Purchase','<b class="ge-num">'+AM_fmt(sys.cost)+'</b>');
   h+=PF_kv('Operating','<b class="ge-num">'+AM_fmt(sys.dailyCost)+'/day</b>');
   h+=PF_kv('Power draw','<b>'+AM_icon('lighting','ge-ic-sm')+' '+sys.power+'</b>');
-  h+=PF_kv('Capacity','<b class="ge-num">'+sys.capacity+(id==='processing'?' jobs':id==='restock'?' pkgs':id==='manager'?' plants':' plants')+'</b>');
+  h+=PF_kv('Capacity','<b class="ge-num">'+sys.capacity+(id==='processing'?' jobs':id==='restock'?' pkgs':' plants')+'</b>');
   h+=PF_kv('Efficiency','<b class="ge-num">'+Math.round(sys.efficiency*100)+'%</b>');
   h+=PF_kv('Reliability','<b class="ge-num">'+Math.round(sys.reliability*100)+'%</b>');
   h+='</div>';
 
+  /* P3-W4: earned-gate requirements — WHAT I NEED, per gate */
+  if(!owned){
+    var gates=AM_gateList(id);
+    h+='<div class="ge-am-reqs"><div class="ge-almost-lbl">REQUIREMENTS</div>';
+    gates.forEach(function(g){
+      h+='<div class="ge-datarow'+(g.met?'':' ge-am-req-unmet')+'"><span>'+AM_icon(g.met?'check':'lock','ge-ic-sm')+' '+AM_esc(g.label)+'</span><b class="ge-num">'+AM_esc(String(g.have))+' / '+AM_esc(String(g.need))+'</b></div>';
+    });
+    h+='</div>';
+  }
+
   if(id==='climate'&&owned){
-    h+='<div class="ge-am-controls"><label class="ge-field"><span>Target °F</span><input type="number" class="ge-input" data-am-temp min="60" max="90" step="1" value="'+AM_int(st.tempTarget,76)+'"></label>';
-    h+='<label class="ge-field"><span>Target RH%</span><input type="number" class="ge-input" data-am-rh min="30" max="80" step="1" value="'+AM_int(st.rhTarget,55)+'"></label></div>';
+    h+='<div class="ge-am-controls"><label class="ge-field"><span>Target °F</span><input type="number" class="ge-input" inputmode="numeric" enterkeyhint="done" data-am-temp min="60" max="90" step="1" value="'+AM_int(st.tempTarget,76)+'"></label>';
+    h+='<label class="ge-field"><span>Target RH%</span><input type="number" class="ge-input" inputmode="numeric" enterkeyhint="done" data-am-rh min="30" max="80" step="1" value="'+AM_int(st.rhTarget,55)+'"></label></div>';
   }
   if(id==='manager'&&owned){
     var emps=[];
@@ -9644,11 +11042,19 @@ function AM_cardHTML(id){
 
   h+='<div class="ge-am-actions">';
   if(!owned){
-    if(gateMet){
+    /* P3-W4: BUY appears when every earned gate is met (cash is checked at
+       purchase with its own toast); otherwise the card shows what's missing. */
+    var buyable=false;
+    try{
+      buyable=AM_gateList(id).filter(function(g){ return g.key!=='cash'; }).every(function(g){ return g.met; });
+    }catch(e){ buyable=gateMet; }
+    if(buyable){
       h+='<button class="ge-btn ge-btn-gold ge-btn-block" data-am-buy="'+id+'">'+AM_icon('cash','ge-ic-md')+'BUY '+AM_fmt(sys.cost)+'</button>';
     }else{
+      var miss=[];
+      try{ miss=AM_gateList(id).filter(function(g){ return !g.met&&g.key!=='cash'; }); }catch(e){}
       h+='<button class="ge-btn ge-btn-block" disabled>'+AM_icon('lock','ge-ic-md')+'LOCKED</button>';
-      h+='<p class="ge-caption ge-muted">'+AM_icon('lock','ge-ic-sm')+' Requires <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b> rank — you are <b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>.</p>';
+      h+='<p class="ge-caption ge-muted">'+AM_icon('lock','ge-ic-sm')+' '+(miss.length?('Next: <b>'+AM_esc(miss[0].label)+'</b> — need '+AM_esc(String(miss[0].need))):'Requires <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b> rank')+'.</p>';
     }
   }else{
     h+='<button class="ge-btn ge-btn-block '+(on?'ge-btn-ghost':'ge-btn-primary')+'" data-am-toggle="'+id+'">'+(on?AM_icon('x','ge-ic-md')+'TURN OFF':AM_icon('check','ge-ic-md')+'TURN ON')+'</button>';
@@ -9661,6 +11067,44 @@ function AM_cardHTML(id){
 function AM_screenHead(){
   try{ if(typeof screenHead==='function') return screenHead('equipment','AUTOMATION CONTROL CENTER'); }catch(e){}
   return '<div class="screenhead"><h2>AUTOMATION CONTROL CENTER</h2></div>';
+}
+
+/* P3-W4: NEXT IN THE TECH TREE — Almost-There-style panel (WHAT I WANT /
+   WHAT I NEED / HOW CLOSE) for the nearest locked tier. Read-only. */
+function AM_nextTreeHTML(){
+  try{
+    if(!AM_migrate()) return '';
+    var next=AM_nextLocked();
+    var h='<div class="ge-card ge-almost-card"><div class="ge-card-head"><h3>'+AM_icon('star','ge-ic-md')+'NEXT IN THE TECH TREE</h3></div>';
+    if(!next){
+      return h+'<div class="ge-almost-row"><div class="ge-datarow"><span class="ge-almost-lbl">WHAT I WANT</span><b>Everything</b></div>'+
+        '<div class="ge-datarow"><span class="ge-almost-lbl">WHAT I NEED</span><span class="ge-num">Nothing — the machine runs itself</span></div>'+
+        /* P3-W6 endgame cross-link: maxed automation is a handoff, not a finish line. */
+        '<div class="ge-datarow"><span class="ge-almost-lbl">NEXT FRONTIER</span><span class="ge-muted">Breed the genetics it grows.</span></div>'+
+        '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="breeding">BREEDING LAB</button></div></div></div>';
+    }
+    var sys=AM_SYSTEMS[next], gates=AM_gateList(next);
+    var unmet=gates.filter(function(g){ return !g.met; });
+    var prev=AM_chainPrev(next);
+    var pos=AM_ORDER.indexOf(next)+1;
+    h+='<div class="ge-almost-row">';
+    h+='<div class="ge-datarow"><span class="ge-almost-lbl">WHAT I WANT</span><b>'+AM_esc(sys.name)+'</b></div>';
+    h+='<div class="ge-caption ge-muted">Tier '+pos+' of '+AM_ORDER.length+' — '+AM_esc(sys.desc)+'</div>';
+    h+='<div class="ge-datarow"><span class="ge-almost-lbl">WHAT I NEED</span><span class="ge-num">'+(unmet.length?unmet.map(function(g){ return AM_esc(g.label)+': '+AM_esc(String(g.need)); }).join(' · '):'Ready to install — '+AM_fmt(sys.cost))+'</span></div>';
+    if(prev&&!(S.am&&S.am[prev]&&S.am[prev].owned)){
+      h+='<div class="ge-caption ge-muted">'+AM_icon('lock','ge-ic-sm')+' The tree builds in order — <b>'+AM_esc(AM_SYSTEMS[prev].name)+'</b> comes first.</div>';
+    }
+    h+='<div class="ge-almost-lbl">HOW CLOSE AM I</div>';
+    gates.forEach(function(g){
+      h+='<div class="ge-progress-meta"><span class="ge-caption ge-muted">'+AM_esc(g.label)+': '+AM_esc(String(g.have))+' / '+AM_esc(String(g.need))+'</span><b class="ge-num">'+g.pct+'%</b></div>';
+      h+='<div class="ge-progress"><i style="width:'+AM_clamp(g.pct,0,100)+'%"></i></div>';
+    });
+    var avg=Math.round(gates.reduce(function(a,g){ return a+g.pct; },0)/Math.max(1,gates.length));
+    h+='<div class="ge-progress-meta"><span><b>OVERALL</b></span><b class="ge-num">'+avg+'%</b></div>';
+    h+='<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" onclick="show(\'techtree\')">VIEW FULL TREE</button></div>';
+    h+='</div></div>';
+    return h;
+  }catch(e){ return ''; }
 }
 
 /* RENDER.automation — parent registers 'automation' in SCREENS and adds the
@@ -9683,6 +11127,7 @@ try{
       h+=PF_kv(AM_icon('cash','ge-ic-sm')+' Operating cost (active)','<b class="ge-num">'+AM_fmt(total)+'/day</b>');
       h+=PF_kv(AM_icon('day','ge-ic-sm')+' Last day charged','<b class="ge-num">'+AM_fmt(S.am.lastCost)+'</b>');
       h+=PF_kv(AM_icon('star','ge-ic-sm')+' Your rank','<b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>')+'</div>';
+      h+=AM_nextTreeHTML(); /* P3-W4: nearest locked tier, Almost-There style */
       if(S.am.notes&&S.am.notes.length){
         h+='<div class="ge-card"><div class="ge-card-head"><h3>'+AM_icon('scroll','ge-ic-lg')+'LAST DAY REPORT</h3></div><ul class="ge-notes">';
         S.am.notes.forEach(function(n){ h+='<li>'+n+'</li>'; });
@@ -9737,6 +11182,13 @@ function AM_wireAutomation(root){
         AM_toast(AM_icon('users','ge-ic-md')+(st.empId?' Supervisor assigned.':' Supervisor removed.'));
         AM_save();
         try{ if(typeof RENDER!=='undefined'&&RENDER.automation) RENDER.automation(); }catch(e){}
+      };
+    });
+    /* P3-W6: wire endgame cross-link buttons (e.g. maxed tree -> breeding) */
+    root.querySelectorAll('[data-ex-go]').forEach(function(b){
+      b.onclick=function(){
+        try{ if(b.getAttribute('data-ex-tab')&&typeof empireTab!=='undefined') empireTab=b.getAttribute('data-ex-tab'); }catch(e){}
+        try{ show(b.getAttribute('data-ex-go')); }catch(e){}
       };
     });
   }catch(e){}
@@ -10720,24 +12172,24 @@ function NX_renderLogin(){
      '</div><label class="ge-check"><input type="checkbox" id="nx-remember" checked> <span>Remember Me</span></label>'+
      '<button class="ge-btn ge-btn-ghost ge-btn-block" id="nx-b-forgot">FORGOT PASSWORD?</button>';
   } else if(NX_loginMode==='login'){
-    inner='<h3 class="ge-h2">LOGIN</h3><input class="ge-input" id="nx-f-user" placeholder="Username" autocomplete="username">'+
-     '<input class="ge-input" id="nx-f-pass" type="password" placeholder="Password" autocomplete="current-password">'+
+    inner='<h3 class="ge-h2">LOGIN</h3><input class="ge-input" id="nx-f-user" placeholder="Username" autocomplete="username" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-f-pass" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="done">'+
      '<label class="ge-check"><input type="checkbox" id="nx-remember2" checked> <span>Remember Me</span></label>'+
      '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-primary" id="nx-do-login">ENTER</button></div>';
   } else if(NX_loginMode==='create'){
     inner='<h3 class="ge-h2">CREATE GROW EMPIRE ID</h3>'+
-     '<input class="ge-input" id="nx-c-user" placeholder="Username" autocomplete="username">'+
-     '<input class="ge-input" id="nx-c-grower" placeholder="Grower Name (callsign)">'+
-     '<input class="ge-input" id="nx-c-email" placeholder="Email" autocomplete="email">'+
-     '<input class="ge-input" id="nx-c-pass" type="password" placeholder="Password" autocomplete="new-password">'+
-     '<input class="ge-input" id="nx-c-pass2" type="password" placeholder="Confirm Password" autocomplete="new-password">'+
+     '<input class="ge-input" id="nx-c-user" placeholder="Username" autocomplete="username" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-grower" placeholder="Grower Name (callsign)" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-email" type="email" inputmode="email" placeholder="Email" autocomplete="email" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-pass" type="password" placeholder="Password" autocomplete="new-password" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-pass2" type="password" placeholder="Confirm Password" autocomplete="new-password" enterkeyhint="done">'+
      '<p class="ge-caption ge-muted">Password is obscured and stored on this device only (demo-grade).</p>'+
      '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-gold" id="nx-do-create">CREATE ID</button></div>';
   } else if(NX_loginMode==='forgot'){
     inner='<h3 class="ge-h2">RESET LOCAL PASSWORD</h3><p class="ge-caption ge-muted">Local reset — no email is sent. Enter the account email to set a new password on this device.</p>'+
-     '<input class="ge-input" id="nx-f-email" placeholder="Account Email">'+
-     '<input class="ge-input" id="nx-f-new" type="password" placeholder="New Password" autocomplete="new-password">'+
-     '<input class="ge-input" id="nx-f-new2" type="password" placeholder="Confirm New Password" autocomplete="new-password">'+
+     '<input class="ge-input" id="nx-f-email" type="email" inputmode="email" placeholder="Account Email" autocomplete="email" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-f-new" type="password" placeholder="New Password" autocomplete="new-password" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-f-new2" type="password" placeholder="Confirm New Password" autocomplete="new-password" enterkeyhint="done">'+
      '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-primary" id="nx-do-reset">RESET</button></div>';
   }
   r.innerHTML=NX_loginShell(inner);
@@ -10826,9 +12278,10 @@ function NX_offlineSim(days){
     try{ if(typeof AM_dayTick==='function') AM_dayTick(); }catch(e){}
     const autoW=S.am&&S.am.water&&S.am.water.owned&&S.am.water.on;
     const autoF=S.am&&S.am.feed&&S.am.feed.owned&&S.am.feed.on;
+    const autoT=!autoW&&S.am&&S.am.timers&&S.am.timers.owned&&S.am.timers.on; /* P3-W4: timers halve offline thirst */
     S.plants.forEach(p=>{
       p.day=num(p.day,0)+0.9; sum.grown++;
-      if(autoW) sum.irr++; else p.water=clamp(num(p.water,80)-14,5,100);
+      if(autoW) sum.irr++; else if(autoT){ sum.irr++; p.water=clamp(num(p.water,80)-7,5,100); } else p.water=clamp(num(p.water,80)-14,5,100);
       if(autoF) sum.feed++; else p.nutrition=clamp(num(p.nutrition,80)-6,5,100);
       /* balanced: plants stall and thirst, they NEVER die while you're away */
       p.health=clamp(num(p.health,90)-4,25,100);
@@ -11004,7 +12457,7 @@ function RH_hooks(){
         const l=g.st.lock||{}; let prog=g.closeText;
         if(l.t==='rep'){ const v=int(l.v,0), rep=int((typeof TY_repOverall==='function')?TY_repOverall():S.reputation,0); prog=Math.min(rep,v)+'/'+v+' rep'; }
         else if(l.t==='cash'){ const c=num(g.st.seed,0)*3; prog=fmt$(Math.min(num(S.cash,0),c))+' / '+fmt$(c); }
-        out.push({ico:'genetics',t:'Next genetics: '+g.st.name,s:prog+(num(g.rel,1)===0?' - requirement met':' - '+g.closeText),go:'genetics',tab:null});
+        out.push({ico:'genetics',t:'Next genetics: '+g.st.name,s:prog+(num(g.rel,1)===0?' — requirement met: buy it in the Genetics Lab':' - '+g.closeText),go:'genetics',tab:null});
       }
     }catch(e){}
     /* 3. pending pheno comparison available */
@@ -11038,6 +12491,20 @@ function RH_hooks(){
       const nproc=(((S.ty||{}).proc)||[]).length;
       if(prods.length) out.push({ico:'box',t:prods.length+' finished product'+(prods.length===1?'':'s')+' to package',s:'Packaging is the next stage of the chain.',go:'production',tab:null});
       else if(nproc>0) out.push({ico:'flask',t:'Chain stage: processing \u2192 packaging',s:'Finished batches will need packaging before sale.',go:'production',tab:null});
+    }catch(e){}
+    /* 7. P3-W6: milestone anticipation - "you're close to X" from real progress.
+       Informational only; never urgent. */
+    try{
+      if(typeof MS_next==='function'){
+        const nx=MS_next(1)[0];
+        if(nx&&!nx.done){
+          const p=nx.prog();
+          if(p&&num(p.target,0)>0&&num(p.cur,0)>=num(p.target,0)*0.5){
+            out.push({ico:'trophy',t:'Close to milestone: '+nx.name,
+              s:MS_progText(nx)+' — the full list lives on the Empire Dashboard.',go:'dashboard',tab:null});
+          }
+        }
+      }
     }catch(e){}
   }catch(e){}
   return out;
@@ -11089,6 +12556,7 @@ function ME_first(key,detail){
 }
 function ME_eliteDetail(strainId,ph,rarity){
   try{ ME_first('elite',{strainId:strainId,strainName:ME_strainName(strainId),phenoNum:int(ph&&ph.num,0),rarity:rarity,day:int(S.day,1)}); }catch(e){}
+  try{ if(typeof MS_onElite==='function') MS_onElite(); }catch(e){} /* P3-W6 milestone: FIRST ELITE EXPRESSION */
 }
 function ME_recordHarvest(st,oz,potency,terpenes,resin){
   /* records only ever move UP - ties keep the earlier harvest */
@@ -11281,6 +12749,7 @@ RENDER.profile=function(){
    PF_tile(icon('project0','ge-ic-md'),'PROJECT 0 SCORE',num(S.project0.points,0))+
   '</div>'+
   '<div class="ge-section-title">TITLES<span class="ge-spread ge-num">'+earned.length+'/'+NX_TITLES.length+'</span></div>'+
+  (typeof P0T_legacyHTML==='function'?P0T_legacyHTML():'')+ /* P3-W3: LEGACY place of honor */
   '<p class="ge-caption ge-muted">Tap an earned title to display it.</p><div class="ge-title-grid">';
   NX_TITLES.forEach(t=>{
     const has=earned.some(e=>e.id===t.id), sel=S.nx.displayTitle===t.name;
@@ -11300,6 +12769,11 @@ RENDER.profile=function(){
     const t=NX_TITLES.find(x=>x.id===b.dataset.title);
     if(t&&earned.some(e=>e.id===t.id)){ S.nx.displayTitle=t.name; save(); toast(icon('crown-gold','ge-ic-md')+' Title set: '+esc(t.name)); RENDER.profile(); }
   });
+  /* P3-W6: wire cross-link buttons (e.g. LEGACY place of honor) */
+  r.querySelectorAll('[data-ex-go]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.exTab) empireTab=b.dataset.exTab;
+    show(b.dataset.exGo);
+  });
 };
 
 
@@ -11313,22 +12787,55 @@ const NX_TECH_TIERS=[
    {id:'t-timers',name:'Irrigation Timers',desc:'Scheduled watering. Requires Level 3.',ico:'water',lvl:3},
    {id:'t-alerts',name:'Environmental Alerts',desc:'Get warned before disaster. Requires Level 4.',ico:'warn',lvl:4},
    {id:'t-reservoir',name:'Basic Reservoir',desc:'Bigger buffer, fewer refills. Requires Level 5.',ico:'drop',lvl:5}]},
- {name:'CULTIVATOR',desc:'First real automation.',nodes:[{id:'water',am:true}]},
- {name:'MASTER GROWER',desc:'Precision dosing.',nodes:[{id:'feed',am:true},{id:'light',am:true}]},
- {name:'COMMERCIAL CULTIVATOR',desc:'Climate at scale.',nodes:[{id:'climate',am:true},{id:'processing',am:true}]},
- {name:'EMPIRE',desc:'The machine runs itself.',nodes:[{id:'restock',am:true},{id:'manager',am:true}]}
+ /* P3-W4: the earned tech-tree spine — MANUAL (Beginner tier above) →
+    BASIC TIMERS → AUTO-WATER → AUTO-FEED → ENVIRONMENT CONTROLLER →
+    IRRIGATION CONTROLLER → NUTRIENT DOSER (feed line) → CLIMATE
+    AUTOMATION → ADVANCED GROW AI. Each tier requires the previous tier
+    installed, plus its own level / rep / facility / mission gates. */
+ {name:'BASIC TIMERS',desc:'Scheduled micro-watering. The first machine.',nodes:[{id:'timers',am:true}],chain:1},
+ {name:'AUTO-WATER',desc:'Drip lines take over hydration.',nodes:[{id:'water',am:true}],chain:2},
+ {name:'AUTO-FEED',desc:'Precision fertigation, never burned.',nodes:[{id:'feed',am:true}],chain:3},
+ {name:'ENVIRONMENT CONTROLLER',desc:'Holds the room at 76°F / 55% RH.',nodes:[{id:'envctrl',am:true}],chain:4},
+ {name:'IRRIGATION CONTROLLER',desc:'High-capacity precision irrigation.',nodes:[{id:'irrctrl',am:true}],chain:5},
+ {name:'SMART LIGHTING',desc:'Rides the dimmer for every strain.',nodes:[{id:'light',am:true}],chain:6},
+ {name:'CLIMATE AUTOMATION',desc:'Your targets, held against the weather.',nodes:[{id:'climate',am:true}],chain:7},
+ {name:'PROCESSING',desc:'A second shift in the lab.',nodes:[{id:'processing',am:true}],chain:8},
+ {name:'LOGISTICS',desc:'Product moves itself to shelves.',nodes:[{id:'restock',am:true}],chain:9},
+ {name:'MANAGEMENT',desc:'Supervised automation.',nodes:[{id:'manager',am:true}],chain:10},
+ {name:'ADVANCED GROW AI',desc:'The machine coordinates itself. It advises — never decides.',nodes:[{id:'growai',am:true}],chain:11}
 ];
 function NX_techNodeState(nd){
   if(nd.am){
     const sys=AM_SYSTEMS[nd.id], st=(S.am&&S.am[nd.id])||{};
     if(st.owned) return 'owned';
-    let rankName='?'; try{ rankName=AM_rankName(sys.rankGate); }catch(e){}
-    const rankOk=(()=>{ try{return AM_rankMet(nd.id);}catch(e){return false;} })();
-    return {state:rankOk?'available':'locked',sys:sys,rankName:rankName};
+    /* P3-W4: full earned-gate inspection — rank, previous tier, level, rep,
+       facility, mission (cash is checked at purchase). */
+    let gates=[];
+    try{ gates=(typeof AM_gateList==='function')?AM_gateList(nd.id):[]; }catch(e){}
+    const unmet=gates.filter(g=>!g.met&&g.key!=='cash');
+    const prev=(typeof AM_chainPrev==='function')?AM_chainPrev(nd.id):null;
+    return {state:unmet.length?'locked':'available',sys:sys,gates:gates,unmet:unmet,prev:prev};
   }
   const lvl=int(S.level,1);
   if(!nd.lvl) return {state:'owned'};
   return {state:lvl>=nd.lvl?'owned':'locked'};
+}
+/* P3-W4: requirement text + previous-tier name for tech-tree nodes. */
+function NX_techReqText(nd,info,sys){
+  try{
+    if(info&&typeof info==='object'&&info.unmet){
+      const parts=info.unmet.map(g=>g.label+': '+g.need);
+      return 'Requires: '+parts.join(' • ')+' • '+fmt$(sys.cost);
+    }
+    if(info&&typeof info==='object'&&info.rankName) return 'Requires: '+info.rankName+' • '+fmt$(sys.cost);
+  }catch(e){}
+  return '';
+}
+function NX_techPrevName(info){
+  try{
+    if(info&&typeof info==='object'&&info.prev&&typeof AM_SYSTEMS!=='undefined'&&AM_SYSTEMS[info.prev]) return AM_SYSTEMS[info.prev].name;
+  }catch(e){}
+  return null;
 }
 RENDER.techtree=function(){
   const r=$('techtree-root'); if(!r) return;
@@ -11343,8 +12850,10 @@ RENDER.techtree=function(){
       if(nd.am){
         const sys=AM_SYSTEMS[nd.id], info=NX_techNodeState(nd);
         const state=typeof info==='string'?info:info.state;
-        const req=typeof info==='object'?('Requires: '+info.rankName+' • '+fmt$(sys.cost)):'';
+        const req=NX_techReqText(nd,info,sys);
+        const prevName=NX_techPrevName(info);
         html+='<div class="ge-node '+state+'"><span class="ge-node-ico">'+icon(sys.ico,'ge-ic-lg')+'</span><div class="ge-node-body"><b>'+esc(sys.name)+'</b><p class="ge-caption ge-muted">'+esc(sys.desc)+'</p>'+
+         (prevName?'<p class="ge-caption ge-muted">'+icon('lock','ge-ic-sm')+' Builds on: <b>'+esc(prevName)+'</b></p>':'')+
          (state==='owned'?'<span class="ge-badge ge-badge-keeper">'+icon('check','ge-ic-sm')+'INSTALLED</span>':state==='available'?'<span class="ge-badge ge-badge-legendary">AVAILABLE</span>':'<span class="ge-badge">'+icon('lock','ge-ic-sm')+' '+esc(req)+'</span>')+'</div>'+
          (state==='available'?'<button class="ge-btn ge-btn-gold" data-buyam="'+nd.id+'">INSTALL — '+fmt$(sys.cost)+'</button>':'')+'</div>';
       } else {
@@ -11397,7 +12906,7 @@ function NX_getKeeper(id){ return (S.keepers||[]).find(k=>k.id===id); }
 function NX_renameKeeper(id){
   const k=NX_getKeeper(id); if(!k) return;
   const m=modal('<h3>'+icon('star','ic')+' RENAME KEEPER</h3><p class="muted">'+esc(k.strainName)+' #'+k.phenoNum+'</p>'+
-   '<input class="nx-in" id="nx-kn" maxlength="40" value="'+esc(k.customName||'')+'" placeholder="Custom keeper name (optional)">'+
+   '<input class="nx-in" id="nx-kn" enterkeyhint="done" maxlength="40" value="'+esc(k.customName||'')+'" placeholder="Custom keeper name (optional)">'+
    '<div class="btn-row"><button class="btn" id="nx-kn-c">CANCEL</button><button class="btn btn-gold" id="nx-kn-ok">SAVE</button></div>');
   m.querySelector('#nx-kn-c').onclick=()=>m.remove();
   m.querySelector('#nx-kn-ok').onclick=()=>{ k.customName=m.querySelector('#nx-kn').value.trim().slice(0,40); save(); NX_saved(); m.remove(); RENDER.keepers(); toast('👑 Keeper renamed.'); };
@@ -12010,6 +13519,13 @@ function CAP_wireHaptics(){
 /* ---------- Android back button ---------- */
 function CAP_backHandler(){
   try{
+    /* 0a-2. W4: branded error overlay -> dismiss via its HOME path first. It
+       appends to body (bypassing the router); without this, back would open
+       the exit-confirm modal BEHIND the error overlay and trap the player. */
+    try{ const __er=document.getElementById('cap-err');
+      if(__er){ const hb=__er.querySelector('#cap-err-home'); if(hb){ hb.click(); } else { __er.remove(); } CAP_sfx('click'); return; } }catch(e){}
+    /* 0a. P3-W2 vault lineage sheets -> close the topmost one first */
+    try{ if(typeof GE_closeTopSheet==='function'&&GE_closeTopSheet()){ CAP_sfx('click'); return; } }catch(e){}
     /* 0. plant focus sheet -> close it first (P2-W6: it appends to body, bypassing the router) */
     try{ const __sh=document.getElementById('plant-focus'); if(__sh&&typeof closeFocus==='function'){ closeFocus(); CAP_sfx('click'); return; } }catch(e){}
     /* 1. popup open -> close the topmost one */
@@ -12017,6 +13533,10 @@ function CAP_backHandler(){
     if(root&&root.lastElementChild){
       const top=root.lastElementChild;
       try{ top.remove(); }catch(e){}
+      /* W4: run the overlay's registered dismiss hook AFTER removal. The
+         P3-W2 ceremony queue pump guards on "no ceremony open", so firing
+         before removal saw the still-attached node and stalled the queue. */
+      try{ if(top&&typeof top.__geOnDismiss==='function') top.__geOnDismiss(); }catch(e){}
       CAP_sfx('click'); return;
     }
     const cur=(typeof current!=='undefined')?current:'menu';
@@ -12471,13 +13991,17 @@ const EM_FACILITY_BLURB=[
  'Serious square footage for a serious operation.',
  'Industrial scale. The neighborhood knows your name.',
  'Precision environment for genetic work.',
- 'The crown jewel. Project 0 grade preservation.'
+ 'The crown jewel. Project 0 grade preservation.',
+ /* P3-W4: new tiers */
+ 'A dedicated lab wing: mothers, clones, and precision breeding.',
+ 'Project 0 headquarters: preservation lab plus dry and cure rooms.',
+ 'The empire at full scale: automation nexus and flagship dispensary.'
 ];
 const EM_EQUIP_TIERS=['','Standard','Professional','Commercial','Industrial','Project 0'];
 const EM_EQUIP_ICON={lights:'lighting',hvac:'hvac',humid:'humid',dehumid:'drop',co2sys:'co2',
  irrigation:'irrigation',nutrients:'nutrients',sensors:'sensors',drycure:'drycure'};
 function EM_facilityArt(tier){
-  const t=clamp(int(tier,0),0,5);
+  const t=clamp(int(tier,0),0,FACILITIES.length-1); /* P3-W4: was 0-5 */
   const w=46+t*12, h=30+t*6, x=Math.round((120-w)/2), y=76-h;
   const gold=t>=5, lab=t>=4;
   let s='<svg class="ge-fac-art" viewBox="0 0 120 80" aria-hidden="true">';
@@ -12523,7 +14047,14 @@ function EM_facilityCard(f,i){
      :next?'<span class="ge-pill ge-pill-neutral">NEXT</span>'
      :'<span class="ge-pill ge-pill-neutral">'+icon('lock','ge-ic-sm')+'LOCKED</span>')+'</div>';
   h+='<div class="ge-datarow"><span>'+icon('grow','ge-ic-md')+'Capacity</span><b class="ge-num">'+f.slots+' grow slots</b></div>';
-  h+='<ul class="ge-benefits"><li>'+f.slots+' grow slots</li><li>'+esc(EM_FACILITY_BLURB[i]||'')+'</li></ul>';
+  h+='<ul class="ge-benefits"><li>'+f.slots+' grow slots</li><li>'+esc(EM_FACILITY_BLURB[i]||'')+'</li>';
+  /* P3-W4: new tiers list their real unlocks on the card */
+  try{
+    if(typeof P3W4_facUnlocks==='function'&&i>=6){
+      P3W4_facUnlocks(i).forEach(u=>{ h+='<li>'+icon(u.ico||'check','ge-ic-sm')+' '+esc(u.t)+'</li>'; });
+    }
+  }catch(e){}
+  h+='</ul>';
   if(isCur){
     h+='<p class="ge-label ge-green">Operating at full capacity.</p>';
   }else if(owned){
@@ -12543,11 +14074,14 @@ function EM_facilityCard(f,i){
   return h+'</div></div>';
 }
 function EM_motherRoomCard(){
-  const maxed=int(S.motherCapacity,0)>=4;
+  const capMax=(typeof P3W4_motherCapMax==='function')?P3W4_motherCapMax():4; /* P3-W4: 6 with Breeding Lab */
+  const maxed=int(S.motherCapacity,0)>=capMax;
   let h='<div class="ge-card ge-facility"><div class="ge-facility-art">'+EM_facilityArt(3)+'</div><div class="ge-facility-body">';
   h+='<div class="ge-card-head"><h3>MOTHER ROOM</h3>'+(maxed?'<span class="ge-pill ge-pill-neutral">MAXED</span>':'')+'</div>';
-  h+='<p class="ge-caption ge-muted">House mother plants to take identical clones.</p>';
-  h+='<div class="ge-datarow"><span>'+icon('mothers','ge-ic-md')+'Mother slots</span><b class="ge-num">'+int(S.motherCapacity,0)+' / 4</b></div>';
+  h+='<p class="ge-caption ge-muted">House mother plants to take identical clones.'+(capMax>4?'':'')+'</p>';
+  if(int(S.facility,0)>=6) h+='<p class="ge-caption ge-muted">'+icon('mothers','ge-ic-sm')+' Breeding Lab wing: expanded mother capacity.</p>';
+  else h+='<p class="ge-caption ge-muted">'+icon('lock','ge-ic-sm')+' Slots 5–6 unlock with the Breeding Lab facility.</p>';
+  h+='<div class="ge-datarow"><span>'+icon('mothers','ge-ic-md')+'Mother slots</span><b class="ge-num">'+int(S.motherCapacity,0)+' / '+capMax+'</b></div>';
   h+=maxed?'<p class="ge-label">MAXED OUT.</p>'
     :'<button class="ge-btn ge-btn-gold ge-btn-block" data-buymother="1">'+icon('plus','ge-ic-md')+'ADD SLOT — '+fmt$(MOTHER_CAP_COSTS[int(S.motherCapacity,0)])+'</button>';
   return h+'</div></div>';
@@ -12558,6 +14092,16 @@ function EM_facilitiesHTML(){
   h+='<div class="ge-section-title">'+icon('facility','ge-ic-md')+'<span>FACILITIES</span></div>';
   FACILITIES.forEach((f,i)=>{ h+=EM_facilityCard(f,i); });
   h+=EM_motherRoomCard();
+  /* P3-W6 endgame cross-link: maxed facilities are never a dead end -
+     the frontier becomes optimization (records) and the genetics. */
+  try{
+    if(int(S.facility,0)>=FACILITIES.length-1){
+      h+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-md')+'EMPIRE COMPLETE — THE FRONTIER</h3></div>'+
+       '<p class="ge-caption ge-muted">Every room built. From here the game is mastery: beat your personal records and push the genetics further than the rooms ever could.</p>'+
+       '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="leaderboards">HALL OF RECORDS</button>'+
+       '<button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="breeding">BREEDING LAB</button></div></div>';
+    }
+  }catch(e){}
   return h;
 }
 function EM_equipTierName(lvl){ return EM_EQUIP_TIERS[clamp(int(lvl,0),1,5)]; }
@@ -12652,7 +14196,7 @@ function EM_rarCls(rarity){
     :'ge-pill ge-pill-neutral';
 }
 function EM_facilityUnlockCine(prevT,newT,name){
-  const slots=FACILITIES[clamp(int(S.facility,0),0,5)].slots;
+  const slots=FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].slots;
   return cineOverlay(
    '<div class="ge-cine-fac"><div class="ge-display ge-cine-title">FACILITY UNLOCKED</div>'+
    '<div class="ge-cine-compare"><div class="ge-cine-side"><span class="ge-label">BEFORE</span>'+facilitySceneSVG(prevT)+'<b>'+esc(FAC_TIERS[prevT].name)+'</b></div>'+
@@ -13325,3 +14869,895 @@ function P0V_titleSplit(t){
   }
   return {ic:'trophy',gold:false,text:s};
 }
+/* ============================================================================
+   P3-W5 — PEOPLE + BUSINESS
+   ----------------------------------------------------------------------------
+   Wave 5 extends the two existing staff systems and the business sim. Nothing
+   is forked, replaced, or redesigned:
+
+   PART A — EMPLOYEES. The 8 wave-5 roles map onto the existing EX_ROLES named-
+   staff system (the "11 employee roles" with FIRE/REPLACE + confirm flow):
+     Grow Technician      -> NEW role 'growtech'
+     Irrigation Technician-> existing 'irritech' (IRRIGATION TECH)
+     Trimmer              -> existing 'trimmer' (TRIMMER)
+     Processing Technician-> NEW role 'processtech'
+     Breeder              -> existing 'breeding' (BREEDING SPECIALIST)
+     Dispensary Worker    -> NEW role 'dispworker'
+     Manager              -> existing 'manager' (MANAGER)
+     Master Grower        -> NEW role 'mastergrower'
+   All eight get wave-5 mechanics: experience tenure (daysWorked, grows every
+   day on payroll, veteran XP every 10 days -> level-ups via the existing
+   EX_empLevelCheck, which also raises salary — better employees cost more),
+   an efficiency factor (skill + tenure), and a concrete specialty with real
+   day-tick effects. Hiring/firing/payroll are untouched: EX_hireEmp /
+   EX_fireEmp (confirm-first, no severance, no refunds) / EX_payrollTick.
+   Specialties are passive stat effects only — employees NEVER auto-sell,
+   auto-breed, or auto-keep. No parallel payroll, no parallel registries.
+
+   PART B — DISPENSARY TASTE. The 8 existing TY_CUST_TYPES each gain a taste
+   archetype (budget / potency / terpene / indica / sativa / collector /
+   medical / connoisseur). Customer selection scoring (P3W5_custScore) is the
+   exact legacy formula plus a preference bonus, so a 24%-THC jar with
+   exceptional terps/quality beats a 32%-THC jar for terpene hunters and
+   connoisseurs, while potency hunters still chase THC. SELECTION ONLY — prices
+   (pricePerOz / TY_prodPrice / WX_sellMult) are never touched. All products
+   (flower, premium, pre-rolls, concentrates, edibles, seed/clone packs) keep
+   flowing through the existing sale paths.
+
+   PART C — MARKET CONDITIONS. 7 rotating conditions (FLOWER SURPLUS,
+   CONCENTRATE SHORTAGE, INDICA DEMAND, TERPENE CRAZE, RARE GENETICS MARKET,
+   PRE-ROLL DEMAND, LOCAL COMPETITION) applied as one combined, hard-banded
+   multiplier inside WX_sellMult (the existing sale path): each condition
+   0.90-1.25, combined 0.85-1.60. They tick down daily (P3W5_condTick, driven
+   by the existing EX_tick day tick), expire, announce via the existing
+   TY_addNews feed, and never persist. Informational opportunities only —
+   no forced sales, nothing punishing, retention-rule clean.
+
+   PART D — REP CATEGORIES. S.reputation stays the single headline number for
+   strain unlocks/missions (backward compatible, untouched). Alongside it,
+   S.ty.rep gains three new categories next to the existing five:
+     grower  — elite harvests (Q85+ -> +2, Q95+ -> +3)
+     breeder — new customs (+1, +2 at 85+ stability)
+     p0      — preservation tier-ups (+tier, once per genetic per tier)
+   ('business' already exists; dispensary days add +1 per $1500 revenue, cap
+   +4/day.) Gains are DIRECT to the category — deliberately not routed through
+   TY_gainRep/gainRep, so the headline stays authoritative and each category is
+   attributable to exactly the action that earned it. Each category unlocks one
+   concrete, modest mechanic at a fixed threshold (see P3W5_UNLOCKS).
+   ============================================================================ */
+
+/* ---------------- state ---------------- */
+function P3W5_migrate(){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.p3w5||typeof S.p3w5!=='object') S.p3w5={};
+    if(!Array.isArray(S.p3w5.conds)) S.p3w5.conds=[];
+    S.p3w5.conds=S.p3w5.conds.filter(function(c){ return c&&c.id&&P3W5_CONDITIONS.some(function(d){ return d.id===c.id; }); })
+      .map(function(c){ return {id:String(c.id), days:Math.max(1,int(c.days,3))}; });
+    if(!S.p3w5.unlocks||typeof S.p3w5.unlocks!=='object') S.p3w5.unlocks={};
+    /* rep categories: append-only alongside the existing five; legacy saves backfill 0 */
+    if(S.ty&&S.ty.rep&&typeof S.ty.rep==='object'){
+      ['grower','breeder','p0'].forEach(function(k){
+        if(S.ty.rep[k]===undefined||S.ty.rep[k]===null) S.ty.rep[k]=0;
+        else S.ty.rep[k]=Math.max(0,num(S.ty.rep[k],0));
+      });
+    }
+  }catch(e){}
+}
+/* new rep categories join the existing TY_REP_CATS list (rendered by TY_repProfileHTML as-is) */
+try{
+  if(typeof TY_REP_CATS!=='undefined'&&Array.isArray(TY_REP_CATS)){
+    [['grower','GROWER REP','star','Elite harvests. Master growers watch this.'],
+     ['breeder','BREEDER REP','genetics','Stable crosses and named genetics.'],
+     ['p0','PROJECT 0 REP','preserve','Preservation work. The vault remembers.']
+    ].forEach(function(a){
+      if(!TY_REP_CATS.some(function(c){ return c&&c.id===a[0]; }))
+        TY_REP_CATS.push({id:a[0],name:a[1],ico:a[2],desc:a[3]});
+    });
+  }
+}catch(e){}
+
+/* ---------------- rep categories ----------------
+   Direct-to-category gains: the headline S.reputation is never inflated here,
+   and categories stay attributable to exactly the action that earned them. */
+function P3W5_gainCat(cat,n){
+  try{
+    if(!S.ty||!S.ty.rep) return;
+    n=num(n,0); if(!(n>0)) return;
+    if(!(cat in S.ty.rep)) return;
+    S.ty.rep[cat]=Math.max(0,num(S.ty.rep[cat],0)+n);
+  }catch(e){}
+}
+function P3W5_repCat(id){ try{ return Math.max(0,num(S.ty&&S.ty.rep?S.ty.rep[id]:0,0)); }catch(e){ return 0; } }
+/* Category gain rates — modest by design, documented here:
+   grower:   elite harvest Q85+ -> +2, Q95+ -> +3
+   breeder:  new custom cross -> +1 (+2 at 85+ stability)
+   business: dispensary day -> +1 per $1500 revenue, cap +4/day
+   p0:       preservation tier-up -> +tier (1..4), once per genetic per tier, ever */
+function P3W5_onHarvestRep(qq){ try{ if(qq>=85) P3W5_gainCat('grower', qq>=95?3:2); }catch(e){} }
+function P3W5_onCrossBred(cross){ try{ P3W5_gainCat('breeder', num(cross&&cross.stab,0)>=85?2:1); }catch(e){} }
+function P3W5_onDispensarySales(rev,sales){ try{ if(num(rev,0)>0) P3W5_gainCat('business', clamp(Math.round(num(rev,0)/1500),1,4)); }catch(e){} }
+function P3W5_onP0Tier(t){ try{ P3W5_gainCat('p0', clamp(int(t,1),1,4)); }catch(e){} }
+
+/* ---------------- category unlocks (concrete, modest) ---------------- */
+const P3W5_UNLOCKS=[
+ {id:'steady-hands',    cat:'grower',   need:40, name:'STEADY HANDS',     desc:'Plants shed +2 stress every day.'},
+ {id:'stable-hands',    cat:'breeder',  need:30, name:'STABLE HANDS',     desc:'+3 stability on all new crosses.'},
+ {id:'retail-draw',     cat:'business', need:40, name:'RETAIL DRAW',      desc:'+2 dispensary customers/day.'},
+ {id:'archivists-trust',cat:'p0',       need:30, name:"ARCHIVIST'S TRUST",desc:'+10% Project 0 points.'}
+];
+function P3W5_hasUnlock(id){ try{ return !!(S.p3w5&&S.p3w5.unlocks&&S.p3w5.unlocks[id]); }catch(e){ return false; } }
+function P3W5_unlocksCheck(){
+  try{
+    if(!S.p3w5) return;
+    P3W5_UNLOCKS.forEach(function(u){
+      if(S.p3w5.unlocks[u.id]) return;
+      if(P3W5_repCat(u.cat)>=u.need){
+        S.p3w5.unlocks[u.id]=1;
+        try{ if(typeof TY_notify==='function') TY_notify(icon('trophy','ge-ic-md')+' REP UNLOCK: <b>'+esc(u.name)+'</b> — '+esc(u.desc),'good',true); }catch(e){}
+      }
+    });
+  }catch(e){}
+}
+function P3W5_retailDrawBonus(){ try{ return P3W5_hasUnlock('retail-draw')?2:0; }catch(e){ return 0; } }
+function P3W5_p0Mult(){ try{ return P3W5_hasUnlock('archivists-trust')?1.1:1; }catch(e){ return 1; } }
+function P3W5_repUnlocksHTML(){
+  try{
+    let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-md')+'CATEGORY UNLOCKS</h3></div>';
+    P3W5_UNLOCKS.forEach(function(u){
+      const v=Math.round(P3W5_repCat(u.cat)), got=P3W5_hasUnlock(u.id);
+      h+='<div class="ge-datarow"><span>'+esc(u.name)+' <span class="ge-caption ge-muted">('+esc(u.cat.toUpperCase())+' '+u.need+')</span><br><span class="ge-caption ge-muted">'+esc(u.desc)+'</span></span>'+
+        (got?'<span class="ge-pill ge-pill-gold">'+icon('check','ge-ic-sm')+'UNLOCKED</span>':'<b class="ge-num">'+v+' / '+u.need+'</b>')+'</div>';
+    });
+    h+='<p class="ge-caption ge-muted">Grower: elite harvests • Breeder: stable crosses • Business: dispensary sales • Project 0: preservation tiers.</p></div>';
+    return h;
+  }catch(e){ return ''; }
+}
+
+/* ---------------- employees: specialties ---------------- */
+const P3W5_ROLE_SPEC={
+  growtech:'Plants recover +health and shed stress each day.',
+  irritech:'Waters the thirstiest plants every morning.',
+  trimmer:'Processing batches finish faster.',
+  processtech:'More processing capacity and output.',
+  breeding:'New crosses hold slightly more stability.',
+  dispworker:'Serves more customers per shift.',
+  manager:'Trims costs across the empire.',
+  mastergrower:'Lifts final harvest quality.'
+};
+function P3W5_empSpecHTML(e){
+  try{
+    const spec=P3W5_ROLE_SPEC[e.role];
+    if(!spec) return '';
+    return '<p class="ge-caption">'+icon('star','ge-ic-sm')+' '+esc(spec)+' <span class="ge-muted">• '+int(e.daysWorked,0)+' days worked</span></p>';
+  }catch(err){ return ''; }
+}
+function P3W5_assigned(role){
+  try{ return (S.ex.employees||[]).filter(function(e){ return e&&e.assigned&&e.role===role; }); }catch(e){ return []; }
+}
+function P3W5_efficiency(e){
+  /* skill + tenure -> 0.25..2.0 deterministic specialty multiplier */
+  try{ return clamp(0.5+num(e.skill,5)/40+Math.min(0.5,int(e.daysWorked,0)/60),0.25,2); }catch(e){ return 1; }
+}
+function P3W5_breederStab(){
+  /* Breeder specialty: slight stability lift on new crosses. Bonus pool caps at
+     50 -> +6 max; STABLE HANDS (Breeder Rep 30) adds +3. Hard clamp +9. */
+  try{
+    let b=num((typeof EX_employeeBonus==='function'?EX_employeeBonus('breeding'):0),0)*0.12;
+    if(P3W5_hasUnlock('stable-hands')) b+=3;
+    return clamp(b,0,9);
+  }catch(e){ return 0; }
+}
+function P3W5_masterGrowerBonus(){
+  /* Master Grower specialty: slight final-quality lift. Pool caps at 20 -> +3 max. */
+  try{ return num((typeof EX_employeeBonus==='function'?EX_employeeBonus('mastergrower'):0),0)*0.15; }catch(e){ return 0; }
+}
+function P3W5_processBoost(){
+  /* Trimmer + Processing Technician feed the existing processor bonus pool. */
+  try{
+    const eb=typeof EX_employeeBonus==='function'?EX_employeeBonus:function(){ return 0; };
+    return num(eb('trimmer'),0)+num(eb('processtech'),0);
+  }catch(e){ return 0; }
+}
+function P3W5_trimDays(){
+  /* Trimmer specialty: batches finish 1 day sooner once trimmer presence is meaningful. */
+  try{ return num((typeof EX_employeeBonus==='function'?EX_employeeBonus('trimmer'):0),0)>=8?1:0; }catch(e){ return 0; }
+}
+/* Daily crew work. Called from EX_tick (the existing day tick) — passive stat
+   effects only. Employees NEVER sell, breed, or keep: no sale calls, no cross
+   creation, no keeper writes anywhere in this function or its callees. */
+function P3W5_dayTick(){
+  try{
+    if(!S.ex||!Array.isArray(S.ex.employees)) return;
+    S.ex.employees.forEach(function(e){
+      e.daysWorked=int(e.daysWorked,0)+1; /* experience grows with days worked */
+      if(int(e.daysWorked,0)%10===0){ e.xp=num(e.xp,0)+40; EX_empLevelCheck(e,false); } /* veteran tenure bonus -> level-ups raise salary: better costs more */
+    });
+    /* Irrigation Technician waters the thirstiest plants (cap 95 — never overwater) */
+    const techs=P3W5_assigned('irritech');
+    if(techs.length&&Array.isArray(S.plants)&&S.plants.length){
+      const thirsty=S.plants.filter(function(p){ return !p.dead&&num(p.water,100)<70; })
+        .sort(function(a,b){ return num(a.water,0)-num(b.water,0); });
+      techs.forEach(function(t){
+        const eff=P3W5_efficiency(t), n=2+Math.floor(eff);
+        for(let i=0;i<n&&i<thirsty.length;i++){ const p=thirsty[i]; p.water=clamp(num(p.water,0)+12*eff,0,95); }
+      });
+    }
+    /* Grow Technician: health regen + stress relief */
+    const gts=P3W5_assigned('growtech');
+    if(gts.length&&Array.isArray(S.plants)){
+      gts.forEach(function(t){
+        const eff=P3W5_efficiency(t);
+        S.plants.forEach(function(p){ if(p.dead) return; p.health=clamp(num(p.health,0)+2*eff,0,100); p.stress=clamp(num(p.stress,0)-3*eff,0,100); });
+      });
+    }
+    /* STEADY HANDS (Grower Rep 40): veteran growers keep the room calm */
+    if(P3W5_hasUnlock('steady-hands')&&Array.isArray(S.plants))
+      S.plants.forEach(function(p){ if(!p.dead) p.stress=clamp(num(p.stress,0)-2,0,100); });
+    /* market conditions tick down daily, expire, rotate */
+    P3W5_condTick();
+    P3W5_unlocksCheck();
+  }catch(e){}
+}
+
+/* ---------------- dispensary taste preferences ----------------
+   Selection only — prices are never touched here. */
+function P3W5_custPref(t){
+  try{
+    let pref=(t&&t.pref)||'balanced';
+    /* TERPENE CRAZE: the market is flavor-mad — a quarter of foot traffic hunts terps */
+    if(pref!=='terpene'&&P3W5_condActive('terpene-craze')&&Math.random()<0.25) pref='terpene';
+    return pref;
+  }catch(e){ return (t&&t.pref)||'balanced'; }
+}
+function P3W5_stockEntry(s){
+  /* Enrich a customer-sim stock row with the traits preference scoring needs. */
+  try{
+    const ref=s.ref||{};
+    let terp=num(ref.terpenes,NaN), pot=num(ref.potency,NaN), bag=num(ref.bagAppeal,NaN);
+    let custom=!!ref.custom, stype='hybrid';
+    try{
+      const st=typeof getStrain==='function'?getStrain(s.strainId):null;
+      if(st){ stype=st.type||'hybrid'; if(st.custom) custom=true;
+        if(isNaN(terp)) terp=num(st.terp,70); if(isNaN(pot)) pot=num(st.pot,70); if(isNaN(bag)) bag=num(st.bagAppeal,70); }
+    }catch(e){}
+    s.terpenes=isNaN(terp)?70:terp; s.potency=isNaN(pot)?70:pot; s.bagAppeal=isNaN(bag)?70:bag;
+    s.stype=stype; s.custom=custom;
+  }catch(e){}
+  return s;
+}
+function P3W5_prefScore(pref,s){
+  /* Trait-based valuation: WHO the buyer is changes what they reach for.
+     A 24%-THC jar with exceptional terps/quality beats a 32%-THC jar for
+     terpene hunters and connoisseurs; potency hunters still chase THC. */
+  try{
+    const terp=num(s.terpenes,70), pot=num(s.potency,70), q=num(s.quality,70), bag=num(s.bagAppeal,70);
+    switch(pref){
+      case 'budget':      return clamp((1-num(s.price,0)/1000)*30,0,30);
+      case 'potency':     return pot*0.5;
+      case 'terpene':     return terp*0.6+q*0.2-pot*0.1;
+      case 'indica':      return (s.stype==='indica'?25:0)+q*0.2;
+      case 'sativa':      return (s.stype==='sativa'?25:0)+q*0.2;
+      case 'collector':   return (s.custom?40:0)+(q>=90?20:0);
+      case 'medical':     return (s.stype==='indica'?15:0)+q*0.35;
+      case 'connoisseur': return terp*0.45+q*0.35+bag*0.2-pot*0.05;
+      default:            return q*0.1;
+    }
+  }catch(e){ return 0; }
+}
+function P3W5_custScore(c,s){
+  /* Exact legacy score + preference bonus. Prices are never touched here. */
+  try{
+    const base=(s.strainId===c.favStrain?30:0)+(s.ptype===c.prefPtype?20:0)+s.quality-s.price*c.priceSens*0.05;
+    return base+P3W5_prefScore(c.pref,s);
+  }catch(e){ return 0; }
+}
+
+/* ---------------- dynamic market conditions ---------------- */
+const P3W5_CONDITIONS=[
+ {id:'flower-surplus', name:'FLOWER SURPLUS', desc:'Flower is flooding the market. Hold it, or process it into something scarce.', days:[3,6],
+  mult:function(si,it){ const pt=P3W5_ptype(it); return (pt==='flower'||pt==='premium'||pt==='budget')?0.92:1; }},
+ {id:'conc-shortage', name:'CONCENTRATE SHORTAGE', desc:'Extract shelves are bare. Time to run the lab.', days:[3,5],
+  mult:function(si,it){ return P3W5_ptype(it)==='conc'?1.22:1; }},
+ {id:'indica-demand', name:'INDICA DEMAND', desc:'The city wants heavy indicas. Couch-lock is currency.', days:[3,6],
+  mult:function(si,it){ return P3W5_stype(si)==='indica'?1.15:1; }},
+ {id:'terpene-craze', name:'TERPENE CRAZE', desc:'Flavor chasers pay for loud terps. Terpene hunters flood the shop.', days:[3,5],
+  mult:function(si,it){ return num(it.terpenes,0)>=75?1.15:1; }},
+ {id:'rare-genetics', name:'RARE GENETICS MARKET', desc:'Collectors hunt one-of-one genetics. Save your elite flower.', days:[4,6],
+  mult:function(si,it){ return (it.custom||num(it.quality,0)>=90)?1.20:1; }},
+ {id:'preroll-demand', name:'PRE-ROLL DEMAND', desc:'Convenience is king this week. Roll them while they are hot.', days:[3,5],
+  mult:function(si,it){ return P3W5_ptype(it)==='preroll'?1.20:1; }},
+ {id:'local-competition', name:'LOCAL COMPETITION', desc:'A rival shop undercut the block. Prices dip — holding is free.', days:[2,4],
+  mult:function(){ return 0.93; }}
+];
+function P3W5_ptype(it){ try{ return (typeof TY_ptypeOf==='function'?TY_ptypeOf(it):'flower'); }catch(e){ return 'flower'; } }
+function P3W5_stype(si){ try{ const st=typeof getStrain==='function'?getStrain(si):null; return st?st.type:'hybrid'; }catch(e){ return 'hybrid'; } }
+function P3W5_condActive(id){ try{ return !!(S.p3w5&&S.p3w5.conds&&S.p3w5.conds.some(function(c){ return c.id===id; })); }catch(e){ return false; } }
+function P3W5_condTick(){
+  /* Daily: conditions expire (never permanent), quiet days may roll a new one
+     (at most 2 active). Announcements go through the existing news feed.
+     Informational opportunities only — no forced sales, nothing punishing. */
+  try{
+    if(!S.p3w5) return;
+    S.p3w5.conds.forEach(function(c){ c.days=int(c.days,1)-1; });
+    const expired=S.p3w5.conds.filter(function(c){ return c.days<=0; });
+    S.p3w5.conds=S.p3w5.conds.filter(function(c){ return c.days>0; });
+    expired.forEach(function(c){
+      const d=P3W5_CONDITIONS.find(function(x){ return x.id===c.id; });
+      if(d&&typeof TY_addNews==='function') TY_addNews('cash','<b>'+esc(d.name)+'</b> cooled off.');
+    });
+    if(S.p3w5.conds.length<2&&Math.random()<0.35){
+      const avail=P3W5_CONDITIONS.filter(function(d){ return !P3W5_condActive(d.id); });
+      if(avail.length){
+        const d=pick(avail);
+        S.p3w5.conds.push({id:d.id,days:rndi(d.days[0],d.days[1])});
+        if(typeof TY_addNews==='function') TY_addNews('chart','<b>MARKET:</b> '+esc(d.name)+' — '+esc(d.desc));
+        try{ if(typeof TY_notify==='function') TY_notify(icon('chart','ge-ic-md')+' Market condition: <b>'+esc(d.name)+'</b>','info',true); }catch(e){}
+      }
+    }
+  }catch(e){}
+}
+function P3W5_marketMult(strainId,item){
+  /* Combined condition factor, hard-banded: each condition 0.90-1.25,
+     combined 0.85-1.60. Applied inside WX_sellMult (the existing sale path),
+     so flower, products, and contracts all share the one controlled band. */
+  try{
+    if(!S.p3w5||!S.p3w5.conds||!S.p3w5.conds.length) return 1;
+    let m=1;
+    S.p3w5.conds.forEach(function(c){
+      const d=P3W5_CONDITIONS.find(function(x){ return x.id===c.id; });
+      if(d&&typeof d.mult==='function'){ const f=num(d.mult(strainId,item||{}),1); m*=clamp(f,0.9,1.25); }
+    });
+    return clamp(m,0.85,1.6);
+  }catch(e){ return 1; }
+}
+function P3W5_condsHTML(){
+  try{
+    if(!S.p3w5||!S.p3w5.conds||!S.p3w5.conds.length) return '';
+    let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('chart','ge-ic-md')+'MARKET CONDITIONS</h3></div>';
+    S.p3w5.conds.forEach(function(c){
+      const d=P3W5_CONDITIONS.find(function(x){ return x.id===c.id; });
+      if(!d) return;
+      h+='<div class="ge-datarow"><span>'+esc(d.name)+'<br><span class="ge-caption ge-muted">'+esc(d.desc)+'</span></span>'+
+         '<span class="ge-pill ge-pill-watch">'+int(c.days,0)+'d left</span></div>';
+    });
+    h+='<p class="ge-caption ge-muted">Opportunities, not orders — holding is always free.</p></div>';
+    return h;
+  }catch(e){ return ''; }
+}
+
+/* ============================================================
+   P3 WAVE 6 — EMPIRE DASHBOARD + BIG PURCHASE GOALS + MAJOR MILESTONES + ENDGAME COHERENCE
+   ----------------------------------------------------------------------------
+   PART C — MAJOR MILESTONES. 12 milestones, each fires exactly once.
+   Ledger: S.msDone = {id:{day}} (save-safe, in S; backfilled silently for
+   legacy saves in normalizeState via MS_backfill). Ceremony: restrained —
+   one toast + one PR_haptic('achievement') tick. Industrial, never casino.
+   No cash, no XP, no rewards granted — milestones are informational
+   (retention rule: no fake urgency).
+   Trigger points are thin additive hooks at the natural events
+   (harvest finalize, keeper ceremony, elite detail, createCross/selfCross,
+   P0T_verifiedCeremony, facility purchase) plus MS_sweep() at day tick as
+   the backstop for the monotone money milestones.
+   ----------------------------------------------------------------------------
+   PART B — BIG PURCHASE GOALS. P14_wave6() extends the Almost There panel
+   (WHAT I WANT / WHAT I NEED / HOW CLOSE AM I) with the Wave 4/5 additions:
+   next facility tier (6-8 included), next automation tier (8-11 included,
+   binding gate drives HOW CLOSE), next keeper-vault expansion (real cost +
+   real facility gate), Wave-5 crew roles in the hiring pool (real signing
+   costs). Prices are SURFACED, never changed — economy frozen.
+   ----------------------------------------------------------------------------
+   PART A — EMPIRE DASHBOARD. RENDER.dashboard (JS-injected screen, AM_init
+   pattern — no index.html change). Progressive complexity: the snapshot +
+   milestones always render; every other section gates on its system being
+   in use (no employees -> no crew card; no processing -> no batch card).
+   Reuses Almost-There visual language (.ge-almost-row/.ge-almost-lbl,
+   .ge-progress) and existing card/datarow/metric classes. Every card links
+   back to its system (data-ex-go) — the dashboard IS the visible endgame loop.
+   ----------------------------------------------------------------------------
+   PART D — ENDGAME COHERENCE. Terminal states get explicit cross-links
+   instead of dead ends:
+     - LEGACY place of honor -> codex completion / breed the line forward
+     - maxed keeper vault -> Project 0 LEGACY push
+     - maxed automation tree -> breeding frontier
+     - maxed facility (Cultivation Empire) -> Hall of Records (optimization)
+     - TY_finHTML (DAILY LEDGER) was defined but never rendered anywhere;
+       the dashboard FINANCES section renders it inline when unlocked.
+   ============================================================ */
+
+/* ---------------- PART C: milestone engine ---------------- */
+function MS_ensure(){
+  try{
+    if(!S||typeof S!=='object') return;
+    if(!S.msDone||typeof S.msDone!=='object') S.msDone={};
+  }catch(e){}
+}
+function MS_p2(cur,target){ return {cur:num(cur,0),target:Math.max(1,num(target,1))}; }
+function MS_hasF2(){
+  try{
+    return (S.customStrains||[]).some(s=>{
+      const m=String(s.genLabel||s.generation||'').match(/^(F|BX)(\d+)$/i);
+      return !!m&&(m[1].toUpperCase()==='BX'||int(m[2],0)>=2);
+    });
+  }catch(e){ return false; }
+}
+function MS_hasStabilized(){
+  try{
+    const stab=(S.ty&&S.ty.stab)||{};
+    return (S.customStrains||[]).some(s=>num(s.stabilityPct,0)>=90||num(stab[s.id],0)>=90);
+  }catch(e){ return false; }
+}
+function MS_verifiedCount(){
+  try{
+    return Object.keys(S.p0vault||{}).filter(gid=>{ const e=S.p0vault[gid]; return e&&num(e.tier,0)>=2; }).length;
+  }catch(e){ return 0; }
+}
+/* The 12 major milestones, in progression order. prog() reads live state;
+   trig is the honest in-game path (used by the "you're close" return hook). */
+const MS_DEFS=[
+ {id:'first-harvest',name:'FIRST HARVEST',ico:'harvest',sub:'Bring a plant home.',trig:'Harvest any plant',
+  prog:function(){ return MS_p2(S.stats&&S.stats.harvests,1); }},
+ {id:'first-keeper',name:'FIRST KEEPER',ico:'keepers',sub:'Crown a phenotype.',trig:'Mark a keeper in the vault',
+  prog:function(){ return MS_p2(Math.max(num(S.stats&&S.stats.keepersFound,0),(S.keepers||[]).length),1); }},
+ {id:'first-10k',name:'FIRST $10,000',ico:'cash',sub:'$10,000 lifetime revenue.',trig:'Sell product at the dispensary',
+  prog:function(){ return MS_p2(S.stats&&S.stats.lifetimeRevenue,10000); }},
+ {id:'first-elite',name:'FIRST ELITE EXPRESSION',ico:'dna',sub:'Find an elite or legendary phenotype.',trig:'Run pheno hunts',
+  prog:function(){ return MS_p2(num(S.stats&&S.stats.eliteFound,0)+num(S.stats&&S.stats.legendaryFound,0),1); }},
+ {id:'first-cross',name:'FIRST CROSS',ico:'breeding',sub:'Breed your first custom genetic.',trig:'Breed in the breeding lab',
+  prog:function(){ return MS_p2(S.stats&&S.stats.crosses,1); }},
+ {id:'first-f2',name:'FIRST F2',ico:'genetics',sub:'Breed a second-generation line.',trig:'Cross two customs (F2) or backcross (BX)',
+  prog:function(){ return MS_p2(MS_hasF2()?1:0,1); }},
+ {id:'first-stabilized',name:'FIRST STABILIZED LINE',ico:'check',sub:'Hold a line at 90%+ stability.',trig:'Stabilize a custom line through selection',
+  prog:function(){ return MS_p2(MS_hasStabilized()?1:0,1); }},
+ {id:'first-p0verified',name:'FIRST PROJECT 0 VERIFIED GENETIC',ico:'project0',sub:'Verify a genetic under Project 0.',trig:'Preserve a genetic — 3 harvests to VERIFIED',
+  prog:function(){ return MS_p2(MS_verifiedCount(),1); }},
+ {id:'first-100k',name:'FIRST $100,000',ico:'cash',sub:'$100,000 lifetime revenue.',trig:'Sell product at the dispensary',
+  prog:function(){ return MS_p2(S.stats&&S.stats.lifetimeRevenue,100000); }},
+ {id:'first-warehouse',name:'FIRST WAREHOUSE',ico:'empire',sub:'Expand to the Warehouse facility.',trig:'Buy facility tier 3 — Warehouse',
+  prog:function(){ return MS_p2(S.facility,3); }},
+ {id:'first-1m',name:'FIRST $1,000,000',ico:'cash',sub:'$1,000,000 lifetime revenue.',trig:'Sell product at the dispensary',
+  prog:function(){ return MS_p2(S.stats&&S.stats.lifetimeRevenue,1000000); }}
+];
+function MS_def(id){ return MS_DEFS.find(d=>d.id===id)||null; }
+function MS_done(id){ try{ MS_ensure(); return !!(S.msDone&&S.msDone[id]); }catch(e){ return false; } }
+function MS_met(def){
+  try{
+    if(!def||typeof def.prog!=='function') return false;
+    const p=def.prog();
+    return p&&num(p.target,0)>0&&num(p.cur,0)>=num(p.target,0);
+  }catch(e){ return false; }
+}
+function MS_fire(id){
+  try{
+    MS_ensure();
+    if(!id||(S.msDone&&S.msDone[id])) return false; /* exactly-once */
+    const def=MS_def(id); if(!def) return false;
+    S.msDone[id]={day:Math.max(1,int(S.day,1))}; /* mark BEFORE any UI can fail */
+    try{ toast(icon(def.ico||'trophy','ge-ic-md')+' <b>MILESTONE — '+esc(def.name)+'</b><br><span class="ge-muted">'+esc(def.sub||'')+'</span>'); }catch(e){}
+    try{ if(typeof PR_haptic==='function') PR_haptic('achievement'); }catch(e){} /* one restrained tick — never fireworks */
+    try{ save(); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+function MS_check(id){
+  try{
+    if(MS_done(id)) return false;
+    const def=MS_def(id);
+    return (def&&MS_met(def))?MS_fire(id):false;
+  }catch(e){ return false; }
+}
+/* backstop: monotone money milestones + save-edit consistency. Idempotent. */
+function MS_sweep(){
+  try{ MS_DEFS.forEach(d=>{ try{ MS_check(d.id); }catch(e){} }); }catch(e){}
+}
+/* legacy saves: conditions already met are marked SILENTLY (no toast, no
+   haptic) so nothing fires spuriously on load. Exactly-once preserved. */
+function MS_backfill(){
+  try{
+    MS_ensure();
+    let touched=false;
+    MS_DEFS.forEach(d=>{
+      try{
+        if(S.msDone[d.id]) return;
+        if(MS_met(d)){ S.msDone[d.id]={day:1,backfilled:true}; touched=true; }
+      }catch(e){}
+    });
+    if(touched){ try{ save(); }catch(e){} }
+  }catch(e){}
+}
+function MS_progText(def){
+  try{
+    const p=def.prog(), cur=num(p.cur,0), target=num(p.target,1);
+    const money=/\$/.test(def.name);
+    return money?(fmt$(cur)+' / '+fmt$(target)):(Math.round(cur)+'/'+Math.round(target));
+  }catch(e){ return ''; }
+}
+/* upcoming milestones in progression order, for dashboard + return hooks */
+function MS_next(n){
+  try{
+    MS_ensure();
+    return MS_DEFS.filter(d=>!MS_done(d.id)).slice(0,Math.max(1,int(n,3)));
+  }catch(e){ return []; }
+}
+/* thin event wrappers — called from the natural trigger points */
+function MS_onHarvest(){ try{ MS_check('first-harvest'); }catch(e){} }
+function MS_onKeeper(){ try{ MS_check('first-keeper'); }catch(e){} }
+function MS_onElite(){ try{ MS_check('first-elite'); }catch(e){} }
+function MS_onCross(cross){
+  try{ MS_check('first-cross'); }catch(e){}
+  try{ MS_check('first-f2'); }catch(e){}
+  try{ MS_check('first-stabilized'); }catch(e){}
+}
+function MS_onFacility(i){ try{ if(int(i,0)>=3) MS_check('first-warehouse'); }catch(e){} }
+function MS_onP0Verified(){ try{ MS_check('first-p0verified'); }catch(e){} }
+
+/* ---------------- PART B: big purchase goals for the Almost There panel ----------------
+   Real affordability math on the Wave 4/5 additions. Prices are surfaced,
+   never changed (economy frozen). Each entry: {rel,want,need,close,pct,go,tab}. */
+function P14_wave6(){
+  const out=[];
+  try{
+    const cash=num(S.cash,0);
+    const push=(rel,want,need,close,pct,go,tab)=>{ out.push({rel:rel,want:want,need:need,close:close,pct:pct,go:go,tab:tab}); };
+    /* 1. next facility tier (Wave-4 tiers 6-8 included) — pure cash gate */
+    try{
+      if(typeof FACILITIES!=='undefined'){
+        const fi=clamp(int(S.facility,0),0,FACILITIES.length-1);
+        if(fi<FACILITIES.length-1){
+          const f=FACILITIES[fi+1], cost=num(f.cost,0), gap=Math.max(0,cost-cash), rel=cost>0?gap/cost:0;
+          push(rel,'Facility: '+f.name,fmt$(cost),gap>0?(fmt$(gap)+' to go'):'affordable now',
+            Math.round((1-Math.min(1,rel))*100),'empire','facilities');
+        }
+      }
+    }catch(e){}
+    /* 2. next automation tier (tiers 8-11 included) — binding gate drives HOW CLOSE */
+    try{
+      if(typeof AM_nextLocked==='function'&&typeof AM_SYSTEMS!=='undefined'){
+        const id=AM_nextLocked();
+        if(id&&AM_SYSTEMS[id]){
+          const sys=AM_SYSTEMS[id], cost=num(sys.cost,0);
+          let gates=[]; try{ gates=AM_gateList(id); }catch(e2){}
+          const unmet=(gates||[]).filter(g=>g&&!g.met);
+          let rel, close, need;
+          if(unmet.length){
+            unmet.sort((a,b)=>num(a.pct,0)-num(b.pct,0)); /* binding = least complete */
+            const b=unmet[0];
+            rel=1-num(b.pct,0)/100;
+            if(b.key==='cash'){ const gap=Math.max(0,cost-cash); close=fmt$(gap)+' to go'; }
+            else close=String(b.label||'Requirement')+': '+String(b.have)+' → '+String(b.need);
+            need=fmt$(cost)+' · '+unmet.map(g=>String(g.label)).join(' · ');
+          }else{
+            const gap=Math.max(0,cost-cash); rel=cost>0?gap/cost:0;
+            close=gap>0?(fmt$(gap)+' to go'):'affordable now'; need=fmt$(cost);
+          }
+          push(rel,'Automation: '+sys.name,need,close,Math.round((1-Math.min(1,rel))*100),'automation',null);
+        }
+      }
+    }catch(e){}
+    /* 3. next keeper-vault expansion — real cost + real facility gate */
+    try{
+      if(typeof KEEPER_CAPS!=='undefined'&&typeof KEEPER_CAP_COSTS!=='undefined'){
+        const lvl=clamp(int(S.keeperCapLevel,0),0,KEEPER_CAPS.length-1), next=lvl+1;
+        if(next<KEEPER_CAPS.length){
+          const cost=num(KEEPER_CAP_COSTS[next],0);
+          const gate=(typeof keeperCapGate==='function')?keeperCapGate(next):null;
+          const gap=Math.max(0,cost-cash), rel=cost>0?gap/cost:0;
+          push(rel,'Keeper Vault: '+KEEPER_CAPS[next]+' slots',fmt$(cost)+(gate?(' · '+gate):''),
+            gap>0?(fmt$(gap)+' to go'):(gate?'gate locked':'affordable now'),
+            Math.round((1-Math.min(1,rel))*100),'keepers',null);
+        }
+      }
+    }catch(e){}
+    /* 4. Wave-5 crew roles in the hiring pool — real signing costs */
+    try{
+      const w5=['growtech','processtech','dispworker','mastergrower'];
+      const pool=((S.ex||{}).pool||[]).filter(c=>c&&w5.indexOf(c.role)>=0);
+      if(pool.length){
+        pool.sort((a,b)=>num(a.sign,0)-num(b.sign,0));
+        const c=pool[0], cost=num(c.sign,0), gap=Math.max(0,cost-cash), rel=cost>0?gap/cost:0;
+        let rname=c.role; try{ rname=EX_roleById(c.role).name; }catch(e2){}
+        push(rel,'Hire '+String(c.name||'specialist')+' ('+rname+')',fmt$(cost),
+          gap>0?(fmt$(gap)+' to go'):'affordable now',
+          Math.round((1-Math.min(1,rel))*100),'empire','staff');
+      }
+    }catch(e){}
+  }catch(e){}
+  return out;
+}
+
+/* ---------------- PART A: EMPIRE DASHBOARD ----------------
+   Idempotent screen registration (AM_init pattern): SCREENS entry +
+   section#scr-dashboard with div#dashboard-root. No index.html change. */
+function DASH_init(){
+  try{
+    if(typeof SCREENS!=='undefined'&&Array.isArray(SCREENS)&&SCREENS.indexOf('dashboard')<0) SCREENS.push('dashboard');
+    if(typeof document!=='undefined'){
+      let sec=null; try{ sec=document.getElementById('scr-dashboard'); }catch(e){}
+      if(!sec){
+        sec=document.createElement('section'); sec.id='scr-dashboard'; sec.className='screen hidden';
+        const d=document.createElement('div'); d.id='dashboard-root'; sec.appendChild(d);
+        const main=document.getElementById('app')||document.querySelector('main');
+        if(main) main.appendChild(sec);
+      }
+    }
+  }catch(e){}
+  return true;
+}
+
+/* Dashboard data — pure reads of live state (testable, reconciles with direct computation) */
+function DASH_plantStats(){
+  let active=0, ready=0;
+  try{ (S.plants||[]).forEach(p=>{ try{ active++; if(stageOf(p)>=5) ready++; }catch(e){} }); }catch(e){}
+  let slots=4, fname='Starter Tent', fi=0;
+  try{
+    fi=clamp(int(S.facility,0),0,FACILITIES.length-1);
+    slots=FACILITIES[fi].slots; fname=FACILITIES[fi].name;
+  }catch(e){}
+  return {active:active,ready:ready,slots:slots,facility:fname,fi:fi};
+}
+function DASH_invValue(){
+  let oz=0, val=0;
+  try{ (S.inventory||[]).forEach(it=>{ try{ const a=num(it.amount,0); oz+=a; val+=pricePerOz(it)*a; }catch(e){} }); }catch(e){}
+  return {oz:Math.round(oz*10)/10,val:Math.round(val)};
+}
+function DASH_fin(){
+  let rev=0, exp=0, lifeRev=0, lifeExp=0;
+  try{ rev=num(S.ty.fin.rev,0); exp=num(S.ty.fin.exp,0); }catch(e){}
+  try{ lifeRev=num(S.stats.lifetimeRevenue,0); }catch(e){}
+  try{ (S.ty.fin.hist||[]).forEach(h=>{ lifeExp+=num(h.exp,0); }); }catch(e){}
+  return {rev:Math.round(rev),exp:Math.round(exp),profit:Math.round(rev-exp),
+          lifeRev:Math.round(lifeRev),lifeExp:Math.round(lifeExp),lifeProfit:Math.round(lifeRev-lifeExp)};
+}
+function DASH_proc(){
+  const jobs=[];
+  try{ (S.ty.proc||[]).forEach(j=>{
+    let nm='Batch';
+    try{ const pt=(typeof TY_PRODUCTS!=='undefined')?TY_PRODUCTS.find(x=>x.id===j.ptype):null; if(pt) nm=pt.name; }catch(e){}
+    jobs.push({name:nm,daysLeft:num(j.daysLeft,0)});
+  }); }catch(e){}
+  let finished=0;
+  try{ finished=(S.ty.prod||[]).filter(p=>p&&!p.packaged).length; }catch(e){}
+  return {jobs:jobs,finished:finished};
+}
+function DASH_disp(){
+  let sales=0, crev=0, cust=0;
+  try{ const st=S.ty.cust.stats; sales=int(st.sales,0); crev=Math.round(num(st.rev,0)); cust=int(st.cust,0); }catch(e){}
+  return {sales:sales,rev:crev,cust:cust};
+}
+function DASH_missions(){
+  let done=0;
+  try{ done=(S.missionsDone||[]).length; }catch(e){}
+  const chains=[];
+  try{
+    (typeof CHAINS!=='undefined'?CHAINS:[]).forEach(def=>{
+      const ch=(typeof CHA_state==='function')?CHA_state(def.id):null; if(!ch) return;
+      const total=def.stages.length, doneN=Object.keys(ch.sdone||{}).length;
+      chains.push({name:def.name,done:!!ch.done,stage:int(ch.stage,0),total:total,doneN:doneN});
+    });
+  }catch(e){}
+  return {done:done,chains:chains};
+}
+function DASH_breeding(){
+  let customs=[];
+  try{ customs=(S.customStrains||[]).filter(s=>s&&typeof s==='object'); }catch(e){}
+  let stab=0, f2=0;
+  const stabMap=(S.ty&&S.ty.stab)||{};
+  customs.forEach(s=>{
+    if(num(s.stabilityPct,0)>=90||num(stabMap[s.id],0)>=90) stab++;
+    const m=String(s.genLabel||s.generation||'').match(/^(F|BX)(\d+)$/i);
+    if(m&&(m[1].toUpperCase()==='BX'||int(m[2],0)>=2)) f2++;
+  });
+  return {total:customs.length,stabilized:stab,f2:f2,inStab:customs.length-stab};
+}
+function DASH_p0(){
+  const tiers=[0,0,0,0,0];
+  try{ Object.keys(S.p0vault||{}).forEach(gid=>{ const e=S.p0vault[gid]; tiers[clamp(int(e&&e.tier,0),0,4)]++; }); }catch(e){}
+  return tiers;
+}
+function DASH_genetics(){
+  let owned=0;
+  try{ owned=(typeof ownedCount==='function')?ownedCount(S):0; }catch(e){}
+  let hist=0;
+  try{ Object.keys(S.codexHist||{}).forEach(id=>{ const h=S.codexHist[id];
+    if(h&&(int(h.acquiredDay,0)>0||int(h.grown,0)>0||int(h.harvested,0)>0||int(h.crossesCreated,0)>0||(h.genNotes||[]).length>0)) hist++;
+  }); }catch(e){}
+  let keepers=0;
+  try{ keepers=(S.keepers||[]).length; }catch(e){}
+  return {owned:owned,hist:hist,keepers:keepers};
+}
+function DASH_crew(){
+  let n=0, pay=0;
+  try{ n=(S.ex.employees||[]).length; }catch(e){}
+  try{ pay=(typeof EX_payrollTotal==='function')?EX_payrollTotal():0; }catch(e){}
+  return {n:n,pay:Math.round(num(pay,0))};
+}
+
+/* Dashboard render helpers — reuse existing card/datarow/Almost-There classes */
+function DASH_secTitle(ico,title,count){
+  return '<div class="ge-section-title">'+icon(ico,'ge-ic-sm')+'<span>'+esc(title)+'</span>'+
+    (count!=null?'<span class="ge-spread ge-num">'+count+'</span>':'')+'</div>';
+}
+function DASH_card(ico,title,rows,go,tab,cta){
+  let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon(ico,'ge-ic-md')+esc(title)+'</h3></div>';
+  rows.forEach(r=>{ h+='<div class="ge-datarow"><span>'+r[0]+'</span><b class="ge-num">'+r[1]+'</b></div>'; });
+  if(go) h+='<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="'+go+'"'+
+    (tab?' data-ex-tab="'+tab+'"':'')+'>'+esc(cta||'VIEW')+'</button></div>';
+  return h+'</div>';
+}
+function DASH_snapHTML(){
+  const ps=DASH_plantStats(), cash=num(S.cash,0);
+  let h=DASH_secTitle('star','EMPIRE SNAPSHOT');
+  h+='<div class="ge-home-glance">'+
+   '<div class="ge-metric-tile"><span class="ge-metric-value ge-num">'+ps.active+'<span class="ge-muted">/'+ps.slots+'</span></span><span class="ge-metric-label">GROWING</span></div>'+
+   '<div class="ge-metric-tile"><span class="ge-metric-value ge-num">'+ps.ready+'</span><span class="ge-metric-label">READY</span></div>'+
+   '<div class="ge-metric-tile"><span class="ge-metric-value ge-num">'+fmt$(cash)+'</span><span class="ge-metric-label">CASH</span></div>'+
+   '<div class="ge-metric-tile"><span class="ge-metric-value ge-num">DAY '+int(S.day,1)+'</span><span class="ge-metric-label">DAY</span></div></div>';
+  /* next goal — Almost-There visual language */
+  try{
+    const cands=(typeof P14_candidates==='function')?P14_candidates():[];
+    const c=cands[0];
+    if(c){
+      h+='<div class="ge-card ge-almost-card"><div class="ge-card-head"><h3>'+icon('star','ge-ic-md')+'NEXT GOAL</h3></div>'+
+       '<div class="ge-almost-row">'+
+       '<div class="ge-datarow"><span class="ge-almost-lbl">WHAT I WANT</span><b>'+esc(c.want)+'</b></div>'+
+       '<div class="ge-datarow"><span class="ge-almost-lbl">WHAT I NEED</span><span class="ge-num">'+esc(c.need)+'</span></div>'+
+       '<div class="ge-almost-lbl">HOW CLOSE AM I</div>'+
+       '<div class="ge-progress-meta"><span class="ge-caption ge-muted">'+esc(c.close)+'</span><b class="ge-num">'+c.pct+'%</b></div>'+
+       '<div class="ge-progress"><i style="width:'+clamp(c.pct,0,100)+'%"></i></div>'+
+       (c.go?'<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="'+c.go+'"'+(c.tab?' data-ex-tab="'+c.tab+'"':'')+'>VIEW</button></div>':'')+
+       '</div></div>';
+    }
+  }catch(e){}
+  return h;
+}
+function DASH_msHTML(){
+  const nx=MS_next(3);
+  let done=0;
+  try{ done=Object.keys(S.msDone||{}).length; }catch(e){}
+  let last=null, lastDay=0;
+  try{ Object.keys(S.msDone||{}).forEach(id=>{ const d=S.msDone[id]; if(d&&num(d.day,0)>=lastDay){ lastDay=num(d.day,0); last=id; } }); }catch(e){}
+  const lastDef=last?MS_def(last):null;
+  let h=DASH_secTitle('trophy','MILESTONES',done+' / '+MS_DEFS.length);
+  h+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-md')+'UPCOMING</h3></div>';
+  if(!nx.length) h+='<p class="ge-caption ge-muted">Every milestone complete. The empire is legend — the frontier now is your records.</p>';
+  nx.forEach(n=>{
+    let pct=0;
+    try{ const p=n.prog(); pct=clamp(num(p.cur,0)/Math.max(1,num(p.target,1))*100,0,100); }catch(e){}
+    h+='<div class="ge-almost-row">'+
+      '<div class="ge-datarow"><span class="ge-almost-lbl">MILESTONE</span><b>'+esc(n.name)+'</b></div>'+
+      '<div class="ge-datarow"><span class="ge-almost-lbl">PROGRESS</span><span class="ge-num">'+esc(MS_progText(n))+'</span></div>'+
+      '<div class="ge-progress-meta"><span class="ge-caption ge-muted">'+esc(n.trig||'')+'</span><b class="ge-num">'+Math.round(pct)+'%</b></div>'+
+      '<div class="ge-progress"><i style="width:'+pct+'%"></i></div></div>';
+  });
+  if(lastDef) h+='<div class="ge-datarow"><span class="ge-almost-lbl">LAST EARNED</span><b>'+esc(lastDef.name)+' <span class="ge-muted">· Day '+lastDay+'</span></b></div>';
+  return h+'</div>';
+}
+function DASH_roomsHTML(){
+  const ps=DASH_plantStats();
+  if(!(ps.active>0||ps.fi>0)) return ''; /* progressive: beginners see the snapshot only */
+  return DASH_secTitle('grow','GROW ROOMS')+
+   DASH_card('grow','ROOMS & CAPACITY',[
+     ['Facility',esc(ps.facility)],
+     ['Plants',ps.active+' / '+ps.slots],
+     ['Ready to harvest',ps.ready]
+   ],'empire','facilities');
+}
+function DASH_crewHTML(){
+  const c=DASH_crew();
+  if(c.n<=0) return '';
+  return DASH_secTitle('crew','CREW')+
+   DASH_card('crew','EMPLOYEES',[
+     ['Staff',c.n],
+     ['Payroll',fmt$(c.pay)+'/day']
+   ],'empire','staff');
+}
+function DASH_invHTML(){
+  const iv=DASH_invValue();
+  if(!(iv.oz>0)) return '';
+  return DASH_secTitle('jar','HARVEST INVENTORY')+
+   DASH_card('jar','INVENTORY VALUE',[
+     ['On hand',fmtW(iv.oz)],
+     ['Est. value',fmt$(iv.val)]
+   ],'dispensary',null,'SELL');
+}
+function DASH_procHTML(){
+  const pr=DASH_proc();
+  if(!(pr.jobs.length>0||pr.finished>0||num(S.stats&&S.stats.processedOz,0)>0)) return '';
+  const rows=[];
+  if(pr.jobs.length) rows.push(['Batches in flight',pr.jobs.length]);
+  pr.jobs.slice(0,3).forEach(j=>rows.push(['<span class="ge-muted">· '+esc(j.name)+'</span>',Math.max(0,Math.ceil(j.daysLeft))+'d left']));
+  if(pr.finished) rows.push(['Awaiting packaging',pr.finished]);
+  if(!rows.length) rows.push(['Pipeline','Idle — harvest to feed it']);
+  return DASH_secTitle('flask','PROCESSING')+DASH_card('flask','PRODUCTION PIPELINE',rows,'production');
+}
+function DASH_dispHTML(){
+  const d=DASH_disp(), f=DASH_fin();
+  if(!((S.ty&&S.ty.initDone)&&(d.sales>0||f.rev>0))) return '';
+  return DASH_secTitle('dispensary','DISPENSARY')+
+   DASH_card('dispensary','SALES TODAY',[
+     ['Revenue today',fmt$(f.rev)],
+     ['Customers served',d.cust],
+     ['Lifetime sales',d.sales]
+   ],'dispensary');
+}
+function DASH_finHTML(){
+  const f=DASH_fin();
+  if(!(num(S.stats&&S.stats.lifetimeRevenue,0)>0||((S.ty&&S.ty.fin&&S.ty.fin.hist)||[]).length>0)) return '';
+  /* PART D: TY_finHTML (DAILY LEDGER) was defined but never rendered anywhere —
+     the dashboard revives it inline when finances unlock. */
+  let h=DASH_secTitle('chart','FINANCES')+
+   DASH_card('chart','MONEY',[
+     ['Revenue today',fmt$(f.rev)],
+     ['Expenses today',fmt$(f.exp)],
+     ['Profit today',(f.profit>=0?'+':'')+fmt$(f.profit)],
+     ['Lifetime revenue',fmt$(f.lifeRev)],
+     ['Lifetime profit',(f.lifeProfit>=0?'+':'')+fmt$(f.lifeProfit)]
+   ],null);
+  try{ if(typeof TY_finHTML==='function') h+=TY_finHTML(); }catch(e){}
+  return h;
+}
+function DASH_misHTML(){
+  const m=DASH_missions();
+  if(!(m.done>0||m.chains.some(c=>!c.done&&c.doneN>0))) return '';
+  const rows=[['Missions complete',m.done]];
+  m.chains.forEach(c=>{ if(c.done||c.doneN>0) rows.push(['<span class="ge-muted">· '+esc(c.name)+'</span>',c.done?'COMPLETE':(c.doneN+'/'+c.total)]); });
+  return DASH_secTitle('missions','MISSIONS & STORY ARCS')+DASH_card('missions','PROGRESS',rows,'missions');
+}
+function DASH_breedHTML(){
+  const b=DASH_breeding();
+  if(b.total<=0) return '';
+  return DASH_secTitle('breeding','BREEDING PROJECTS')+
+   DASH_card('breeding','CUSTOM GENETICS',[
+     ['Active customs',b.total],
+     ['Stabilizing',b.inStab],
+     ['Stabilized lines',b.stabilized],
+     ['F2+ / BX lines',b.f2]
+   ],'breeding');
+}
+function DASH_p0HTML(){
+  const t=DASH_p0(), sum=t.reduce((a,b)=>a+b,0);
+  if(!(sum>0||num(S.project0&&S.project0.points,0)>0)) return '';
+  const names=(typeof P0T_TIERS!=='undefined')?P0T_TIERS:['CANDIDATE','DOCUMENTED','VERIFIED','PRESERVED','LEGACY'];
+  const rows=names.map((n,i)=>['<span class="ge-muted">· '+n+'</span>',t[i]]);
+  return DASH_secTitle('project0','PROJECT 0 PIPELINE')+DASH_card('project0','PRESERVATION TIERS',rows,'project0');
+}
+function DASH_genHTML(){
+  const g=DASH_genetics();
+  if(!(g.owned>0||g.hist>0)) return '';
+  let total=34;
+  try{ total=allStrains().length; }catch(e){}
+  return DASH_secTitle('genetics','GENETICS')+
+   DASH_card('genetics','COLLECTION',[
+     ['Owned',g.owned+' / '+total],
+     ['Codex history',g.hist],
+     ['Keepers',g.keepers]
+   ],'genetics');
+}
+RENDER.dashboard=function(){
+  try{ DASH_init(); }catch(e){}
+  const r=document.getElementById('dashboard-root'); if(!r) return;
+  let html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'home\')">'+
+    icon('x','ge-ic-md')+'<span>HOME</span></button>'+
+   '<h2 class="ge-screenhead-title">'+icon('empire','ge-ic-lg')+'EMPIRE DASHBOARD</h2></div>';
+  html+=DASH_snapHTML();
+  html+=DASH_msHTML();
+  html+=DASH_roomsHTML();
+  html+=DASH_crewHTML();
+  html+=DASH_invHTML();
+  html+=DASH_procHTML();
+  html+=DASH_dispHTML();
+  html+=DASH_finHTML();
+  html+=DASH_misHTML();
+  html+=DASH_breedHTML();
+  html+=DASH_p0HTML();
+  html+=DASH_genHTML();
+  html+='</div>';
+  r.innerHTML=html;
+  r.querySelectorAll('[data-ex-go]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.exTab) empireTab=b.dataset.exTab;
+    show(b.dataset.exGo);
+  });
+};
+/* auto-register on load (idempotent; mirrors AM_init) */
+try{ DASH_init(); }catch(e){}

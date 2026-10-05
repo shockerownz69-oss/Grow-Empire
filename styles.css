@@ -1921,7 +1921,7 @@ svg.ge-ic-xl{width:var(--ge-ic-xl);height:var(--ge-ic-xl)}
 .ge-btn-ghost:active{color:var(--ge-ink)}
 .ge-btn-gold{background:var(--ge-grad-gold);color:#1a1206;   /* premium/legendary ONLY */
   box-shadow:0 2px 12px rgba(212,160,23,.25),var(--ge-hi-inset)}
-.ge-btn-sm{min-height:40px;padding:0 13px;font-size:11px;border-radius:var(--ge-r-sm)}
+.ge-btn-sm{min-height:44px;padding:0 13px;font-size:11px;border-radius:var(--ge-r-sm)}
 .ge-btn-block{width:100%}
 .ge-btn-icon{width:44px;height:44px;min-height:44px;padding:0;border-radius:var(--ge-r-sm)}
 .ge-btn-row{display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);margin:var(--ge-sp-3) 0}
@@ -3246,6 +3246,12 @@ select.ge-input{ appearance:auto; }
 .ge-am-status{ margin-top:4px; }
 .ge-am-desc{ margin:0 0 var(--ge-sp-3); }
 .ge-am-stats{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+/* P3-W4: tech-tree requirement rows on automation cards */
+.ge-am-reqs{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-am-reqs .ge-datarow{ padding:3px 0; }
+.ge-am-reqs .ge-datarow span{ display:flex; align-items:center; gap:6px; }
+.ge-am-req-unmet span{ color:var(--ge-muted); }
+.ge-am-req-unmet b{ color:var(--ge-amber); }
 .ge-am-controls{ display:flex; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
 .ge-am-actions .ge-caption{ margin-top:var(--ge-sp-2); }
 .ge-notes{ margin:0; padding-left:var(--ge-sp-5); color:var(--ge-muted); font-size:var(--ge-size-body); line-height:var(--ge-lh); }
@@ -4280,6 +4286,12 @@ select.ge-input{ appearance:auto; }
 .ge-am-status{ margin-top:4px; }
 .ge-am-desc{ margin:0 0 var(--ge-sp-3); }
 .ge-am-stats{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+/* P3-W4: tech-tree requirement rows on automation cards */
+.ge-am-reqs{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-am-reqs .ge-datarow{ padding:3px 0; }
+.ge-am-reqs .ge-datarow span{ display:flex; align-items:center; gap:6px; }
+.ge-am-req-unmet span{ color:var(--ge-muted); }
+.ge-am-req-unmet b{ color:var(--ge-amber); }
 .ge-am-controls{ display:flex; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
 .ge-am-actions .ge-caption{ margin-top:var(--ge-sp-2); }
 .ge-notes{ margin:0; padding-left:var(--ge-sp-5); color:var(--ge-muted); font-size:var(--ge-size-body); line-height:var(--ge-lh); }
@@ -4405,3 +4417,61 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 .ge-cmp-side{margin-top:10px;}
 .ge-cmp-side-name{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;color:#8b8b93;margin-bottom:6px;text-transform:uppercase;}
 .ge-cmp-overall td{background:rgba(204,85,0,.06);}
+/* ================= P3-W2: NEW GENETIC ceremony (industrial — crimson/burnt orange) ================= */
+.cine-genetic .cine-stage{background:radial-gradient(ellipse at 50% 28%,rgba(224,32,32,.12),transparent 62%),#0c0c0e;}
+.gen-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.gen-stage .pr-smoke,.gen-stage .pr-scan{position:absolute;}
+.gen-kicker{display:flex;align-items:center;gap:6px;color:#ff8c2e;letter-spacing:.18em;font-size:11px;font-weight:700;position:relative;z-index:1;}
+.gen-art{position:relative;z-index:1;}
+.gen-title{font-size:28px;color:#ff5a2e;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.8);margin:6px 0 2px;text-align:center;position:relative;z-index:1;}
+.gen-name{font-size:20px;font-weight:800;color:#fff;position:relative;z-index:1;text-align:center;}
+.gen-lin{display:flex;align-items:center;gap:6px;color:#b9b9c0;font-size:12px;position:relative;z-index:1;max-width:100%;}
+.gen-lin span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:340px;position:relative;z-index:1;}
+.gen-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,90,46,.25);border-radius:8px;padding:8px 4px;text-align:center;opacity:0;animation:genCellIn .5s ease-out forwards;}
+@keyframes genCellIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.gen-cell span{display:block;font-size:9px;letter-spacing:.12em;color:#8a8a92;}
+.gen-cell b{font-size:15px;color:#ffb37a;}
+.gen-sub{color:#9a9aa2;font-size:12px;text-align:center;position:relative;z-index:1;}
+.gen-namerow{display:flex;gap:8px;width:100%;max-width:340px;position:relative;z-index:1;}
+.gen-namerow[hidden]{display:none;}
+.gen-namerow .ge-input{flex:1;min-width:0;}
+.gen-stage .ge-btn-grid{position:relative;z-index:1;width:100%;max-width:340px;}
+/* ================= P3-W2: vault lineage sheet + selection history ================= */
+.ge-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 4px;}
+.ge-sheet-head h3{margin:0;font-size:14px;letter-spacing:.1em;display:flex;align-items:center;gap:6px;}
+.ge-sheet-body{padding:6px 14px 26px;overflow-y:auto;max-height:72vh;}
+.w2-selchain{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.w2-sel-arrow{color:#ff5a2e;font-weight:800;}
+.ge-chip{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,90,46,.35);border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;text-align:left;font-family:inherit;}
+.ge-chip b{color:#ffb37a;font-size:14px;}
+.ge-chip span{font-size:10px;color:#b9b9c0;}
+.w2-vault-row{display:flex;gap:10px;align-items:flex-start;}
+.w2-vault-row .ge-spec-art{flex:0 0 64px;}
+.w2-vault-row .ge-spec-main{flex:1;min-width:0;}
+/* ================= P3-W3: PROJECT 0 VERIFIED ceremony (industrial — black/charcoal/crimson/burnt orange) ================= */
+.cine-p0verified .cine-stage{background:radial-gradient(ellipse at 50% 28%,rgba(204,85,0,.13),transparent 62%),#0b0b0d;}
+.p0v-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.p0v-stage .pr-smoke,.p0v-stage .pr-scan{position:absolute;}
+.p0v-mask{position:relative;z-index:1;opacity:.9;}
+.p0v-mask-ic{width:64px;height:auto;filter:drop-shadow(0 0 18px rgba(204,85,0,.55));}
+.p0v-kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.24em;color:#ff7a1a;font-weight:800;position:relative;z-index:1;}
+.p0v-title{font-size:30px;color:#ff5a2e;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.8);margin:6px 0 2px;animation:countPop .55s ease-out;position:relative;z-index:1;text-align:center;}
+.p0v-name{font-size:18px;font-weight:900;letter-spacing:1px;color:#fff;position:relative;z-index:1;text-align:center;}
+.p0v-tiers{display:flex;align-items:center;gap:6px;position:relative;z-index:1;flex-wrap:wrap;justify-content:center;}
+.p0v-tier{font-size:10px;letter-spacing:.14em;font-weight:800;padding:6px 10px;border:1px solid #3a3a40;border-radius:6px;color:#8a8a92;background:rgba(255,255,255,.03);}
+.p0v-tier.done{color:#ffb37a;border-color:rgba(255,90,46,.4);background:rgba(255,90,46,.08);}
+.p0v-tier.now{color:#ffd9d9;border-color:rgba(224,32,32,.65);background:rgba(224,32,32,.14);box-shadow:0 0 16px rgba(224,32,32,.35);}
+.p0v-arrow{color:#ff5a2e;font-weight:800;}
+.p0v-sub{color:#9a9aa2;font-size:12px;text-align:center;position:relative;z-index:1;line-height:1.5;}
+.p0v-stage .ge-btn-block{position:relative;z-index:1;max-width:330px;}
+/* ================= P3-W3: preservation pipeline rows ================= */
+.p0t-row{border-top:1px solid rgba(255,255,255,.07);padding:10px 2px 12px;}
+.p0t-row:first-of-type{border-top:none;}
+.p0t-rowhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.p0t-rowhead b{font-size:14px;color:#fff;}
+.p0t-req span{color:#9a9aa2;}
+.p0t-req.is-met span{color:#d7d7dc;}
+.p0t-req b{color:#8a8a92;}
+.p0t-req.is-met b{color:#ffb37a;}
+.p0t-row .ge-btn-block{margin-top:8px;}
