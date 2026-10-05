@@ -74,32 +74,32 @@ const STRAINS = [
  {id:'tangerine-tbone',type:'sativa',name:'Tangerine T-Bone',yld:80,pot:84,terp:95,ft:58,stab:86,resin:82,vigor:90,tags:['Fruit','Exotic','Fast'],seed:95},
  {id:'northern-lights',type:'indica',name:'Northern Lights',yld:76,pot:78,terp:72,ft:55,stab:95,resin:78,vigor:92,tags:['Stable','Fast','Old School'],seed:40},
  {id:'blue-dream',type:'sativa',name:'Blue Dream BX',yld:88,pot:76,terp:80,ft:60,stab:90,resin:74,vigor:95,tags:['Fruit','Heavy','Stable'],seed:45},
- {id:'og-kush',type:'hybrid',name:'OG Kush IBL',yld:70,pot:89,terp:88,ft:64,stab:87,resin:88,vigor:74,tags:['Gassy','Old School','Keeper'],seed:70},
+ {id:'og-kush',type:'hybrid',name:'OG Kush IBL',yld:70,pot:89,terp:88,ft:64,stab:87,resin:88,vigor:74,tags:['Gassy','Old School','Keeper'],seed:70,lock:{t:'rep',v:25}},
  {id:'sour-diesel',type:'sativa',name:'Sour Diesel',yld:82,pot:85,terp:86,ft:68,stab:84,resin:80,vigor:90,tags:['Gassy','Skunky','Heavy'],seed:60},
  {id:'granddaddy-purp',type:'indica',name:'Granddaddy Purp',yld:75,pot:82,terp:84,ft:58,stab:92,resin:82,vigor:80,tags:['Purple','Fruit','Stable'],seed:50},
  {id:'white-widow',type:'hybrid',name:'White Widow',yld:78,pot:84,terp:76,ft:56,stab:94,resin:92,vigor:88,tags:['Frosty','Resin Monster','Stable','Fast'],seed:55},
  {id:'pineapple-express',type:'hybrid',name:'Pineapple Express',yld:84,pot:78,terp:90,ft:57,stab:86,resin:76,vigor:93,tags:['Fruit','Fast','Heavy'],seed:48},
- {id:'girl-scout-cookies',type:'hybrid',name:'Girl Scout Cookies',yld:72,pot:90,terp:89,ft:62,stab:83,resin:90,vigor:76,tags:['Exotic','Frosty','Keeper'],seed:75},
- {id:'zkittlez',type:'indica',name:'Zkittlez',yld:74,pot:83,terp:96,ft:59,stab:81,resin:84,vigor:82,tags:['Fruit','Exotic','Purple'],seed:80},
- {id:'gelato-33',type:'hybrid',name:'Gelato #33',yld:76,pot:88,terp:91,ft:60,stab:85,resin:89,vigor:80,tags:['Frosty','Exotic','Keeper'],seed:85},
- {id:'wedding-cake',type:'indica',name:'Wedding Cake',yld:79,pot:87,terp:88,ft:61,stab:87,resin:91,vigor:82,tags:['Frosty','Gassy','Keeper'],seed:88},
- {id:'runtz',type:'hybrid',name:'Runtz',yld:73,pot:86,terp:94,ft:58,stab:82,resin:87,vigor:84,tags:['Fruit','Exotic','Frosty'],seed:92},
- {id:'apple-fritter',type:'hybrid',name:'Apple Fritter',yld:81,pot:85,terp:89,ft:60,stab:84,resin:86,vigor:85,tags:['Fruit','Frosty','Heavy'],seed:78},
- {id:'ice-cream-cake',type:'indica',name:'Ice Cream Cake',yld:71,pot:87,terp:90,ft:62,stab:86,resin:90,vigor:75,tags:['Frosty','Exotic','Purple'],seed:82},
+ {id:'girl-scout-cookies',type:'hybrid',name:'Girl Scout Cookies',yld:72,pot:90,terp:89,ft:62,stab:83,resin:90,vigor:76,tags:['Exotic','Frosty','Keeper'],seed:75,lock:{t:'rep',v:50}},
+ {id:'zkittlez',type:'indica',name:'Zkittlez',yld:74,pot:83,terp:96,ft:59,stab:81,resin:84,vigor:82,tags:['Fruit','Exotic','Purple'],seed:80,lock:{t:'rep',v:75}},
+ {id:'gelato-33',type:'hybrid',name:'Gelato #33',yld:76,pot:88,terp:91,ft:60,stab:85,resin:89,vigor:80,tags:['Frosty','Exotic','Keeper'],seed:85,lock:{t:'rep',v:75}},
+ {id:'wedding-cake',type:'indica',name:'Wedding Cake',yld:79,pot:87,terp:88,ft:61,stab:87,resin:91,vigor:82,tags:['Frosty','Gassy','Keeper'],seed:88,lock:{t:'rep',v:50}},
+ {id:'runtz',type:'hybrid',name:'Runtz',yld:73,pot:86,terp:94,ft:58,stab:82,resin:87,vigor:84,tags:['Fruit','Exotic','Frosty'],seed:92,lock:{t:'rep',v:150}},
+ {id:'apple-fritter',type:'hybrid',name:'Apple Fritter',yld:81,pot:85,terp:89,ft:60,stab:84,resin:86,vigor:85,tags:['Fruit','Frosty','Heavy'],seed:78,lock:{t:'rep',v:150}},
+ {id:'ice-cream-cake',type:'indica',name:'Ice Cream Cake',yld:71,pot:87,terp:90,ft:62,stab:86,resin:90,vigor:75,tags:['Frosty','Exotic','Purple'],seed:82,lock:{t:'rep',v:200}},
  {id:'mac-1',type:'hybrid',name:'MAC 1',yld:70,pot:89,terp:87,ft:66,stab:88,resin:92,vigor:72,tags:['Exotic','Resin Monster','Keeper'],seed:110,lock:{t:'rep',v:150}},
  {id:'gmo-cookies',type:'indica',name:'GMO Cookies',yld:83,pot:91,terp:82,ft:64,stab:85,resin:89,vigor:80,tags:['Gassy','Skunky','Heavy'],seed:95,lock:{t:'rep',v:100}},
  {id:'tropicana-cookies',type:'sativa',name:'Tropicana Cookies',yld:77,pot:84,terp:93,ft:57,stab:83,resin:83,vigor:88,tags:['Fruit','Purple','Fast'],seed:90,lock:{t:'cash',v:500}},
  {id:'jealousy',type:'hybrid',name:'Jealousy',yld:75,pot:88,terp:92,ft:63,stab:84,resin:88,vigor:79,tags:['Exotic','Frosty','Gassy'],seed:105,lock:{t:'rep',v:200}},
  {id:'permanent-marker',type:'hybrid',name:'Permanent Marker',yld:72,pot:90,terp:89,ft:64,stab:80,resin:90,vigor:74,tags:['Gassy','Exotic','Resin Monster'],seed:115,lock:{t:'rep',v:250}},
  {id:'oreoz',type:'indica',name:'Oreoz',yld:74,pot:89,terp:85,ft:61,stab:82,resin:93,vigor:77,tags:['Frosty','Exotic','Purple'],seed:100,lock:{t:'cash',v:750}},
- {id:'gushers',type:'hybrid',name:'Gushers',yld:80,pot:84,terp:92,ft:59,stab:83,resin:85,vigor:86,tags:['Fruit','Exotic','Heavy'],seed:88},
- {id:'sunset-sherbet',type:'indica',name:'Sunset Sherbet',yld:76,pot:85,terp:90,ft:60,stab:86,resin:87,vigor:83,tags:['Fruit','Frosty','Purple'],seed:80},
- {id:'dosidos',type:'indica',name:'Do-Si-Dos',yld:78,pot:88,terp:86,ft:62,stab:87,resin:90,vigor:79,tags:['Gassy','Frosty','Heavy'],seed:85},
+ {id:'gushers',type:'hybrid',name:'Gushers',yld:80,pot:84,terp:92,ft:59,stab:83,resin:85,vigor:86,tags:['Fruit','Exotic','Heavy'],seed:88,lock:{t:'rep',v:350}},
+ {id:'sunset-sherbet',type:'indica',name:'Sunset Sherbet',yld:76,pot:85,terp:90,ft:60,stab:86,resin:87,vigor:83,tags:['Fruit','Frosty','Purple'],seed:80,lock:{t:'rep',v:100}},
+ {id:'dosidos',type:'indica',name:'Do-Si-Dos',yld:78,pot:88,terp:86,ft:62,stab:87,resin:90,vigor:79,tags:['Gassy','Frosty','Heavy'],seed:85,lock:{t:'rep',v:75}},
  {id:'strawberry-cough',type:'sativa',name:'Strawberry Cough',yld:82,pot:79,terp:88,ft:58,stab:89,resin:76,vigor:91,tags:['Fruit','Fast','Stable'],seed:55},
  {id:'chemdawg',type:'hybrid',name:'Chemdawg 91',yld:77,pot:89,terp:87,ft:66,stab:78,resin:86,vigor:82,tags:['Gassy','Skunky','Old School'],seed:95,lock:{t:'rep',v:120}},
  {id:'ak-47',type:'sativa',name:'AK-47',yld:86,pot:80,terp:75,ft:54,stab:93,resin:80,vigor:94,tags:['Fast','Stable','Heavy','Old School'],seed:42},
- {id:'super-silver-haze',type:'sativa',name:'Super Silver Haze',yld:84,pot:83,terp:82,ft:70,stab:85,resin:82,vigor:89,tags:['Old School','Heavy','Skunky'],seed:58},
- {id:'project-zero-og',type:'hybrid',name:'Project Zero OG',yld:88,pot:96,terp:94,ft:65,stab:95,resin:98,vigor:90,tags:['Keeper','Resin Monster','Exotic','Gassy'],seed:500,lock:{t:'mission',v:'p0-2'}},
+ {id:'super-silver-haze',type:'sativa',name:'Super Silver Haze',yld:84,pot:83,terp:82,ft:70,stab:85,resin:82,vigor:89,tags:['Old School','Heavy','Skunky'],seed:58,lock:{t:'rep',v:25}},
+ {id:'project-zero-og',type:'hybrid',name:'Project Zero OG',yld:88,pot:96,terp:94,ft:65,stab:95,resin:98,vigor:90,tags:['Keeper','Resin Monster','Exotic','Gassy'],seed:500,lock:{t:'mission',v:'p0-50'}},
  {id:'crown-jewel',type:'hybrid',name:'Crown Jewel',yld:90,pot:95,terp:93,ft:64,stab:92,resin:97,vigor:88,tags:['Keeper','Resin Monster','Exotic','Frosty'],seed:750,lock:{t:'rep',v:500}}
 ];
 function strainById(id){ return STRAINS.find(s=>s.id===id); }
@@ -125,8 +125,8 @@ const MISSIONS = [
  {id:'strain-qr',cat:'Strain Trials',name:'Royal Treatment',desc:'Harvest Queen\'s Revenge S1 at 85+ quality.',prog:s=>[((s.stats.strainGrown['queens-revenge-s1']||{}).best||0)>=85?1:0,1],reward:{cash:400,xp:150,gen:['oreoz']}},
  {id:'strain-slur',cat:'Strain Trials',name:'Slurricane Season',desc:'Harvest Slurricane #7 at 80+ quality.',prog:s=>[((s.stats.strainGrown['slurricane-7']||{}).best||0)>=80?1:0,1],reward:{cash:300,xp:120}},
  {id:'strain-rks',cat:'Strain Trials',name:'Skunk Hunt',desc:'Harvest RKS S1.',prog:s=>[((s.stats.strainGrown['rks-s1']||{}).count||0)>=1?1:0,1],reward:{cash:150,xp:60}},
- {id:'strain-ttb',cat:'Strain Trials',name:'Citrus Press',desc:'Harvest Tangerine T-Bone at 80+ quality.',prog:s=>[((s.stats.strainGrown['tangerine-tbone']||{}).best||0)>=80?1:0,1],reward:{cash:300,xp:120}},
- {id:'strain-20gen',cat:'Strain Trials',name:'Genetic Vault',desc:'Own 28 unlocked genetics.',prog:s=>[Math.min(unlockedCount(s),28),28],reward:{cash:500,xp:200,p0:3}},
+ {id:'strain-ttb',cat:'Strain Trials',name:'Citrus Press',desc:'Harvest Tangerine T-Bone at 80+ quality.',prog:s=>[((s.stats.strainGrown['tangerine-tbone']||{}).best||0)>=80?1:0,1],reward:{cash:300,xp:120,gen:['tropicana-cookies']}},
+ {id:'strain-20gen',cat:'Strain Trials',name:'Genetic Vault',desc:'Own 28 unlocked genetics.',prog:s=>[Math.min(ownedCount(s),28),28],reward:{cash:500,xp:200,p0:3}},
  // QUALITY CHALLENGES
  {id:'q-70',cat:'Quality Challenges',name:'Headstash',desc:'Harvest at 70+ quality.',prog:s=>[s.stats.bestQuality>=70?1:0,1],reward:{cash:150,xp:60}},
  {id:'q-85',cat:'Quality Challenges',name:'Top Shelf',desc:'Harvest at 85+ quality.',prog:s=>[s.stats.bestQuality>=85?1:0,1],reward:{cash:350,xp:140,p0:2}},
@@ -202,7 +202,7 @@ const ACHIEVEMENTS = [
  {id:'a-p0100',name:'🕊️ Project Zero',desc:'Earn 100 Project 0 points.',t:s=>s.project0.points>=100},
  {id:'a-lvl15',name:'👑 Empire Royalty',desc:'Reach level 15.',t:s=>s.level>=15},
  {id:'a-day365',name:'📅 One Year Deep',desc:'Reach day 365.',t:s=>s.day>=365},
- {id:'a-allstrain',name:'🌿 Living Library',desc:'Unlock every strain.',t:s=>unlockedCount(s)>=STRAINS.length+s.customStrains.length&&STRAINS.every(st=>!s.lockedStrains.includes(st.id))},
+ {id:'a-allstrain',name:'🌿 Living Library',desc:'Unlock every strain.',t:s=>STRAINS.every(st=>!s.lockedStrains.includes(st.id))},
  {id:'a-firstkeeper',name:'👑 First Keeper',desc:'Mark your first keeper phenotype.',t:s=>s.stats.keepersFound>=1},
  {id:'a-phenohunter',name:'🧬 Pheno Hunter',desc:'Test 25 phenotypes.',t:s=>s.stats.phenoTested>=25},
  {id:'a-selpress',name:'🔬 Selection Pressure',desc:'Test 100 phenotypes.',t:s=>s.stats.phenoTested>=100},
@@ -216,7 +216,7 @@ const P0_REWARDS = {
  genetics:{3:{gen:['project-zero-og']},5:{title:'🧬 Preservationist'}},
  nocompromise:{3:{cash:500},5:{title:'💪 No Compromise'}},
  preservation:{3:{gen:['oreoz']},5:{title:'🏦 Vault Keeper'}},
- cultivation:{3:{cash:750},5:{title:'🌱 Master Cultivator'}},
+ cultivation:{3:{cash:750,gen:['super-silver-haze']},5:{title:'🌱 Master Cultivator'}},
  family:{3:{rep:50},5:{title:'❤️ Family First'}},
  freedom:{3:{cash:500},5:{title:'🕊️ Free Grower'}},
  resin:{3:{gen:['mac-1']},5:{title:'💎 Resin Royalty'}},
@@ -238,6 +238,7 @@ function defaultState(){
     facility:0,
     crew:{ assistant:false,irrigation:false,health:false,breeder:false,harvest:false,manager:false },
     lockedStrains:locked,
+    strainOwned:{},
     customStrains:[],
     missionsDone:[], missionSeen:[],
     project0:{ points:0, tracks:{genetics:0,nocompromise:0,preservation:0,cultivation:0,family:0,freedom:0,resin:0,knowledge:0}, titles:[] },
@@ -267,9 +268,43 @@ function defaultState(){
 function allStrains(){ return STRAINS.concat(S.customStrains); }
 function getStrain(id){ return allStrains().find(s=>s.id===id); }
 function isUnlocked(id){ return !S.lockedStrains.includes(id); }
+/* first-acquisition tracking: strainId -> day the player actually acquired it
+   (seeds first bought, or unlocked through play). Powers every "Own X genetics" counter. */
+function markStrainOwned(id){
+  if(!id) return;
+  try{
+    if(!S.strainOwned||typeof S.strainOwned!=='object') S.strainOwned={};
+    if(!S.strainOwned[id]) S.strainOwned[id]=Math.max(1,int(S.day,1));
+  }catch(e){}
+}
+function ownedCount(s){
+  s=(s&&typeof s==='object')?s:S;
+  let n=0;
+  try{
+    const ow=(s.strainOwned&&typeof s.strainOwned==='object')?s.strainOwned:{};
+    STRAINS.forEach(st=>{ if(ow[st.id]) n++; });
+    n+=(s.customStrains||[]).length; /* bred crosses are owned by construction */
+  }catch(e){}
+  return n;
+}
+/* mission-lock reference for lock reasons; null when the id is unknown */
+function lockMissionName(v){ try{ const m=MISSIONS.find(m=>m.id===v); return m?m.name:null; }catch(e){ return null; } }
+function lockReasonText(l,seedPrice){
+  if(!l) return 'Locked genetics';
+  if(l.t==='rep') return 'Unlocks at '+l.v+' reputation';
+  if(l.t==='cash') return 'Buy for '+fmt$(seedPrice);
+  const mn=lockMissionName(l.v);
+  return mn?('Complete the Project 0 mission \u201c'+mn+'\u201d'):'Unlock via Project 0 mission';
+}
+/* mission-locked strains hide their name as ??? until unlocked (discovery tease) */
+function strainDisplayName(st){
+  try{ if(st&&st.lock&&st.lock.t==='mission'&&!isUnlocked(st.id)) return '???'; }catch(e){}
+  return st?st.name:'???';
+}
 function unlockStrain(id){
   if(!S.lockedStrains.includes(id)) return false;
   S.lockedStrains = S.lockedStrains.filter(x=>x!==id);
+  markStrainOwned(id);
   const st = getStrain(id);
   toast(icon('dna','ge-ic-md')+' Unlocked genetics: '+(st?st.name:id));
   return true;
@@ -327,6 +362,13 @@ function normalizeState(){
   S.mothers=S.mothers.filter(m=>m&&typeof m==='object');
   S.motherCapacity=clamp(int(S.motherCapacity,1),1,4);
   if(!Array.isArray(S.phenoHunts)) S.phenoHunts=[];
+  /* first-acquisition backfill (save v3): legacy saves never tracked per-strain acquisition.
+     Treat every currently-unlocked base strain as acquired so "Own X genetics" progress is preserved. */
+  if(!S.strainOwned||typeof S.strainOwned!=='object') S.strainOwned={};
+  try{
+    const lockedNow=Array.isArray(S.lockedStrains)?S.lockedStrains:[];
+    STRAINS.forEach(st=>{ if(lockedNow.indexOf(st.id)<0&&!S.strainOwned[st.id]) S.strainOwned[st.id]=1; });
+  }catch(e){}
   if(!S.phenoHistory||typeof S.phenoHistory!=='object') S.phenoHistory={};
   if(!Array.isArray(S.phenoArchive)) S.phenoArchive=[];
   if(!S.keeperCloneRuns||typeof S.keeperCloneRuns!=='object') S.keeperCloneRuns={};
@@ -386,7 +428,16 @@ function normalizeState(){
 
 /* ---------------- Save / load ---------------- */
 function save(){ try{ if(typeof NX_saveKey==='function'){ try{S.lastSeen=Date.now();}catch(e){} try{ if(typeof NX_stampInv==='function') NX_stampInv(); }catch(e){} localStorage.setItem(NX_saveKey(), JSON.stringify(S)); } else localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
-function freshStart(){ S = defaultState(); normalizeState(); }
+function freshStart(){
+  /* NEW GAME / RESET wipes progression but preserves genuine settings (prefs,
+     tutorial-seen flags) — QA: these must survive a fresh start. */
+  let keepPrefs=null, keepTips=null;
+  try{ if(S&&S.prefs&&typeof S.prefs==='object') keepPrefs=JSON.parse(JSON.stringify(S.prefs)); }catch(e){}
+  try{ if(S&&S.tips&&typeof S.tips==='object') keepTips=JSON.parse(JSON.stringify(S.tips)); }catch(e){}
+  S = defaultState(); normalizeState();
+  if(keepPrefs){ S.prefs=keepPrefs; try{ if(typeof CAP_prefs==='function') CAP_prefs(); }catch(e){} }
+  if(keepTips){ S.tips=keepTips; }
+}
 function load(){
   try{
     const raw = localStorage.getItem((typeof NX_saveKey==='function')?NX_saveKey():SAVE_KEY);
@@ -1198,7 +1249,7 @@ function checkMissions(){
       if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,m.name); }catch(e){} }
       const nm=m.name;
       setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Mission complete: <b>'+esc(nm)+'</b>'),50);
-      // mission-locked strain p0-2
+      // mission-locked strain p0-50
       if(m.id==='p0-50') unlockStrain('project-zero-og');
     }
   });
@@ -1353,14 +1404,14 @@ function strainCard(st,opts){
   const gPrice=Math.round(st.seed*3*((typeof WX_discount==='function')?WX_discount('genetics'):1));
   if(locked){
     const l=st.lock;
-    lockHtml='<p class="lock-note">'+icon('lock','kv-ico')+' '+(l.t==='rep'?'Unlocks at '+l.v+' reputation':l.t==='cash'?'Buy for '+fmt$(st.seed*3):'Unlock via Project 0 mission')+'</p>';
+    lockHtml='<p class="lock-note">'+icon('lock','kv-ico')+' '+esc(lockReasonText(l,st.seed*3))+'</p>';
     if(l.t==='cash') lockHtml+='<button class="btn btn-small btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(gPrice)+'</button>';
   }
   const custom=st.custom?'<span class="badge gold">CUSTOM</span>':'';
   const lin=st.lineage?'<p class="muted">'+icon('dna','kv-ico')+' '+esc(st.lineage)+'</p>':'';
   const ph=S.phenoHistory[st.id];
   const sg=S.stats.strainGrown[st.id];
-  const histHtml='<div class="kv"><span>'+icon('grow','kv-ico')+' Times grown</span><b>'+(sg?sg.count:0)+'</b></div>'+
+  const histHtml='<div class="kv"><span>'+icon('harvest','kv-ico')+' Times harvested</span><b>'+(sg?sg.count:0)+'</b></div>'+
    '<div class="kv"><span>'+icon('harvest','kv-ico')+' Best yield</span><b>'+(sg&&num(sg.yield,0)>0?fmtW(sg.yield):'\u2014')+'</b></div>'+
    '<div class="kv"><span>'+icon('hunt','kv-ico')+' Phenos tested</span><b>'+(ph?int(ph.tested,0):0)+'</b></div>'+
    '<div class="kv"><span>'+icon('keepers','kv-ico')+' Keepers found</span><b>'+(ph?int(ph.keepers,0):0)+'</b></div>'+
@@ -1369,7 +1420,7 @@ function strainCard(st,opts){
    '<button class="btn btn-small" data-hunt="'+st.id+'">'+icon('hunt','ic')+'PHENO HUNT</button>'+
    '<button class="btn btn-small btn-gold" data-vkeepers="'+st.id+'">'+icon('keepers','ic')+'KEEPERS</button></div>':'';
   return '<div class="card strain-card"><div class="strain-hero">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
-    '<h3>'+esc(st.name)+' '+custom+'</h3>'+lin+
+    '<h3>'+esc(strainDisplayName(st))+' '+custom+'</h3>'+lin+
     '<div class="tags">'+st.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+
     statBar('Yield',st.yld)+statBar('Potency',st.pot)+statBar('Terpenes',st.terp)+
     '<div class="statrow"><span class="slabel">Flower time</span><span class="sval" style="width:auto">'+st.ft+' days</span></div>'+
@@ -1820,6 +1871,7 @@ function plantSeed(strainId){
   S.cash-=st.seed;
   const p=newPlant(strainId);
   S.plants.push(p);
+  markStrainOwned(strainId);
   S.stats.plantsStarted++; S.stats.phenoTested++;
   S.stats.maxConcurrent=Math.max(S.stats.maxConcurrent,S.plants.length);
   const h=phist(strainId); h.tested++;
@@ -2238,6 +2290,8 @@ function advanceDay(){
     }
   }
   S.day++; S.stats.daysAdvanced++;
+  /* QA: Perfect Environment streak advances here (per DAY), not on app boot */
+  try{ const sc=(typeof envEval==='function')?envEval().score:0; S.nx.envStreak=(sc>=90)?int(S.nx.envStreak,0)+1:0; }catch(e){}
   gainXP(5);
   save(); updateHUD();
   checkMissions(); checkAchievements();
@@ -5434,13 +5488,13 @@ function EX_doLegacy(){
 
 function EX_applyLegacy(runNum){
   const diff=S.difficulty, D=DIFFS[diff];
-  const keep={ project0:S.project0, lockedStrains:S.lockedStrains.slice(), customStrains:S.customStrains,
+  const keep={ project0:S.project0, lockedStrains:S.lockedStrains.slice(), strainOwned:S.strainOwned, customStrains:S.customStrains,
     keepers:S.keepers, keeperCapacity:S.keeperCapacity, achievements:S.achievements.slice(),
     titles:S.titles.slice(), phenoHistory:S.phenoHistory, phenoArchive:S.phenoArchive };
   const exKeep={ trophies:S.ex.trophies, ach:S.ex.ach, records:S.ex.records };
   S=defaultState();
   S.difficulty=diff; S.cash=D.cash; S.started=true;
-  S.project0=keep.project0; S.lockedStrains=keep.lockedStrains; S.customStrains=keep.customStrains;
+  S.project0=keep.project0; S.lockedStrains=keep.lockedStrains; S.strainOwned=keep.strainOwned; S.customStrains=keep.customStrains;
   S.keepers=keep.keepers; S.keeperCapacity=keep.keeperCapacity; S.achievements=keep.achievements;
   S.titles=keep.titles; S.phenoHistory=keep.phenoHistory; S.phenoArchive=keep.phenoArchive;
   S.ex=EX_defaultEx();
@@ -5539,7 +5593,7 @@ function EX_nextUnlock(){
     const l=st.lock; let gap=Infinity,txt='';
     if(l.t==='rep'){ gap=Math.max(0,int(l.v,0)-int(S.reputation,0)); txt=st.name+': reach '+int(l.v,0)+' rep'+(gap>0?' ('+gap+' to go)':''); }
     else if(l.t==='cash'){ const c=st.seed*3; gap=Math.max(0,c-num(S.cash,0))/100; txt=st.name+': save '+fmt$(c)+' for the genetics'; }
-    else { gap=50; txt=st.name+': unlock via Project 0 missions'; }
+    else { gap=50; txt=strainDisplayName(st)+': unlock via Project 0 missions'; }
     if(!best||gap<best.gap) best={gap:gap,text:txt,go:'genetics',tab:null};
   });
   EX_BUILDINGS.forEach(b=>{
@@ -6917,9 +6971,9 @@ function TY_envPanel(){
 /* ---------------- 40+ NEW MISSIONS ---------------- */
 const TY_MISSIONS=[
  /* CULTIVATION */
- {id:'tyc-roots',cat:'Cultivation',name:'Root Zone',desc:'Keep root quality above 75% (check the grow room).',prog:s=>[num(S.ty.rootQ,0)>=75?1:0,1],reward:{cash:300,xp:120}},
- {id:'tyc-vpd',cat:'Cultivation',name:'Dialed In',desc:'Hold VPD in the 0.8–1.2 sweet spot for a day.',prog:s=>[(()=>{try{const v=TY_envVals();return (v.vpd>=0.8&&v.vpd<=1.2)?1:0;}catch(e){return 0;}})(),1],reward:{cash:400,xp:150}},
- {id:'tyc-ppfd',cat:'Cultivation',name:'Light Science',desc:'Run PPFD between 600–1000.',prog:s=>[(()=>{try{const v=TY_envVals();return (v.ppfd>=600&&v.ppfd<=1000)?1:0;}catch(e){return 0;}})(),1],reward:{cash:400,xp:150}},
+ {id:'tyc-roots',cat:'Cultivation',name:'Root Zone',desc:'Keep root quality above 75% (check the grow room).',prog:s=>[(S.plants.length>0&&num(S.ty.rootQ,0)>=75)?1:0,1],reward:{cash:300,xp:120}},
+ {id:'tyc-vpd',cat:'Cultivation',name:'Dialed In',desc:'Hold VPD in the 0.8–1.2 sweet spot for a day.',prog:s=>[(()=>{try{if(!S.plants.length)return 0;const v=TY_envVals();return (v.vpd>=0.8&&v.vpd<=1.2)?1:0;}catch(e){return 0;}})(),1],reward:{cash:400,xp:150}},
+ {id:'tyc-ppfd',cat:'Cultivation',name:'Light Science',desc:'Run PPFD between 600–1000.',prog:s=>[(()=>{try{if(!S.plants.length)return 0;const v=TY_envVals();return (v.ppfd>=600&&v.ppfd<=1000)?1:0;}catch(e){return 0;}})(),1],reward:{cash:400,xp:150}},
  {id:'tyc-50plants',cat:'Cultivation',name:'Crop Lord',desc:'Start 50 plants (lifetime).',prog:s=>[Math.min(int(s.stats.plantsStarted,0),50),50],reward:{cash:800,xp:300}},
  {id:'tyc-flawless5',cat:'Cultivation',name:'Untouchable',desc:'5 flawless grows.',prog:s=>[Math.min(int(s.stats.flawlessGrows,0),5),5],reward:{cash:1000,xp:400,p0:3}},
  /* GENETICS */
@@ -6965,7 +7019,7 @@ const TY_MISSIONS=[
  {id:'tybr-pheno20',cat:'Breeding',name:'Pheno Factory',desc:'Test 20 phenotypes.',prog:s=>[Math.min(int(s.stats.phenoTested,0),20),20],reward:{cash:1000,xp:400}},
  /* REPUTATION */
  {id:'tyr-qrep',cat:'Reputation',name:'Quality Speaks',desc:'Reach 200 quality rep.',prog:s=>[Math.min(Math.round(TY_repCat('quality')),200),200],reward:{cash:800,xp:300,rep:10}},
- {id:'tyr-grep',cat:'Reputation',name:'Gene Famous',desc:'Reach 200 genetics rep.',prog:s=>[Math.min(Math.round(TY_repCat('genetics')),200),200],reward:{cash:1000,xp:400,rep:10}},
+ {id:'tyr-grep',cat:'Reputation',name:'Gene Famous',desc:'Reach 200 genetics rep.',prog:s=>[Math.min(Math.round(TY_repCat('genetics')),200),200],reward:{cash:1000,xp:400,rep:10,gen:['zkittlez']}},
  {id:'tyr-brep',cat:'Reputation',name:'Boardroom',desc:'Reach 200 business rep.',prog:s=>[Math.min(Math.round(TY_repCat('business')),200),200],reward:{cash:1000,xp:400,rep:10}},
  {id:'tyr-playstyle',cat:'Reputation',name:'Known For Something',desc:'Reach 300 in any rep category.',prog:s=>[Math.min(Math.round(Math.max(TY_repCat('quality'),TY_repCat('genetics'),TY_repCat('business'),TY_repCat('service'),TY_repCat('reliability'))),300),300],reward:{cash:1500,xp:600,rep:15}},
  {id:'tyr-rank5',cat:'Reputation',name:'Name Rings Bells',desc:'Reach rank LOCAL BOSS.',prog:s=>[TY_rankIdx()>=5?1:0,1],reward:{cash:2000,xp:800,rep:20}},
@@ -7358,7 +7412,7 @@ function GT_legendaryCount(){
 }
 function GT_vaultStats(){
   const all=allStrains();
-  const owned=all.filter(s=>isUnlocked(s.id)).length;
+  const owned=ownedCount(S);
   let phenos=0; try{ Object.values(S.phenoHistory||{}).forEach(h=>{ phenos+=int(h.tested,0); }); }catch(e){}
   const keepers=(S.keepers||[]).length;
   const crosses=int(S.stats.crosses,0)+(S.customStrains||[]).length;
@@ -7434,7 +7488,7 @@ function GT_strainCard(st){
   let lockHtml='';
   if(locked){
     const l=st.lock||{t:'rep',v:999};
-    lockHtml='<div class="ge-spec-lock"><p class="ge-caption">'+icon('lock','ge-ic-md')+' '+(l.t==='rep'?'Unlocks at '+l.v+' reputation':l.t==='cash'?'Buy for '+fmt$(st.seed*3):'Unlock via Project 0 mission')+'</p>';
+    lockHtml='<div class="ge-spec-lock"><p class="ge-caption">'+icon('lock','ge-ic-md')+' '+esc(lockReasonText(l,st.seed*3))+'</p>';
     if(l.t==='cash') lockHtml+='<button class="ge-btn ge-btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(st.seed*3)+'</button>';
     lockHtml+='</div>';
   }
@@ -7442,7 +7496,7 @@ function GT_strainCard(st){
   return '<div class="ge-card ge-card-tap ge-spec-card gt-card strain-card" data-strain="'+st.id+'">'+
     '<div class="ge-spec-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
     '<div class="ge-spec-main">'+
-    '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(st.name)+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
+    '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(strainDisplayName(st))+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
     '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+
       (keepers>0?'<span class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'KEEPER ×'+keepers+'</span>':'')+
       (mothers>0?'<span class="ge-badge ge-badge-mother">'+icon('mothers','ge-ic-sm')+'MOTHER</span>':'')+
@@ -8576,7 +8630,7 @@ const MN_MISSIONS = [
  /* ================= GENETICS (5) ================= */
  {id:'mn-gen-codex',cat:'Genetics',name:'Living Codex',
   desc:'Own 32 unlocked genetics strains.',
-  prog:()=>[Math.min(MN_unlockedGenetics(),32),32],
+  prog:()=>{ try{ return [Math.min(ownedCount(MN_S()),32),32]; }catch(e){ return [0,32]; } },
   reward:{cash:1500,xp:600,rep:25,p0:5}},
  {id:'mn-gen-vault',cat:'Genetics',name:'Seed Vault Curator',
   desc:'Preserve 10 strains in the vault.',
@@ -10008,8 +10062,7 @@ function NX_migrateAll(){
   try{ NX_registerLeaderboards(); }catch(e){}
   try{ NX_wrapKeepers(); NX_wrapBreeding(); NX_wrapDispensary(); NX_wrapEmpire(); NX_wrapSettings(); NX_wrapKeyActions(); }catch(e){}
   if(int(S.version,0)<3) S.version=3;
-  /* env streak tracking for Perfect Environment */
-  try{ const sc=(typeof envEval==='function')?envEval().score:0; S.nx.envStreak=(sc>=90)?int(S.nx.envStreak,0)+1:0; }catch(e){}
+  /* QA: env streak must advance on DAY ADVANCE, not app boot — see advanceDay() */
 }
 
 /* ---------------- init ---------------- */
