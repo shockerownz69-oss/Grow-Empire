@@ -243,7 +243,8 @@ function defaultState(){
     lockedStrains:locked,
     strainOwned:{},
     customStrains:[],
-    missionsDone:[], missionSeen:[], tutTeaseFired:false, /* P1.5 */
+    codexHist:{}, /* P2-W2: Living Codex - per-strain player history (migration-safe) */
+    missionsDone:[], missionSeen:[], tutTeaseFired:false, chains:{}, /* P1.5, P2.3 */
     project0:{ points:0, tracks:{genetics:0,nocompromise:0,preservation:0,cultivation:0,family:0,freedom:0,resin:0,knowledge:0}, titles:[] },
     stats:{ plantsStarted:0,waterings:0,feedings:0,trainings:0,inspects:0,daysAdvanced:0,harvests:0,
       lifetimeHarvestOz:0,lifetimeRevenue:0,bestQuality:0,bestBagAppeal:0,biggestHarvest:0,
@@ -280,6 +281,7 @@ function markStrainOwned(id){
     if(!S.strainOwned||typeof S.strainOwned!=='object') S.strainOwned={};
     if(!S.strainOwned[id]) S.strainOwned[id]=Math.max(1,int(S.day,1));
   }catch(e){}
+  try{ codexOnAcquired(id); }catch(e){} /* P2-W2: stamp codex acquisition */
 }
 function ownedCount(s){
   s=(s&&typeof s==='object')?s:S;
@@ -305,6 +307,96 @@ function strainDisplayName(st){
   try{ if(st&&st.lock&&st.lock.t==='mission'&&!isUnlocked(st.id)) return '???'; }catch(e){}
   return st?st.name:'???';
 }
+
+/* ================= P2-W2 LIVING CODEX: per-strain player history =================
+   S.codexHist maps strainId -> the player's relationship record with that genetic.
+   Deliberately separate from:
+     S.lockedStrains     (availability / unlock route)
+     S.strainOwned       (first-acquisition state)
+     S.stats.strainGrown (harvest aggregates) and S.phenoHistory (evaluation counters)
+   States stay separate: database != discovered != unlocked != owned != grown != harvested != bred. */
+function codexHist(id){
+  try{
+    if(!id) return null;
+    if(!S.codexHist||typeof S.codexHist!=='object') S.codexHist={};
+    let h=S.codexHist[id];
+    if(!h||typeof h!=='object') h=S.codexHist[id]={};
+    h.acquiredDay=Math.max(0,int(h.acquiredDay,0));
+    ['grown','harvested','phenosEvaluated','crossesCreated','completedDay'].forEach(k=>{ h[k]=Math.max(0,int(h[k],0)); });
+    ['bestYield','bestPotency','bestTerpene','bestResin','keeperPhenoOverall'].forEach(k=>{ h[k]=Math.max(0,num(h[k],0)); });
+    if(!Array.isArray(h.genNotes)) h.genNotes=[];
+    else h.genNotes=h.genNotes.filter(n=>typeof n==='string').slice(-24);
+    if(typeof h.keeperPheno!=='string') h.keeperPheno=null;
+    h.completed=!!h.completed;
+    return h;
+  }catch(e){ return null; }
+}
+/* mystery-entry clue: hint mapped to the strain's actual lock route, never a spoiler */
+function codexClue(st){
+  try{
+    const l=st&&st.lock;
+    if(!l) return null;
+    if(typeof l.clue==='string'&&l.clue) return l.clue; /* data-driven override */
+    if(l.t==='rep') return 'Rumored among elite breeders. Reach the required reputation.';
+    if(l.t==='cash') return 'Reserved stock \u2014 cash opens this door.';
+    if(l.t==='mission') return 'Complete a Project 0 cultivation challenge.';
+    if(l.t==='breed') return 'Discover through breeding.';
+    if(l.t==='hunt') return 'Complete a phenotype hunt.';
+    return 'Locked genetics.';
+  }catch(e){ return 'Locked genetics.'; }
+}
+/* codex entry completion: owned + grown + harvested. Exactly-once toast; silent for backfill. */
+function codexCheckComplete(id,silent){
+  try{
+    const h=codexHist(id); if(!h||h.completed) return false;
+    let owned=!!(S.strainOwned&&S.strainOwned[id]);
+    if(!owned){ try{ const cs=getStrain(id); owned=!!(cs&&cs.custom); }catch(e){} } /* bred crosses are owned by construction */
+    if(owned&&h.grown>0&&h.harvested>0){
+      h.completed=true; h.completedDay=Math.max(1,int(S.day,1));
+      if(!silent){
+        const st=getStrain(id);
+        toast(icon('crown-gold','ge-ic-md')+' <b>CODEX COMPLETE</b> \u2014 '+esc(st?st.name:id)+' fully documented. The archive remembers.');
+      }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+/* stamping helpers - called at the correct lifecycle points only */
+function codexOnAcquired(id){ try{ const h=codexHist(id); if(h&&!h.acquiredDay){ h.acquiredDay=Math.max(1,int(S.day,1)); } codexCheckComplete(id); }catch(e){} }
+function codexOnGrown(id){ try{ const h=codexHist(id); if(!h) return; h.grown++; h.phenosEvaluated++; codexCheckComplete(id); }catch(e){} }
+function codexOnHarvest(id,rec){
+  try{
+    const h=codexHist(id); if(!h) return;
+    h.harvested++;
+    if(rec&&typeof rec==='object'){
+      h.bestYield=Math.max(h.bestYield,num(rec.yieldOz,0));
+      h.bestPotency=Math.max(h.bestPotency,num(rec.potency,0));
+      h.bestTerpene=Math.max(h.bestTerpene,num(rec.terpenes,0));
+      h.bestResin=Math.max(h.bestResin,num(rec.resin,0));
+    }
+    codexCheckComplete(id);
+  }catch(e){}
+}
+function codexOnKeeper(strainId,k,silent){
+  try{
+    const h=codexHist(strainId); if(!h||!k) return;
+    const ov=num(k.overall,0), ref='PHENO #'+int(k.phenoNum,0);
+    if(!h.keeperPheno||ov>h.keeperPhenoOverall){ h.keeperPheno=ref; h.keeperPhenoOverall=ov; }
+    codexCheckComplete(strainId,silent);
+  }catch(e){}
+}
+function codexOnBreedParent(parentId,childName){
+  try{ const h=codexHist(parentId); if(!h) return; h.crossesCreated++;
+    codexNote(parentId,'Bred into \u201c'+String(childName||'Untitled Cross').slice(0,28)+'\u201d'); }catch(e){}
+}
+function codexNote(id,note){
+  try{
+    const h=codexHist(id); if(!h||!note) return;
+    h.genNotes.push('Day '+Math.max(1,int(S.day,1))+': '+String(note).slice(0,120));
+    if(h.genNotes.length>24) h.genNotes=h.genNotes.slice(-24);
+  }catch(e){}
+}
 function unlockStrain(id, acquired=false){
   if(!S.lockedStrains.includes(id)) return false;
   S.lockedStrains = S.lockedStrains.filter(x=>x!==id);
@@ -327,7 +419,7 @@ function normalizeState(){
    'lifetimeHarvestOz','lifetimeRevenue','bestQuality','bestBagAppeal','biggestHarvest',
    'q80Harvests','highHealthHarvests','flawlessGrows','keepers','fastestGrow','quickTurnarounds',
    'crosses','secondGenCrosses','compsEntered','compsWon','breederCupWins','sales','processedOz',
-   'missionsDone','maxConcurrent','preserved','equipmentBought','envInRangeDays'].forEach(k=>{ st[k]=num(st[k],0); }); /* P1.5 */
+   'missionsDone','maxConcurrent','preserved','equipmentBought','envInRangeDays','chainsDone'].forEach(k=>{ st[k]=num(st[k],0); }); /* P1.5, P2.3 */
   if(!st.strainGrown||typeof st.strainGrown!=='object') st.strainGrown={};
   S.stats=st;
   const e=(S.env&&typeof S.env==='object')?S.env:{};
@@ -374,6 +466,23 @@ function normalizeState(){
   try{
     const lockedNow=Array.isArray(S.lockedStrains)?S.lockedStrains:[];
     STRAINS.forEach(st=>{ if(lockedNow.indexOf(st.id)<0&&!S.strainOwned[st.id]) S.strainOwned[st.id]=1; });
+  }catch(e){}
+  /* P2-W2 Living Codex: migration-safe history (save v3). The backfill ONLY mirrors
+     existing tracked records - it never invents progress. Completion marks stay
+     silent here: no toast spam for legacy progress. */
+  try{
+    if(!S.codexHist||typeof S.codexHist!=='object') S.codexHist={};
+    Object.keys(S.codexHist).forEach(id=>{ try{ codexHist(id); }catch(e){} }); /* sanitize loaded records */
+    Object.keys(S.strainOwned||{}).forEach(id=>{ const h=codexHist(id); if(h&&!h.acquiredDay) h.acquiredDay=Math.max(1,int(S.strainOwned[id],1)); });
+    Object.keys((S.stats&&S.stats.strainGrown)||{}).forEach(id=>{ const h=codexHist(id); if(!h) return;
+      const sg=S.stats.strainGrown[id]||{};
+      h.harvested=Math.max(h.harvested,int(sg.count,0));
+      h.grown=Math.max(h.grown,int(sg.count,0)); /* legacy: every tracked harvest was a grown run */
+      h.bestYield=Math.max(h.bestYield,num(sg.yield,0)); });
+    Object.keys(S.phenoHistory||{}).forEach(id=>{ const h=codexHist(id);
+      if(h&&S.phenoHistory[id]) h.phenosEvaluated=Math.max(h.phenosEvaluated,int(S.phenoHistory[id].tested,0)); });
+    (S.keepers||[]).forEach(k=>{ if(k&&k.strainId){ try{ codexOnKeeper(k.strainId,k,true); }catch(e){} } });
+    Object.keys(S.codexHist).forEach(id=>{ try{ codexCheckComplete(id,true); }catch(e){} });
   }catch(e){}
   if(!S.phenoHistory||typeof S.phenoHistory!=='object') S.phenoHistory={};
   if(!Array.isArray(S.phenoArchive)) S.phenoArchive=[];
@@ -430,6 +539,10 @@ function normalizeState(){
   try{ if(typeof MN_migrate==='function') MN_migrate(); }catch(e){}
   /* --- Dispensary carts module namespace --- */
   try{ if(typeof CT_migrate==='function') CT_migrate(); }catch(e){}
+  /* --- P2.3 mission chains: migration-safe state + anti-skip validation --- */
+  try{ if(typeof CHA_migrate==='function') CHA_migrate(); }catch(e){}
+  /* --- P2.5 player memory (migration-safe, honestly backfilled) --- */
+  try{ if(typeof ME_migrate==='function') ME_migrate(); }catch(e){}
 }
 
 /* ---------------- Save / load ---------------- */
@@ -443,6 +556,7 @@ function freshStart(){
   S = defaultState(); normalizeState();
   /* QA: new game — the 5 starters are AVAILABLE but not yet acquired; clear legacy backfill */
   S.strainOwned={};
+  S.codexHist={}; /* P2-W2: fresh save starts with zero codex history */
   if(keepPrefs){ S.prefs=keepPrefs; try{ if(typeof CAP_prefs==='function') CAP_prefs(); }catch(e){} }
   if(keepTips){ S.tips=keepTips; }
 }
@@ -899,7 +1013,7 @@ function facilitySceneSVG(tier){
   if(T.lab){ h+='<rect x="14" y="60" width="52" height="70" rx="4" fill="#0e1a1c" stroke="#3a6a6e" stroke-width="1.5" opacity="0.9"/>'; h+='<circle cx="40" cy="95" r="12" fill="none" stroke="#e02020" stroke-width="1.5" opacity="0.7"/>'; }
   if(T.vault){ h+='<rect x="0" y="0" width="'+W+'" height="4" fill="#d4a017" opacity="0.5"/>'; h+='<rect x="0" y="'+(H-4)+'" width="'+W+'" height="4" fill="#d4a017" opacity="0.5"/>'; }
   if(hot) h+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#ff5a1a" opacity="0.10"/>';
-  if(cold) h+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#4a7aff" opacity="0.06"/>';
+  if(cold) h+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#8fa8c4" opacity="0.06"/>';
   return h+'</svg>';
 }
 /* FACILITY UNLOCKED reveal: before/after cinematic */
@@ -1033,7 +1147,7 @@ function roomSceneSVG(){
     h+='<path d="M'+x+' 130 v-'+hh+' m0 0 c-9 -4 -12 -12 -8 -20 c6 2 9 10 8 20z m0 0 c9 -4 12 -12 8 -20 c-6 2 -9 10 -8 20z" fill="#12240f" stroke="#1d3a1a" stroke-width="1"/>';
     h+='<rect x="'+(x-9)+'" y="122" width="18" height="8" fill="#141414"/>'; }
   if(hot) h+='<rect x="0" y="0" width="400" height="130" fill="#ff5a1a" opacity="0.10" class="room-warn-hot"/>';
-  if(cold) h+='<rect x="0" y="0" width="400" height="130" fill="#4a7aff" opacity="0.06"/>';
+  if(cold) h+='<rect x="0" y="0" width="400" height="130" fill="#8fa8c4" opacity="0.06"/>';
   return h+'</svg>';
 }
 /* ---- brand marks ---- */
@@ -1281,6 +1395,279 @@ function checkMissions(){
       if(m.id==='tut-sell'){ try{ TU_onFirstSale(); }catch(e){} } /* P1.5: fire tease cards once */
     }
   });
+  /* P2.3: mission chains advance on the same sweep (flat mission logic above untouched) */
+  try{ if(typeof CHA_check==='function') CHA_check(); }catch(e){}
+}
+
+/* ============================================================
+   P2.3 — MISSION CHAINS (story arcs)
+   Additive layer over flat MISSIONS. Chain-scoped snapshots make
+   stage-skipping impossible; CHA_migrate validates on load.
+   ============================================================ */
+const CHAINS=[
+ {id:'ch-pheno',name:'THE PHENO HUNT',
+  story:'Every legend starts as a seed. Hunt the phenotypes, crown one keeper, and prove it with a clone run.',
+  reward:{cash:1000,xp:400,rep:20,gen:['gelato-33']},
+  stages:[
+   {id:'own',name:'First Contact',desc:'Own a genetic — buy seeds or unlock a strain.',snap:[],
+    prog:(s)=>[Math.min(ownedCount(s),1),1]},
+   {id:'sprout',name:'Pop the Seeds',desc:'Germinate 3 seeds into seedlings.',snap:['stats.sprouted'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.sprouted'),3),3]},
+   {id:'subjects',name:'Test Subjects',desc:'Plant 6 seeds — every seed is a new phenotype.',snap:['stats.phenoTested'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.phenoTested'),6),6]},
+   {id:'select',name:'The Selection',desc:'Harvest 3 phenotypes.',snap:['stats.phenoHarvested'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.phenoHarvested'),3),3]},
+   {id:'compare',name:'Side by Side',desc:'Compare phenotypes twice in the lab.',snap:['stats.comparesDone'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.comparesDone'),2),2]},
+   {id:'keeper',name:'Crown One',desc:'Mark a keeper phenotype.',snap:['stats.keepersFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.keepersFound'),1),1]},
+   {id:'cut',name:'Take the Cut',desc:'Take a clone of your keeper.',snap:['stats.clonesTaken'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.clonesTaken'),1),1]},
+   {id:'cloneharv',name:'Second Generation',desc:'Grow a clone to harvest.',snap:['stats.cloneHarvests'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.cloneHarvests'),1),1]},
+   {id:'proven',name:'Proven Keeper',desc:'Harvest a keeper clone again — confirm the keeper.',snap:['stats.cloneHarvests'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.cloneHarvests'),1),1]}
+  ]},
+ {id:'ch-dialedin',name:'DIALED IN',
+  story:'Great weed is grown in the details. Learn the room, hold it steady, then carry a plant through a full growth stage in the zone.',
+  reward:{cash:400,xp:200,rep:8},
+  stages:[
+   {id:'read',name:'Read the Room',desc:'Score 80+ on the environment readout for a day.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.env80?1:0,1]},
+   {id:'steady',name:'Steady Climate',desc:'Hold a 90+ env score for 3 consecutive days.',snap:[],
+    prog:(s,snap,ch)=>[Math.min(int(ch.data.streak90,0),3),3]},
+   {id:'stage',name:'Full Stage Dialed',desc:'Keep a plant advancing one full growth stage with env never below 90.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.stageDone?1:0,1]}
+  ]},
+ {id:'ch-comeback',name:'THE COMEBACK',
+  story:'Every grower loses a plant. Legends bring one back. Nurse a flatlined plant all the way to harvest.',
+  reward:{cash:350,xp:180,rep:8},
+  stages:[
+   {id:'flat',name:'Flatline',desc:'A plant crashes to 30% health or below.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.critical?1:0,1]},
+   {id:'brink',name:'Back From the Brink',desc:'Nurse that plant back to 85%+ health.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.recovered?1:0,1]},
+   {id:'harvest',name:'The Harvest',desc:'Harvest the comeback plant.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.comeback?1:0,1]}
+  ]},
+ {id:'ch-genehunter',name:'GENE HUNTER',
+  story:'The hunt never ends. Test phenotypes, chase the elite expressions, and bag the unicorn: a true legendary.',
+  reward:{cash:900,xp:400,rep:15,gen:['mac-1']},
+  stages:[
+   {id:'look',name:'First Look',desc:'Test 3 phenotypes.',snap:['stats.phenoTested'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.phenoTested'),3),3]},
+   {id:'deep',name:'Deep Cuts',desc:'Test 12 phenotypes.',snap:['stats.phenoTested'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.phenoTested'),12),12]},
+   {id:'elite',name:'Elite Blood',desc:'Discover an ELITE phenotype.',snap:['stats.eliteFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.eliteFound'),1),1]},
+   {id:'unicorn',name:'The Unicorn',desc:'Discover a LEGENDARY phenotype.',snap:['stats.legendaryFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.legendaryFound'),1),1]}
+  ]},
+ {id:'ch-seedtoshelf',name:'FROM SEED TO SHELF',
+  story:'Dirt to dollars. Run one full pipeline — plant, harvest, process, package, sell — and own every step.',
+  reward:{cash:600,xp:250,rep:10},
+  stages:[
+   {id:'sow',name:'Sow',desc:'Plant a seed.',snap:['stats.plantsStarted'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.plantsStarted'),1),1]},
+   {id:'reap',name:'Reap',desc:'Harvest a plant.',snap:['stats.harvests'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.harvests'),1),1]},
+   {id:'refine',name:'Refine',desc:'Process 1 oz of flower into product.',snap:['stats.processedOz'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.processedOz'),1),1]},
+   {id:'pack',name:'Shelf-Ready',desc:'Package a finished product from this run.',snap:['ty.nextProdId'],
+    prog:(s,snap)=>{ const base=num(snap['ty.nextProdId'],1);
+      const hit=((s.ty&&s.ty.prod)||[]).some(p=>p&&p.packaged&&num(p.id,0)>=base);
+      return [hit?1:0,1]; }},
+   {id:'sell',name:'Cash Out',desc:'Sell product.',snap:['stats.sales'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.sales'),1),1]}
+  ]},
+ {id:'ch-p0',name:'PROJECT 0 INITIATION',
+  story:'It is never about the money — only the genetics. Earn your first preservation score and walk a Project 0 track.',
+  reward:{cash:300,xp:150,p0:5},
+  stages:[
+   {id:'light',name:'First Light',desc:'Earn 3 Project 0 points.',snap:['project0.points'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'project0.points'),3),3]},
+   {id:'preserve',name:'Preserve',desc:'Preserve genetics in the vault.',snap:['stats.preserved'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.preserved'),1),1]},
+   {id:'track',name:'Walk the Path',desc:'Reach level 1 in any Project 0 track.',snap:['project0.tracks'],
+    prog:(s,snap)=>{ let g=0;
+      (typeof P0_TRACKS!=='undefined'?P0_TRACKS:[]).forEach(tr=>{
+        const base=num((snap['project0.tracks']||{})[tr.id],0); let blvl=0;
+        P0_LEVEL_PTS.forEach((th,i)=>{ if(base>=th) blvl=i; });
+        g=Math.max(g,p0Level(tr.id)-blvl); });
+      return [Math.min(g,1),1]; }}
+  ]}
+];
+function CHA_def(id){ return CHAINS.find(c=>c.id===id)||null; }
+function CHA_freshChain(){ return {stage:0,done:false,reward:false,sdone:{},snaps:{},data:{}}; }
+function CHA_getPath(path){
+  try{
+    const parts=String(path).split('.'); let o=S;
+    for(const k of parts){ if(o==null) return 0; o=o[k]; }
+    if(o&&typeof o==='object') return JSON.parse(JSON.stringify(o));
+    return num(o,0);
+  }catch(e){ return 0; }
+}
+function CHA_snapOf(keys){ const o={}; (keys||[]).forEach(k=>{ o[k]=CHA_getPath(k); }); return o; }
+function CHA_d(snap,path){ return num(CHA_getPath(path),0)-num(snap?snap[path]:0,0); }
+function CHA_state(id){
+  const def=CHA_def(id); if(!def) return null;
+  if(!S.chains||typeof S.chains!=='object') S.chains={};
+  let ch=S.chains[id];
+  if(!ch||typeof ch!=='object'){ ch=CHA_freshChain(); S.chains[id]=ch; }
+  return CHA_validateChain(def,ch);
+}
+function CHA_ensureSnap(def,ch){
+  const st=def.stages[ch.stage]; if(!st) return;
+  if(!ch.snaps[st.id]) ch.snaps[st.id]=CHA_snapOf(st.snap);
+}
+function CHA_validateChain(def,ch){
+  const n=def.stages.length;
+  ch.stage=clamp(int(ch.stage,0),0,n);
+  if(!ch.sdone||typeof ch.sdone!=='object') ch.sdone={};
+  if(!ch.snaps||typeof ch.snaps!=='object') ch.snaps={};
+  if(!ch.data||typeof ch.data!=='object') ch.data={};
+  Object.keys(ch.sdone).forEach(k=>{ const i=int(k,-1); if(i<0||i>=n) delete ch.sdone[k]; });
+  let firstOpen=0; while(firstOpen<n&&ch.sdone[firstOpen]) firstOpen++;
+  if(ch.stage>firstOpen) ch.stage=firstOpen;
+  if(ch.done&&firstOpen<n){ ch.done=false; ch.reward=false; }
+  for(let i=0;i<firstOpen;i++){
+    const st=def.stages[i], snap=ch.snaps[st.id];
+    if(!snap) continue;
+    let ok=false, isDone=false;
+    try{ const p=st.prog(S,snap,ch); isDone=(p[0]>=p[1]); ok=true; }catch(e){}
+    if(ok&&!isDone){
+      for(let j=i;j<n;j++) delete ch.sdone[j];
+      Object.keys(ch.snaps).forEach(k=>{
+        const idx=def.stages.findIndex(x=>x.id===k); if(idx>=i) delete ch.snaps[k]; });
+      ch.stage=i; ch.done=false; ch.reward=false;
+      break;
+    }
+  }
+  return ch;
+}
+function CHA_migrate(){
+  try{
+    if(!S||typeof S!=='object') return;
+    if(!S.chains||typeof S.chains!=='object') S.chains={};
+    Object.keys(S.chains).forEach(id=>{
+      const def=CHA_def(id);
+      if(!def){ delete S.chains[id]; return; }
+      CHA_validateChain(def,S.chains[id]);
+    });
+    if(S.stats&&typeof S.stats==='object') S.stats.chainsDone=int(S.stats.chainsDone,0);
+  }catch(e){}
+}
+function CHA_check(){
+  if(!S) return;
+  CHAINS.forEach(def=>{
+    const ch=CHA_state(def.id); if(!ch) return;
+    if(ch.done){ if(!ch.reward) CHA_grantReward(ch,def); return; }
+    let guard=0;
+    while(guard++<16&&ch.stage<def.stages.length){
+      CHA_ensureSnap(def,ch);
+      const st=def.stages[ch.stage];
+      let cur=0,target=1,ok=false;
+      try{ const p=st.prog(S,ch.snaps[st.id]||{},ch); cur=p[0]; target=p[1]; ok=true; }catch(e){}
+      if(!ok) break;
+      if(cur>=target){
+        ch.sdone[ch.stage]=1; ch.stage++;
+        try{ toast(icon('scroll','ge-ic-md')+' Story arc — stage complete: <b>'+esc(st.name)+'</b>'); }catch(e){}
+        continue;
+      }
+      break;
+    }
+    if(ch.stage>=def.stages.length&&!ch.done){ ch.done=true; CHA_grantReward(ch,def); }
+  });
+}
+function CHA_grantReward(ch,def){
+  if(!ch||ch.reward) return;
+  ch.reward=true;
+  const r=def.reward||{};
+  const D=(typeof DIFFS!=='undefined'&&DIFFS[S.difficulty])||{missionReward:1};
+  if(r.cash) S.cash+=Math.round(r.cash*(D.missionReward||1));
+  if(r.rep){ try{ gainRep(r.rep); }catch(e){} }
+  if(r.xp){ try{ gainXP(r.xp); }catch(e){} }
+  if(r.gen) r.gen.forEach(g=>{ try{ unlockStrain(g,true); }catch(e){} });
+  if(r.p0){ try{ addP0('knowledge',r.p0); }catch(e){} }
+  if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,def.name); }catch(e){} }
+  S.stats.chainsDone=int(S.stats.chainsDone,0)+1;
+  try{ toast(icon('trophy','ge-ic-md')+' Story arc complete: <b>'+esc(def.name)+'</b>'); }catch(e){}
+  try{ save(); }catch(e){}
+}
+function CHA_dayTick(){
+  if(!S) return;
+  let sc=0;
+  try{ sc=(typeof envEval==='function')?envEval().score:0; }catch(e){}
+  try{
+    const def=CHA_def('ch-dialedin'), ch=def?CHA_state('ch-dialedin'):null;
+    if(ch&&!ch.done){
+      const d=ch.data;
+      if(ch.stage===0){ if(sc>=80) d.env80=true; }
+      else if(ch.stage===1){ d.streak90=(sc>=90)?int(d.streak90,0)+1:0; }
+      else if(ch.stage===2){
+        let p=(S.plants||[]).find(x=>x&&x.id===d.anchorId);
+        if(!p||sc<90||stageOf(p)<0){
+          let best=null;
+          (S.plants||[]).forEach(x=>{ if(!x||stageOf(x)<0) return; if(!best||stageOf(x)<stageOf(best)) best=x; });
+          d.anchorId=best?best.id:null; d.anchorStage=best?stageOf(best):null;
+        } else if(stageOf(p)>d.anchorStage){ d.stageDone=true; }
+      }
+    }
+  }catch(e){}
+  try{
+    const def=CHA_def('ch-comeback'), ch=def?CHA_state('ch-comeback'):null;
+    if(ch&&!ch.done){
+      const d=ch.data;
+      if(ch.stage===0){
+        const p=(S.plants||[]).find(x=>x&&num(x.minHealth,100)<=30);
+        if(p){ d.plantId=p.id; d.critical=true; }
+      } else {
+        const p=(S.plants||[]).find(x=>x&&x.id===d.plantId);
+        if(!p&&!d.comeback){
+          delete ch.sdone[0]; delete ch.snaps['flat'];
+          ch.stage=0; d.plantId=null; d.critical=false; d.recovered=false;
+        } else if(p&&ch.stage===1&&num(p.health,0)>=85){ d.recovered=true; }
+      }
+    }
+  }catch(e){}
+}
+function CHA_onHarvest(p){
+  if(!S||!p) return;
+  try{
+    const ch=CHA_state('ch-comeback'); if(!ch||ch.done) return;
+    if(ch.stage===2&&ch.data&&ch.data.plantId===p.id) ch.data.comeback=true;
+  }catch(e){}
+}
+function CHA_storyHTML(){
+  let html='<div class="ge-section-title">STORY ARCS<span class="ge-spread ge-num">'+CHAINS.length+'</span></div>';
+  CHAINS.forEach(def=>{
+    const ch=CHA_state(def.id); if(!ch) return;
+    const total=def.stages.length, doneN=Object.keys(ch.sdone).length, done=!!ch.done;
+    const pct=clamp(doneN/Math.max(1,total)*100,0,100);
+    const pseudo={name:def.name,desc:def.story,reward:def.reward};
+    html+='<div class="ge-card ge-mission'+(done?' is-done':'')+'">'+
+     '<div class="ms-top"><span class="ms-cat">STORY ARC</span>'+MS_statePill(done,doneN>0)+MS_diffBadge(pseudo)+'</div>'+
+     '<h3 class="ms-title">'+(done?icon('check','ge-ic-sm'):'')+icon('scroll','ge-ic-sm')+esc(def.name)+'</h3>'+
+     '<p class="ge-body ge-muted">'+esc(def.story)+'</p>'+
+     '<ul class="ms-objs">';
+    def.stages.forEach((st,i)=>{
+      const sdone=!!ch.sdone[i], locked=!sdone&&i>ch.stage;
+      let cur=0,target=1;
+      try{ const pr=st.prog(S,ch.snaps[st.id]||{},ch); cur=pr[0]; target=pr[1]; }catch(e){}
+      const rowDone=sdone||cur>=target;
+      html+='<li class="ms-obj'+(rowDone?' is-done':'')+(locked?' is-locked':'')+'">'+
+       '<span class="ms-check">'+icon(locked?'lock':(rowDone?'check':'clock'),'ge-ic-sm')+'</span>'+
+       '<span class="ms-objt"><b>'+esc(st.name)+'</b> — '+esc(st.desc)+
+       (locked?' <span class="ge-muted">(finish the previous stage)</span>':'')+'</span>'+
+       '<b class="ge-num">'+Math.min(Math.max(0,cur),target)+'/'+target+'</b></li>';
+    });
+    html+='</ul>'+
+     '<div class="ge-progress-meta"><span>'+icon('level','ge-ic-sm')+'ARC PROGRESS</span><b class="ge-num">'+doneN+'/'+total+'</b></div>'+
+     '<div class="ge-progress'+(done?' ge-progress-ok':'')+'"><i style="width:'+pct+'%"></i></div>'+
+     MS_rewardHTML(pseudo)+
+    '</div>';
+  });
+  return html;
 }
 
 /* ---------------- P1.5: First-Sale tease cards (fire once) ----------------
@@ -1486,21 +1873,38 @@ function strainCard(st,opts){
   if(locked){
     const l=st.lock;
     lockHtml='<p class="lock-note">'+icon('lock','kv-ico')+' '+esc(lockReasonText(l,st.seed*3))+'</p>';
+    const clue=codexClue(st); /* P2-W2: mystery hint per unlock route - a hint, never a spoiler */
+    if(clue) lockHtml+='<p class="codex-clue">'+icon('inspect','kv-ico')+' <i>'+esc(clue)+'</i></p>';
     if(l.t==='cash') lockHtml+='<button class="btn btn-small btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(gPrice)+'</button>';
   }
   const custom=st.custom?'<span class="badge gold">CUSTOM</span>':'';
   const lin=st.lineage?'<p class="muted">'+icon('dna','kv-ico')+' '+esc(st.lineage)+'</p>':'';
-  const ph=S.phenoHistory[st.id];
-  const sg=S.stats.strainGrown[st.id];
-  const histHtml='<div class="kv"><span>'+icon('harvest','kv-ico')+' Times harvested</span><b>'+(sg?sg.count:0)+'</b></div>'+
-   '<div class="kv"><span>'+icon('harvest','kv-ico')+' Best yield</span><b>'+(sg&&num(sg.yield,0)>0?fmtW(sg.yield):'\u2014')+'</b></div>'+
-   '<div class="kv"><span>'+icon('hunt','kv-ico')+' Phenos tested</span><b>'+(ph?int(ph.tested,0):0)+'</b></div>'+
-   '<div class="kv"><span>'+icon('keepers','kv-ico')+' Keepers found</span><b>'+(ph?int(ph.keepers,0):0)+'</b></div>'+
-   ((ph&&num(ph.bestScore,0)>0)?'<div class="kv"><span>'+icon('star','kv-ico')+' Best pheno</span><b>#'+int(ph.bestPheno,0)+' ('+Math.round(ph.bestScore)+')</b></div>':'');
+  /* P2-W2 Living Codex: the player's relationship history with this genetic.
+     Every field is stamped at its own lifecycle point (acquire / grow / harvest /
+     keeper / breed) - never conflated with strainOwned or the harvest aggregates. */
+  const cx=codexHist(st.id);
+  const cxHas=cx&&(cx.acquiredDay>0||cx.grown>0||cx.harvested>0||cx.crossesCreated>0||cx.genNotes.length>0);
+  const cxRec=(lbl,ic,val)=>'<div class="kv"><span>'+icon(ic,'kv-ico')+' '+lbl+'</span><b>'+val+'</b></div>';
+  const cxDash='\u2014';
+  const histHtml=cxHas?(
+   '<div class="codex-hist-head">'+icon('dna','kv-ico')+'<h4>YOUR HISTORY</h4>'+
+   (cx.completed?'<span class="tag gold">'+icon('crown-gold','b-ico')+'CODEX COMPLETE</span>':'')+'</div>'+
+   cxRec('Acquired','scroll',(cx.acquiredDay>0?('Day '+cx.acquiredDay):cxDash))+
+   cxRec('Times grown','grow',int(cx.grown,0))+
+   cxRec('Times harvested','harvest',int(cx.harvested,0))+
+   cxRec('Best yield','star',(num(cx.bestYield,0)>0?fmtW(cx.bestYield):cxDash))+
+   cxRec('Best potency','flask',(num(cx.bestPotency,0)>0?Math.round(cx.bestPotency):cxDash))+
+   cxRec('Best terpenes','flask',(num(cx.bestTerpene,0)>0?Math.round(cx.bestTerpene):cxDash))+
+   cxRec('Best resin','flask',(num(cx.bestResin,0)>0?Math.round(cx.bestResin):cxDash))+
+   cxRec('Phenos evaluated','hunt',int(cx.phenosEvaluated,0))+
+   cxRec('Keeper pheno','keepers',(cx.keeperPheno?esc(cx.keeperPheno):cxDash))+
+   cxRec('Crosses created','dna',int(cx.crossesCreated,0))+
+   (cx.genNotes.length?'<div class="codex-notes">'+cx.genNotes.slice(-4).map(n=>'<p class="codex-note">'+icon('scroll','kv-ico')+' '+esc(n)+'</p>').join('')+'</div>':'')
+  ):'';
   const huntBtns=!locked?'<div class="btn-row"><button class="btn btn-small btn-green" data-growseed="'+st.id+'">'+icon('grow','ic')+'GROW</button>'+
    '<button class="btn btn-small" data-hunt="'+st.id+'">'+icon('hunt','ic')+'PHENO HUNT</button>'+
    '<button class="btn btn-small btn-gold" data-vkeepers="'+st.id+'">'+icon('keepers','ic')+'KEEPERS</button></div>':'';
-  return '<div class="card strain-card"><div class="strain-hero">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+  return '<div class="card strain-card'+((cx&&cx.completed)?' codex-complete':'')+'"><div class="strain-hero">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
     '<h3>'+esc(strainDisplayName(st))+' '+custom+'</h3>'+lin+
     '<div class="tags">'+st.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+
     statBar('Yield',st.yld)+statBar('Potency',st.pot)+statBar('Terpenes',st.terp)+
@@ -1580,6 +1984,12 @@ RENDER.breeding=function(){
   html+='<div class="ge-breed-vs">×</div>';
   html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>PARENT B</h3></div><div class="ge-breed-parent">'+(B?flowerSVG(strainSeed(B),'breed-flower'):'')+breedPickList('breed-b',breedB)+'</div></div>';
   if(A&&B){
+    /* P2.1: show the pre-selected harvest/compare pheno (session hint) on the breeding screen */
+    try{ const hint=(typeof window!=='undefined'&&window.__breedPhenoHint)||null;
+      if(hint&&hint.strainId===breedA){
+        html+='<div class="ge-card ge-card-flat"><div class="ge-caption">'+icon('dna','ge-ic-sm')+' Pre-selected pheno: <b>'+esc(hint.strainName)+' #'+int(hint.phenoNum,0)+'</b> <span class="ge-muted">(overall '+int(hint.overall,0)+' \u00b7 '+esc(String(hint.rarity||'common')).toUpperCase()+')</span> \u2014 crossing this hunt\u2019s pheno.</div></div>';
+      }
+    }catch(e){}
     const traits=predictTraits(A,B);
     html+='<div class="ge-card"><div class="ge-card-head">'+icon('inspect','ge-ic-md')+'<h3>PREDICTED OFFSPRING</h3></div>'+
       traits.map(t=>'<div class="ge-progress-meta"><span>'+esc(t.n)+'</span><b>'+Math.round(num(t.v,0))+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(t.v,0)),0,100)+'%"></i></div>').join('')+'</div>';
@@ -1623,8 +2033,15 @@ function createCross(name){
     seed:120, lineage:A2.name+' × '+B2.name };
   S.customStrains.push(cross);
   try{ if(typeof GX_enrichCross==='function') GX_enrichCross(cross,A2,B2); }catch(e){}
+  /* P2-W2 Living Codex: breeding -> parent cross counts + child generation-history note */
+  try{ codexOnBreedParent(breedA,nm); if(breedB!==breedA) codexOnBreedParent(breedB,nm); }catch(e){}
+  try{ codexOnAcquired(cross.id); }catch(e){} /* bred = acquired for customs */
+  try{ const gl=(typeof TY_genLabelOf==='function')?TY_genLabelOf(cross,A2,B2):null;
+    codexNote(cross.id,'Created: '+(A2.name||'?')+' \u00d7 '+(B2.name||'?')+(gl&&gl.label?' ('+gl.label+')':'')); }catch(e){}
   S.stats.crosses++;
+  try{ ME_first('custom',{id:cross.id,name:cross.name,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
   if(A2.custom||B2.custom) S.stats.secondGenCrosses++;
+  try{ P24_breedingDiscovery(cross,A2,B2); }catch(e){} /* P2-4: breeding discovery moment */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
   toast(icon('dna','ge-ic-md')+' New strain created: <b>'+esc(nm)+'</b>');
   save(); updateHUD(); checkMissions(); checkAchievements();
@@ -1653,8 +2070,14 @@ function selfCross(name){
     seed:120, lineage:A2.name+' (S1 self)' };
   S.customStrains.push(cross);
   try{ if(typeof GX_enrichCross==='function') GX_enrichCross(cross,A2,A2); }catch(e){}
+  /* P2-W2 Living Codex: S1 selfing -> parent cross count + child note */
+  try{ codexOnBreedParent(breedA,nm); }catch(e){}
+  try{ codexOnAcquired(cross.id); }catch(e){} /* bred = acquired for customs */
+  try{ codexNote(cross.id,'Created: S1 self of '+(A2.name||'?')); }catch(e){}
   S.stats.crosses++;
+  try{ ME_first('custom',{id:cross.id,name:cross.name,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
   if(A2.custom) S.stats.secondGenCrosses++;
+  try{ P24_breedingDiscovery(cross,A2,A2); }catch(e){} /* P2-4: breeding discovery moment */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
   toast(icon('dna','ge-ic-md')+' New S1 strain created: <b>'+esc(nm)+'</b>');
   save(); updateHUD(); checkMissions(); checkAchievements();
@@ -1831,7 +2254,7 @@ function expressionTags(p){
     if(g.terpenePot<=55) out.push('EARTHY');
   }
   if(ph.legendaryTrait&&!ph.legendaryHidden) out.push(ph.legendaryTrait);
-  else if(ph.legendaryTrait&&ph.legendaryHidden&&s>=3) out.push('❓ UNKNOWN EXPRESSION');
+  else if(ph.legendaryTrait&&ph.legendaryHidden&&s>=3) out.push('UNKNOWN EXPRESSION');
   return out;
 }
 function revealForStage(p){
@@ -1847,8 +2270,11 @@ function revealForStage(p){
 function countRarity(ph,strainId){
   if(!ph||ph.rarityCounted) return;
   ph.rarityCounted=true;
-  if(ph.rarity==='elite'){ S.stats.eliteFound++; addP0('nocompromise',3); addP0('genetics',2); toast(icon('star','ge-ic-md')+' ELITE phenotype discovered!'); }
-  if(ph.rarity==='legendary'){ S.stats.legendaryFound++; addP0('genetics',6); addP0('preservation',3); }
+  if(ph.rarity==='elite'){ S.stats.eliteFound++; try{ ME_eliteDetail(strainId,ph,'elite'); }catch(e){} addP0('nocompromise',3); addP0('genetics',2); toast(icon('star','ge-ic-md')+' ELITE phenotype discovered!');
+    /* P2.1: one discovery ceremony per pheno — rarityCounted already makes the reward
+       idempotent; eliteCelebrated makes the moment idempotent too. */
+    ph.eliteCelebrated=true; ph._eliteCinePending=true; }
+  if(ph.rarity==='legendary'){ S.stats.legendaryFound++; try{ ME_eliteDetail(strainId,ph,'legendary'); }catch(e){} addP0('genetics',6); addP0('preservation',3); }
   const h=phist(strainId);
   if(ph.rarity==='elite') h.elite++;
   if(ph.rarity==='legendary') h.legendary++;
@@ -1870,6 +2296,65 @@ function legendaryRevealModal(st,ph){
    'cine-legend',0);
   const back=document.querySelector('#modal-root .cine-back.cine-legend');
   if(back){ const btn=back.querySelector('#leg-ok'); if(btn) btn.onclick=()=>{ back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); }; }
+}
+
+/* P2.1: ELITE EXPRESSION DETECTED — a major Shocker OwnZ moment. Industrial
+   presentation (black/charcoal/crimson/burnt orange, scan + smoke + glitch,
+   SVG icons only, no emoji, no casino chrome). Haptics: CAP bridge with
+   navigator.vibrate fallback (via PR_haptic). Idempotent: _eliteCineShown is set
+   on first run, so exactly one ceremony per pheno no matter how often discovery
+   is re-checked. */
+function eliteExpressionCeremony(st,ph){
+  try{
+    if(!ph||ph._eliteCineShown) return false;
+    ph._eliteCineShown=true;
+    const seed=(st?st.id:'x')+'#'+ph.num;
+    const rows=[['POTENCY',ph.potencyPot],['RESIN',ph.resinPot],['TERPENES',ph.terpenePot],['YIELD',ph.yieldPot]];
+    cineOverlay(
+     '<div class="elite-stage"><div class="pr-smoke" aria-hidden="true"></div><div class="pr-scan" aria-hidden="true"></div>'+
+     '<div class="elite-kicker">'+icon('dna','ge-ic-sm')+'<span>SHOCKER OWNZ // GENETIC SCAN</span></div>'+
+     '<div class="elite-art">'+dnaSVG('elite-dna')+plantSVG(9,seed,'elite-plant',{frost:3,dense:true})+'</div>'+
+     '<div class="ge-display elite-title pr-glitch" data-text="ELITE EXPRESSION DETECTED">ELITE EXPRESSION DETECTED</div>'+
+     '<div class="elite-name">'+esc(st?st.name:'Unknown')+' <span class="elite-pheno">PHENO #'+ph.num+'</span></div>'+
+     '<div class="elite-grid">'+rows.map((t,i)=>'<div class="elite-cell" style="animation-delay:'+(0.4+i*0.25).toFixed(2)+'s"><span>'+t[0]+'</span><b data-count="'+num(t[1],0)+'" data-dec="0">0</b></div>').join('')+'</div>'+
+     '<div class="elite-sub">A cut above the pack &mdash; preserve it before it&apos;s gone.</div>'+
+     '<button type="button" class="ge-btn ge-btn-gold ge-btn-block" id="elite-ok">'+icon('trophy','ge-ic-md')+'LOG IT</button></div>',
+     'cine-elite',4000);
+    const eb=document.querySelector('#modal-root .cine-back.cine-elite');
+    if(eb){
+      const btn=eb.querySelector('#elite-ok');
+      if(btn) btn.onclick=()=>{ eb.classList.add('cine-out'); eb.classList.remove('is-open'); setTimeout(()=>eb.remove(),300); };
+      eb.querySelectorAll('[data-count]').forEach(el=>{
+        const target=num(el.dataset.count,0), t0=performance.now(), dur=900, delay=500;
+        function tick(t){
+          if(t-t0<delay){ requestAnimationFrame(tick); return; }
+          const p=clamp((t-t0-delay)/dur,0,1), e=1-Math.pow(1-p,3);
+          el.textContent=Math.round(target*e);
+          if(p<1) requestAnimationFrame(tick);
+        }
+        try{ requestAnimationFrame(tick); }catch(e){ el.textContent=Math.round(target); }
+      });
+    }
+    /* haptics: heavy pulse then two beats — CAP bridge first, navigator.vibrate fallback */
+    try{ PR_haptic('alert'); }catch(e){}
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },350);
+    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },700);
+    try{ if(typeof TY_notify==='function') TY_notify(icon('trophy','ge-ic-md')+' <b>ELITE EXPRESSION DETECTED:</b> '+esc(st?st.name:'Unknown')+' #'+ph.num,'good'); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+/* P2.1: terpene profile for the compare table — derived from data that exists
+   (strain flavor tags + terpenePot intensity). No invented per-pheno storage. */
+function phenoTerpeneProfile(g,strainId){
+  let tags=[];
+  try{ const st=strainId?getStrain(strainId):null; if(st&&Array.isArray(st.tags)) tags=st.tags; }catch(e){}
+  const fam=tags.indexOf('Gassy')>=0?'GASSY':tags.indexOf('Skunky')>=0?'SKUNKY':
+    tags.indexOf('Fruit')>=0?'FRUITY':tags.indexOf('Citrus')>=0?'CITRUS':
+    tags.indexOf('Earthy')>=0?'EARTHY':tags.indexOf('Sweet')>=0?'SWEET':
+    tags.indexOf('Floral')>=0?'FLORAL':tags.indexOf('Diesel')>=0?'DIESEL':null;
+  const v=num(g?g.terpenePot:0,50);
+  const inten=v>=90?'OVERWHELMING':v>=78?'LOUD':v>=62?'NOTICEABLE':'FAINT';
+  return (fam||'NEUTRAL')+' \u00b7 '+inten;
 }
 
 /* ---- phenotype inspection (expands INSPECT) ---- */
@@ -1914,6 +2399,8 @@ function inspectPheno(pid){
     countRarity(ph,p.strainId);
     setTimeout(()=>legendaryRevealModal(st,ph),350);
   }
+  /* P2.1: elite ceremony fires at the single discovery moment, once per pheno */
+  if(ph._eliteCinePending){ ph._eliteCinePending=false; setTimeout(()=>{ try{ eliteExpressionCeremony(st,ph); }catch(e){} },350); }
   const ug='<span class="unknown-gene">???</span>';
   const tRow=(label,key)=>'<div class="kv"><span>'+label+'</span><b>'+(ph.known[key]?Math.round(ph[key]):ug)+'</b></div>';
   let html='<h3>'+icon('inspect','ic')+' '+esc(phenoName(p)).replace('\U0001F9EC','')+'</h3>'+
@@ -2000,8 +2487,10 @@ function plantSeed(strainId){
   S.plants.push(p);
   markStrainOwned(strainId);
   S.stats.plantsStarted++; S.stats.phenoTested++;
+  try{ ME_first('plant',{strainId:strainId,name:(st?st.name:strainId),day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
   S.stats.maxConcurrent=Math.max(S.stats.maxConcurrent,S.plants.length);
   const h=phist(strainId); h.tested++;
+  try{ codexOnGrown(strainId); }catch(e){} /* P2-W2: plant -> grown */
   const hunt=S.phenoHunts.find(x=>x.active&&x.strainId===strainId);
   if(hunt){ p.pheno.huntId=hunt.id; hunt.planted++; }
   if(S.stats.phenoTested%5===0){ addP0('preservation',1); addP0('knowledge',1); }
@@ -2136,10 +2625,16 @@ function harvestPlant(p){
   }catch(e){}
   const sg=S.stats.strainGrown[st.id]||{count:0,best:0,yield:0};
   sg.count++; sg.best=Math.max(sg.best,qq); sg.yield=Math.max(num(sg.yield,0),num(oz,0)); S.stats.strainGrown[st.id]=sg;
+  /* P2-W2 Living Codex: harvest -> harvested + best records */
+  try{ codexOnHarvest(st.id,{yieldOz:oz,potency:Math.round(potency),terpenes:Math.round(terpenes),resin:Math.round(resin)}); }catch(e){}
+  try{ if(ph&&ph.num) codexNote(st.id,'Harvested pheno #'+int(ph.num,0)+' \u2014 Q'+qq+', '+fmtW(oz)); }catch(e){}
   S.stats.harvests++; S.stats.lifetimeHarvestOz+=oz;
+  try{ if(typeof CHA_onHarvest==='function') CHA_onHarvest(p); }catch(e){} /* P2.3: comeback-chain harvest hook */
   S.stats.bestQuality=Math.max(S.stats.bestQuality,qq);
   S.stats.bestBagAppeal=Math.max(S.stats.bestBagAppeal,Math.round(bagAppeal));
   S.stats.biggestHarvest=Math.max(S.stats.biggestHarvest,oz);
+  try{ ME_first('harvest',{strainId:st.id,strainName:st.name,oz:oz,quality:qq,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory: first */
+  try{ ME_recordHarvest(st,oz,potency,terpenes,resin); }catch(e){} /* P2.5 player memory: records */
   if(qq>=80) S.stats.q80Harvests++;
   if(p.health>=90) S.stats.highHealthHarvests++;
   if(p.minHealth>=80) S.stats.flawlessGrows++;
@@ -2155,6 +2650,8 @@ function harvestPlant(p){
   S.stats.phenoHarvested++;
   const h=phist(p.strainId); h.harvested++;
   countRarity(ph,p.strainId);
+  /* P2.1: elite ceremony plays BEFORE the harvest report (one per pheno); the report waits. */
+  const eliteCinePending=!!ph._eliteCinePending; ph._eliteCinePending=false;
   const yieldScore=clamp(Math.round(yieldOz/4.5*100),5,100);
   const overall=Math.round(qq*0.3+potency*0.2+resin*0.15+terpenes*0.15+bagAppeal*0.1+yieldScore*0.1);
   S.stats.bestPhenoScore=Math.max(S.stats.bestPhenoScore,overall);
@@ -2194,10 +2691,11 @@ function harvestPlant(p){
     strainId:st.id, strainName:st.name, phenoNum:ph.num,
     rarity:ph.rarity, legendaryTrait:ph.legendaryHidden?null:ph.legendaryTrait,
     traits:ph.expressed.slice(),
-    genetics:{vigor:ph.vigor,structure:ph.structure,yieldPot:ph.yieldPot,potencyPot:ph.potencyPot,
-      resinPot:ph.resinPot,terpenePot:ph.terpenePot,bagAppeal:ph.bagAppeal,flowerSpeed:ph.flowerSpeed,
-      stressTol:ph.stressTol,stability:ph.stability,
-      stretch:ph.stretch,nutrientSensitivity:ph.nutrientSensitivity,envTolerance:ph.envTolerance},
+    /* P2.1: snapshot ALL pheno traits. The keeper flow deep-copies report.genetics;
+       any dropped key silently becomes 50 in the vault via sanitizePhenoGenetics
+       (overwrite-by-default bug: hermRisk/rootVigor/cloneVigor/internode/diseaseRes
+       were lost on every harvest report). */
+    genetics:(function(){ const g={}; PHENO_KEYS.forEach(k=>{ g[k]=clamp(Math.round(num(ph[k],50)),5,100); }); return g; })(),
     overall:overall,
     harvest:{quality:qq,potency:Math.round(potency),terpenes:Math.round(terpenes),
       bagAppeal:Math.round(bagAppeal),resin:Math.round(resin),yieldOz:oz,yieldScore:yieldScore},
@@ -2206,16 +2704,20 @@ function harvestPlant(p){
     isClone:ph.isClone, motherId:ph.motherId||null, keeperId:ph.keeperId||null,
     huntId:ph.huntId||null
   };
-  phenoReportModal(report);
-  /* ---- expansion: append deep grade ceremony into the harvest report modal ---- */
-  try{
-    const gxG2=S.gx&&S.gx.lastGrade;
-    if(gxG2&&gxG2.strainId===st.id&&typeof GX_gradeReportHTML==='function'){
-      const backs=document.querySelectorAll('#modal-root .modal-back');
-      const box=backs.length?backs[backs.length-1].querySelector('.modal'):null;
-      if(box) box.insertAdjacentHTML('beforeend',GX_gradeReportHTML(gxG2));
-    }
-  }catch(e){}
+  const showReport=()=>{ try{
+    phenoReportModal(report);
+    /* ---- expansion: append deep grade ceremony into the harvest report modal ---- */
+    try{
+      const gxG2=S.gx&&S.gx.lastGrade;
+      if(gxG2&&gxG2.strainId===st.id&&typeof GX_gradeReportHTML==='function'){
+        const backs=document.querySelectorAll('#modal-root .modal-back');
+        const box=backs.length?backs[backs.length-1].querySelector('.modal'):null;
+        if(box) box.insertAdjacentHTML('beforeend',GX_gradeReportHTML(gxG2));
+      }
+    }catch(e){}
+  }catch(e){} };
+  if(eliteCinePending){ try{ eliteExpressionCeremony(st,ph); }catch(e){} setTimeout(showReport,4400); }
+  else showReport();
 }
 
 /* ---- harvest-reveal haptics: CAP bridge first, navigator.vibrate fallback ---- */
@@ -2282,6 +2784,8 @@ function phenoReportModal(report){
   const frostTerp=num(g0.resinPot,0)>=88&&num(g0.terpenePot,0)>=88;
   if(eliteExpr||frostTerp)
     banners.push({cls:'pr-banner-p0',ic:'project0',t:'P0 CANDIDATE',s:(eliteExpr?'Elite/legendary expression':'Exceptional resin + terpene combo')+' \u2014 flagged for Project 0 preservation.'});
+  /* P2-4: discovery moments — one-time beats for notable findings (reward-free; W1 owns elite rewards) */
+  try{ P24_harvestDiscoveries(report,r); }catch(e){}
   /* ---- persistent header: Shocker OwnZ industrial presentation; petal-fall retired ---- */
   let html='<div class="ge-harvest-report pr-report">'+
    '<div class="pr-smoke" aria-hidden="true"></div><div class="pr-scan" aria-hidden="true"></div>'+
@@ -2334,7 +2838,7 @@ function phenoReportModal(report){
     m.querySelector('#pr-disc').onclick=()=>{ closeModal(m); toast('Phenotype culled.'); save(); };
   /* P1.7: CLONE/BREED reuse the existing flows, pre-selected with the harvested pheno */
   m.querySelector('#pr-clone').onclick=()=>{ closeModal(m); TU_cloneFromReport(report); };
-  m.querySelector('#pr-breed').onclick=()=>{ closeModal(m); try{ breedA=report.strainId; }catch(e){} show('breeding'); };
+  m.querySelector('#pr-breed').onclick=()=>{ closeModal(m); TU_breedFromReport(report); };
   }
   let step=-1, done=false;
   nextBtn.onclick=()=>{
@@ -2359,10 +2863,77 @@ function TU_cloneFromReport(report){
   }catch(e){ try{ toast(icon('x','ge-ic-md')+' Clone failed.'); }catch(e2){} }
 }
 function archivePheno(report){
-  S.phenoArchive.unshift({strainName:report.strainName,phenoNum:report.phenoNum,rarity:report.rarity,
-    overall:report.overall,day:S.day,traits:report.traits.slice(0,6)});
+  /* P2.1: archive keeps the FULL genetics snapshot so compared/archived phenos
+     render complete trait tables later (previously only 6 trait names were kept). */
+  let genetics=null;
+  try{ if(report&&report.genetics&&typeof report.genetics==='object'){ genetics={}; PHENO_KEYS.forEach(k=>{ genetics[k]=clamp(Math.round(num(report.genetics[k],50)),5,100); }); } }catch(e){}
+  const tr=Array.isArray(report&&report.traits)?report.traits.slice(0,6):[];
+  S.phenoArchive.unshift({strainId:report?report.strainId:null,strainName:report?report.strainName:'?',phenoNum:report?int(report.phenoNum,0):0,rarity:report?report.rarity:'common',
+    overall:report?num(report.overall,0):0,day:S.day,traits:tr,genetics:genetics,
+    isClone:!!(report&&report.isClone),lineage:report&&report.lineage?String(report.lineage):''});
   if(S.phenoArchive.length>200) S.phenoArchive.length=200;
   save(); toast(icon('box','ge-ic-md')+' Phenotype archived.');
+}
+/* P2.1: archive a keeper (full genetics carried). */
+function archiveKeeper(keeperId){
+  try{
+    const k=(S.keepers||[]).find(x=>x.id===keeperId); if(!k) return;
+    archivePheno({strainId:k.strainId,strainName:k.strainName,phenoNum:k.phenoNum,rarity:k.rarity,
+      overall:k.overall,traits:Array.isArray(k.traits)?k.traits:[],genetics:k.genetics,isClone:!!k.isClone,lineage:k.lineage||'Keeper'});
+  }catch(e){ try{ toast(icon('x','ge-ic-md')+' Archive failed.'); }catch(e2){} }
+}
+/* P2.1: per-pheno action set for compare contexts. Entries carry side:'a'|'b' so
+   compareModal groups them under the right pheno. MARK AS KEEPER reuses the
+   hardened keeper flow (markKeeper -> keeperCine -> confirmKeeper, with the
+   direct-save fallback preserved inside the ceremony). */
+function phenoSideActions(side,desc){
+  const out=[];
+  const push=(label,cls,fn)=>out.push({label:label,cls:cls,fn:fn,side:side});
+  if(!desc) return out;
+  if(desc.kind==='report'){
+    const rep=desc.report;
+    push(icon('crown-gold','ge-ic-sm')+' MARK AS KEEPER','ge-btn-gold',()=>markKeeper(rep));
+    push(icon('clone','ge-ic-sm')+' CLONE','ge-btn-primary',()=>TU_cloneFromReport(rep));
+    push(icon('dna','ge-ic-sm')+' BREED','ge-btn-primary',()=>TU_breedFromReport(rep));
+    push(icon('preserve','ge-ic-sm')+' ARCHIVE','ge-btn-ghost',()=>archivePheno(rep));
+    push(icon('x','ge-ic-sm')+' CULL','ge-btn-danger',()=>{ toast('Phenotype culled.'); save(); });
+  }else{
+    const kid=desc.keeperId;
+    push(icon('grow','ge-ic-sm')+' MOTHER','ge-btn-ghost',()=>promoteMother(kid));
+    push(icon('clone','ge-ic-sm')+' CLONE','ge-btn-primary',()=>TU_cloneKeeper(kid));
+    push(icon('dna','ge-ic-sm')+' BREED','ge-btn-primary',()=>TU_breedFromKeeper(kid));
+    push(icon('preserve','ge-ic-sm')+' ARCHIVE','ge-btn-ghost',()=>archiveKeeper(kid));
+    push(icon('x','ge-ic-sm')+' CULL','ge-btn-danger',()=>removeKeeper(kid));
+  }
+  return out;
+}
+/* P2.1: clone a keeper — reuses the existing mother/clone flow (takeClone). */
+function TU_cloneKeeper(keeperId){
+  try{
+    const k=(S.keepers||[]).find(x=>x.id===keeperId); if(!k) return;
+    const mo=(S.mothers||[]).find(x=>x.keeperId===keeperId);
+    if(mo){ takeClone(mo.id); return; }
+    promoteMother(keeperId);
+    setTimeout(()=>{ try{ toast(icon('clone','ge-ic-md')+' Keeper promoted \u2014 use the Mother Room to TAKE CLONE.'); }catch(e){} },450);
+  }catch(e){ try{ toast(icon('x','ge-ic-md')+' Clone failed.'); }catch(e2){} }
+}
+/* P2.1: BREED reuses the existing breeding flow, pre-selected with the pheno.
+   The lab is strain-level; the source pheno is stashed as a session hint and
+   displayed on the breeding screen. */
+function TU_breedFromReport(report){
+  try{ if(!report) return; TU_breedFromStrain(report.strainId,report.strainName,report.phenoNum,report.overall,report.rarity); }catch(e){}
+}
+function TU_breedFromKeeper(keeperId){
+  try{
+    const k=(S.keepers||[]).find(x=>x.id===keeperId); if(!k) return;
+    TU_breedFromStrain(k.strainId,k.strainName,k.phenoNum,k.overall,k.rarity);
+  }catch(e){}
+}
+function TU_breedFromStrain(strainId,strainName,phenoNum,overall,rarity){
+  if(!strainId) return;
+  try{ breedA=strainId; }catch(e){}
+  try{ window.__breedPhenoHint={strainId:strainId,strainName:String(strainName||strainId),phenoNum:int(phenoNum,0),overall:int(overall,0),rarity:rarity||'common'}; }catch(e){}
+  show('breeding');
 }
 
 
@@ -2382,6 +2953,9 @@ function rollEvents(){
     if(S.env.light>100&&Math.random()<0.25) ev.push(stressEvent(p,'light'));
     if(Math.random()<0.03) ev.push(goodEvent(p,pick(['growth','terps','resin'])));
     if(Math.random()<0.012) ev.push(mutationEvent(p));
+    /* P2-4 positive moments: vigorous seedling + rare phenotype expression (hook-only, reward-free) */
+    if(p.stage===-1&&Math.random()<0.05) ev.push(vigorousSeedlingEvent(p));
+    if(Math.random()<0.5&&stageOf(p)>=2&&p.pheno&&(p.pheno.rarity==='elite'||p.pheno.rarity==='legendary')&&!p.eliteSighted) ev.push(eliteSightingEvent(p));
     if(Math.random()<0.02&&stageOf(p)>=2) ev.push(hermEvent(p));
   });
   if(Math.random()<0.04) ev.push(equipFailEvent());
@@ -2397,48 +2971,48 @@ function miteEvent(p){ const st=getStrain(p.strainId);
     ['Ignore it',()=>{ p.health=clamp(p.health-16,0,100); p.problems.push('Spider mites'); toast(icon('bug','ge-ic-md')+' Mites spread! Health -16.'); }]]);
 }
 function gnatEvent(p){ const st=getStrain(p.strainId);
-  return evModal(p,'🦟 Fungus Gnats','Fungus gnats buzzing around your '+st.name+'.',
-   [['Let soil dry out (water -15)',()=>{ p.water=clamp(p.water-15,0,100); p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast('🏜️ Soil dried. Gnats gone.'); }],
+  return evModal(p,icon('bug','ge-ic-md')+' Fungus Gnats','Fungus gnats buzzing around your '+st.name+'.',
+   [['Let soil dry out (water -15)',()=>{ p.water=clamp(p.water-15,0,100); p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast(icon('water','ge-ic-md')+' Soil dried. Gnats gone.'); }],
     ['Sticky traps ($10)',()=>{ if(S.cash>=10){S.cash-=10; p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast(icon('trap','ge-ic-md')+' Traps set.');} else {p.health-=8; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
-    ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Fungus gnats'); toast('🦟 Larvae munch roots! Health -10.'); }]]);
+    ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Fungus gnats'); toast(icon('bug','ge-ic-md')+' Larvae munch roots! Health -10.'); }]]);
 }
 function mildewEvent(p){ const st=getStrain(p.strainId);
-  return evModal(p,'🤍 Powdery Mildew','White powder on leaves of '+st.name+'. Lower humidity!',
+  return evModal(p,icon('warn','ge-ic-md')+' Powdery Mildew','White powder on leaves of '+st.name+'. Lower humidity!',
    [['Defoliate (+stress)',()=>{ p.stress=clamp(p.stress+10,0,100); p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast(icon('train','ge-ic-md')+' Infected leaves removed.'); }],
     ['Fungicide ($25)',()=>{ if(S.cash>=25){S.cash-=25; p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast(icon('spray','ge-ic-md')+' Treated.');} else {p.health-=12; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
-    ['Ignore it',()=>{ p.health=clamp(p.health-14,0,100); p.problems.push('Powdery mildew'); toast('🤍 Mildew spreads! Health -14.'); }]]);
+    ['Ignore it',()=>{ p.health=clamp(p.health-14,0,100); p.problems.push('Powdery mildew'); toast(icon('warn','ge-ic-md')+' Mildew spreads! Health -14.'); }]]);
 }
 function defEvent(p,kind){ const st=getStrain(p.strainId);
-  if(kind==='deficiency') return evModal(p,'🥀 Nutrient Deficiency','Your '+st.name+' is hungry — leaves yellowing.',
+  if(kind==='deficiency') return evModal(p,icon('feed','ge-ic-md')+' Nutrient Deficiency','Your '+st.name+' is hungry — leaves yellowing.',
    [['Feed now',()=>{ p.nutrition=clamp(p.nutrition+30,0,100); toast(icon('flask','ge-ic-md')+' Fed. Crisis averted.'); }],
     ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Deficiency'); toast(icon('warn','ge-ic-md')+' Health -10.'); }]]);
-  return evModal(p,'🔥 Nutrient Burn','Leaf tips burning on '+st.name+' — too much feed!',
+  return evModal(p,icon('flask','ge-ic-md')+' Nutrient Burn','Leaf tips burning on '+st.name+' — too much feed!',
    [['Flush with water',()=>{ p.nutrition=clamp(p.nutrition-35,0,100); p.water=clamp(p.water+20,0,100); toast(icon('water','ge-ic-md')+' Flushed.'); }],
-    ['Ignore it',()=>{ p.health=clamp(p.health-12,0,100); p.problems.push('Nutrient burn'); toast('🔥 Health -12.'); }]]);
+    ['Ignore it',()=>{ p.health=clamp(p.health-12,0,100); p.problems.push('Nutrient burn'); toast(icon('warn','ge-ic-md')+' Health -12.'); }]]);
 }
 function stressEvent(p,kind){ const st=getStrain(p.strainId);
-  const t=kind==='heat'?'🌡️ Heat Stress':'💡 Light Stress';
+  const t=kind==='heat'?icon('temp','ge-ic-md')+' Heat Stress':icon('lighting','ge-ic-md')+' Light Stress';
   return evModal(p,t,'Your '+st.name+' is stressed. Adjust the environment!',
-   [['I\'ll fix the environment',()=>{ toast('⚙️ Adjust sliders in the Grow Room.'); }],
+   [['I\'ll fix the environment',()=>{ toast(icon('settings','ge-ic-md')+' Adjust sliders in the Grow Room.'); }],
     ['Ride it out (-8 health)',()=>{ p.health=clamp(p.health-8,0,100); p.stress=clamp(p.stress+8,0,100); }]]);
 }
 function goodEvent(p,kind){ const st=getStrain(p.strainId);
-  if(kind==='growth'){ p.growthBoost+=2; return evModal(p,'🚀 Exceptional Growth','Your '+st.name+' is exploding with vigor! +2 days growth.',[['Nice!',()=>{}]]); }
-  if(kind==='terps'){ p.terpBoost=(p.terpBoost||0)+5; return evModal(p,'👃 Terpene Surge','Terps going wild on '+st.name+'! +quality.',[['Nice!',()=>{}]]); }
-  p.resinBoost=(p.resinBoost||0)+5; return evModal(p,'💎 Resin Surge','Frost pouring on '+st.name+'! +quality.',[['Nice!',()=>{}]]);
+  if(kind==='growth'){ p.growthBoost+=2; return evModal(p,icon('grow','ge-ic-md')+' Exceptional Growth','Your '+st.name+' is exploding with vigor! +2 days growth.',[['Nice!',()=>{}]]); }
+  if(kind==='terps'){ p.terpBoost=(p.terpBoost||0)+5; return evModal(p,icon('terp','ge-ic-md')+' Terpene Surge','Terps going wild on '+st.name+'! +quality.',[['Nice!',()=>{}]]); }
+  p.resinBoost=(p.resinBoost||0)+5; return evModal(p,icon('drop','ge-ic-md')+' Resin Surge','Frost pouring on '+st.name+'! +quality.',[['Nice!',()=>{}]]);
 }
 function mutationEvent(p){ const st=getStrain(p.strainId);
-  return evModal(p,'🧬 Mutation!','A rare mutation on '+st.name+'.',
+  return evModal(p,icon('dna','ge-ic-md')+' Mutation!','A rare mutation on '+st.name+'.',
    [['Stabilize it (+vigor, +resin)',()=>{ p.growthBoost+=1; p.resinBoost=(p.resinBoost||0)+8; addP0('genetics',2); toast(icon('dna','ge-ic-md')+' Mutation stabilized!'); }],
     ['Cull the branch',()=>{ p.health=clamp(p.health-5,0,100); toast(icon('train','ge-ic-md')+' Culled.'); }]]);
 }
 function hermEvent(p){ const st=getStrain(p.strainId);
-  return evModal(p,'⚠️ Herm Warning','Bananas spotted on '+st.name+' — it may pollinate the room!',
-   [['Isolate & monitor (+stress)',()=>{ p.stress=clamp(p.stress+15,0,100); toast('👀 Isolated. Crisis managed.'); }],
-    ['Cull the plant',()=>{ S.plants=S.plants.filter(x=>x.id!==p.id); toast('🗑️ Plant culled to save the room.'); refreshGrowUI(); }]]);
+  return evModal(p,icon('alert-triangle','ge-ic-md')+' Herm Warning','Bananas spotted on '+st.name+' — it may pollinate the room!',
+   [['Isolate & monitor (+stress)',()=>{ p.stress=clamp(p.stress+15,0,100); toast(icon('shield','ge-ic-md')+' Isolated. Crisis managed.'); }],
+    ['Cull the plant',()=>{ S.plants=S.plants.filter(x=>x.id!==p.id); toast(icon('trash','ge-ic-md')+' Plant culled to save the room.'); refreshGrowUI(); }]]);
 }
 function equipFailEvent(){
-  return evModal(null,'🔧 Equipment Failure','Your HVAC sputters — environment control degraded for 2 days!',
+  return evModal(null,icon('equipment','ge-ic-md')+' Equipment Failure','Your HVAC sputters — environment control degraded for 2 days!',
    [['Repair ($75)',()=>{ if(S.cash>=75){S.cash-=75; toast(icon('equipment','ge-ic-md')+' Repaired.');} else { S.envPenalty=2; toast(icon('x','ge-ic-md')+' Running degraded 2 days!'); } }],
     ['Run degraded',()=>{ S.envPenalty=2; toast(icon('warn','ge-ic-md')+' Environment -15 score for 2 days.'); }]]);
 }
@@ -2461,6 +3035,8 @@ function expansionTick(){
   try{ if(typeof TY_tick==='function') TY_tick(); }catch(e){}
   try{ if(typeof EX_tick==='function') EX_tick(); }catch(e){}
   try{ if(typeof GX_tick==='function') GX_tick(); }catch(e){}
+  /* P2-4: genetic unlock clue scan (online only — expansionTick never runs offline) */
+  try{ if(typeof P24_unlockClueScan==='function') P24_unlockClueScan(); }catch(e){}
 }
 
 /* ---------------- Day advance ---------------- */
@@ -2548,6 +3124,8 @@ function advanceDay(){
     const tIn=num(S.env.temp,76)>=70&&num(S.env.temp,76)<=82, hIn=num(S.env.humidity,52)>=40&&num(S.env.humidity,52)<=60;
     S.stats.envInRangeDays=(tIn&&hIn)?int(S.stats.envInRangeDays,0)+1:0;
   }catch(e){}
+  /* P2.3: mission-chain day hooks (env bands, comeback detection) */
+  try{ if(typeof CHA_dayTick==='function') CHA_dayTick(); }catch(e){}
   gainXP(5);
   save(); updateHUD();
   checkMissions(); checkAchievements();
@@ -3136,6 +3714,8 @@ RENDER.missions=function(){
   html+='<div class="ge-tabs ms-tabs" role="tablist" aria-label="Mission sections">'+
    MS_SECTIONS.map(s=>'<button class="ge-tab'+(missionTab===s.id?' is-active':'')+'" role="tab" aria-selected="'+(missionTab===s.id)+'" data-mtab="'+s.id+'">'+icon(s.icon,'ge-ic-sm')+s.label+'</button>').join('')+
   '</div>';
+  /* P2.3: story arcs render as chapters above the flat mission list */
+  if(missionTab==='story'){ try{ html+=CHA_storyHTML(); }catch(e){} }
   /* cards */
   let total=0;
   Object.keys(cats).forEach(cat=>{
@@ -3259,6 +3839,8 @@ function confirmKeeper(report){
     };
     S.keepers.push(k);
     S.stats.keepersFound=int(S.stats.keepersFound,0)+1;
+    try{ ME_first('keeper',{strainId:strainId,strainName:k.strainName,phenoNum:k.phenoNum,rarity:k.rarity,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+    try{ codexOnKeeper(strainId,k); codexNote(strainId,'Keeper selected: '+k.strainName+' #'+k.phenoNum+' ('+(k.rarity||'common')+')'); }catch(e){} /* P2-W2: keeper -> keeper ref */
     try{ const h=phist(strainId); if(h) h.keepers=int(h.keepers,0)+1; }catch(e){}
     try{
       const hunt=report.huntId?S.phenoHunts.find(x=>x.id===report.huntId):(S.phenoHunts||[]).find(x=>x.active&&strainId===x.strainId);
@@ -3268,7 +3850,7 @@ function confirmKeeper(report){
     if(report.rarity==='elite') addP0('nocompromise',3);
     if(report.rarity==='legendary') addP0('genetics',6);
     gainXP(150); gainRep(10);
-    toast('👑 KEEPER SELECTED<br><b>'+esc(k.strainName)+' — PHENO #'+k.phenoNum+'</b><br>ELITE GENETICS PRESERVED');
+    toast(icon('crown-gold','ge-ic-md')+' KEEPER SELECTED<br><b>'+esc(k.strainName)+' — PHENO #'+k.phenoNum+'</b><br>ELITE GENETICS PRESERVED');
     try{ if(typeof TY_keeperHook==='function') TY_keeperHook(report); }catch(e){}
     save(); updateHUD(); checkMissions(); checkAchievements();
     if(current==='keepers') RENDER.keepers();
@@ -3297,46 +3879,75 @@ function vaultFullModal(report){
   m.querySelector('#vf-up').onclick=()=>{ closeModal(m); keeperTab='vault'; show('keepers'); toast('<span class="ge-label">↑</span> Expand vault capacity below.'); };
   if(weakest) m.querySelector('#vf-compare').onclick=()=>{
     closeModal(m);
+    /* P2.1: full per-pheno actions on each side; the replace flow is preserved */
     compareModal(
-      {name:report.strainName+' #'+report.phenoNum+' (NEW)',genetics:report.genetics,overall:report.overall},
-      {name:weakest.strainName+' #'+weakest.phenoNum,genetics:weakest.genetics,overall:weakest.overall},
-      [
-        {label:icon('crown-gold','ge-ic-sm')+' KEEP NEW',cls:'ge-btn-gold',fn:()=>{ S.keepers=S.keepers.filter(x=>x.id!==weakest.id); toast(icon('x','ge-ic-md')+' Replaced '+esc(weakest.strainName)+' #'+weakest.phenoNum); markKeeper(report); }},
-        {label:'KEEP EXISTING',cls:'ge-btn-ghost',fn:()=>{ archivePheno(report); }},
+      {name:report.strainName+' #'+report.phenoNum+' (NEW)',strainId:report.strainId,genetics:report.genetics,overall:report.overall},
+      {name:weakest.strainName+' #'+weakest.phenoNum,strainId:weakest.strainId,genetics:weakest.genetics,overall:weakest.overall},
+      phenoSideActions('a',{kind:'report',report:report})
+      .concat(phenoSideActions('b',{kind:'keeper',keeperId:weakest.id,strainId:weakest.strainId,strainName:weakest.strainName,phenoNum:weakest.phenoNum,rarity:weakest.rarity}))
+      .concat([
+        {label:icon('crown-gold','ge-ic-sm')+' KEEP NEW (REPLACE)',cls:'ge-btn-gold',side:'a',fn:()=>{ S.keepers=S.keepers.filter(x=>x.id!==weakest.id); toast(icon('x','ge-ic-md')+' Replaced '+esc(weakest.strainName)+' #'+weakest.phenoNum); markKeeper(report); }},
         {label:'CANCEL',cls:'ge-btn-danger',fn:()=>{}}
-      ]);
+      ]));
   };
 }
 
-/* generic side-by-side comparison */
+/* generic side-by-side comparison — P2.1: full 18-trait table + terpene profile,
+   per-row winner highlights (lower-is-better honored), and optional per-side
+   action groups (action entries may carry side:'a'|'b'). */
 function compareModal(a,b,actions){
-  const rows=[['Vigor','vigor'],['Structure','structure'],['Yield','yieldPot'],['Potency','potencyPot'],['Terpenes','terpenePot'],
+  const ga=(a&&a.genetics&&typeof a.genetics==='object')?a.genetics:{};
+  const gb=(b&&b.genetics&&typeof b.genetics==='object')?b.genetics:{};
+  /* [label, key, lowerIsBetter] */
+  /* P2.1: row labels keep their established forms (P1.2-16 pins 'Nutrient Sens.' /
+     'Env Tolerance'); new rows use full names. */
+  const rows=[['Vigor','vigor'],['Structure','structure'],['Yield','yieldPot'],['Potency','potencyPot'],['Terpene Score','terpenePot'],
     ['Resin','resinPot'],['Bag Appeal','bagAppeal'],['Flower Speed','flowerSpeed'],
-    ['Stability','stability'],['Stress Tol.','stressTol'],
-    ['Stretch','stretch'],['Nutrient Sens.','nutrientSensitivity'],['Env Tolerance','envTolerance']];
+    ['Stability','stability'],['Stress Tol.','stressTol'],['Herm Risk','hermRisk',true],
+    ['Root Vigor','rootVigor'],['Clone Vigor','cloneVigor'],['Internodal Spacing','internode'],
+    ['Disease Resistance','diseaseRes'],
+    ['Stretch','stretch'],['Nutrient Sens.','nutrientSensitivity',true],['Env Tolerance','envTolerance']];
   let html='<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>PHENOTYPE COMPARE</h3></div><div class="ge-modal-body"><table class="ge-cmp-table"><tr><th></th><th>'+esc(a.name)+'</th><th>'+esc(b.name)+'</th></tr>';
-  rows.forEach(([label,key])=>{
-    const av=Math.round(num(a.genetics[key],0)), bv=Math.round(num(b.genetics[key],0));
-    html+='<tr><td>'+label+'</td><td class="'+(av>bv?'win':'')+'">'+av+'</td><td class="'+(bv>av?'win':'')+'">'+bv+'</td></tr>';
+  rows.forEach(r=>{
+    const label=r[0], key=r[1], lower=!!r[2];
+    const av=Math.round(num(ga[key],0)), bv=Math.round(num(gb[key],0));
+    const aw=lower?(av<bv&&bv>0):(av>bv), bw=lower?(bv<av&&av>0):(bv>av);
+    html+='<tr><td>'+label+'</td><td class="'+(aw?'win':'')+'">'+av+'</td><td class="'+(bw?'win':'')+'">'+bv+'</td></tr>';
   });
+  /* terpene profile — derived from existing strain tags + terpenePot; non-numeric, no winner */
+  let pa='\u2014', pb='\u2014';
+  try{ pa=phenoTerpeneProfile(ga,a.strainId); }catch(e){}
+  try{ pb=phenoTerpeneProfile(gb,b.strainId); }catch(e){}
+  html+='<tr><td>Terpene Profile</td><td>'+esc(pa)+'</td><td>'+esc(pb)+'</td></tr>';
   const ao=Math.round(num(a.overall,0)), bo=Math.round(num(b.overall,0));
-  html+='<tr><td><b>OVERALL</b></td><td class="'+(ao>bo?'win':'')+'"><b>'+ao+'</b></td><td class="'+(bo>ao?'win':'')+'"><b>'+bo+'</b></td></tr></table></div>';
-  html+='<div class="ge-modal-foot"><div class="ge-btn-row">'+actions.map((ac,i)=>'<button class="ge-btn ge-btn-sm '+ac.cls+'" data-cact="'+i+'">'+ac.label+'</button>').join('')+'</div></div>';
+  html+='<tr class="ge-cmp-overall"><td><b>OVERALL</b></td><td class="'+(ao>bo?'win':'')+'"><b>'+ao+'</b></td><td class="'+(bo>ao?'win':'')+'"><b>'+bo+'</b></td></tr></table></div>';
+  const acts=Array.isArray(actions)?actions:[];
+  const btnFor=x=>'<button type="button" class="ge-btn ge-btn-sm '+x.ac.cls+'" data-cact="'+x.i+'">'+x.ac.label+'</button>';
+  const grp=s=>acts.map((ac,i)=>({ac:ac,i:i})).filter(x=>x.ac&&x.ac.side===s);
+  let foot='<div class="ge-modal-foot">';
+  [['a',a],['b',b]].forEach(sb=>{
+    const list=grp(sb[0]);
+    if(list.length) foot+='<div class="ge-cmp-side"><span class="ge-cmp-side-name">'+esc(sb[1].name)+'</span><div class="ge-btn-row">'+list.map(btnFor).join('')+'</div></div>';
+  });
+  const gen=acts.map((ac,i)=>({ac:ac,i:i})).filter(x=>!x.ac||!x.ac.side);
+  if(gen.length) foot+='<div class="ge-btn-row">'+gen.map(btnFor).join('')+'</div>';
+  foot+='</div>';
+  html+=foot;
   const m=modal(html);
-  m.querySelectorAll('[data-cact]').forEach(btn=>btn.onclick=()=>{ const ac=actions[+btn.dataset.cact]; closeModal(m); ac.fn(); });
+  m.querySelectorAll('[data-cact]').forEach(btn=>btn.onclick=()=>{ const ac=acts[+btn.dataset.cact]; closeModal(m); try{ if(ac&&typeof ac.fn==='function') ac.fn(); }catch(e){} });
   S.stats.comparesDone++;
   save(); checkMissions();
 }
 
-function keeperCmpObj(k){ return {name:k.strainName+' #'+k.phenoNum,genetics:k.genetics,overall:k.overall}; }
+function keeperCmpObj(k){ return {name:k.strainName+' #'+k.phenoNum,strainId:k.strainId,genetics:k.genetics,overall:k.overall}; }
+/* P2.1: keeper-vs-keeper compare — full per-pheno actions on each side */
 function compareKeepers(idA,idB){
   const a=S.keepers.find(x=>x.id===idA), b=S.keepers.find(x=>x.id===idB);
   if(!a||!b) return;
-  compareModal(keeperCmpObj(a),keeperCmpObj(b),[
-    {label:icon('grow','ge-ic-sm')+' MOTHER #'+a.phenoNum,cls:'ge-btn-ghost',fn:()=>promoteMother(a.id)},
-    {label:icon('grow','ge-ic-sm')+' MOTHER #'+b.phenoNum,cls:'ge-btn-ghost',fn:()=>promoteMother(b.id)},
-    {label:'CLOSE',cls:'ge-btn-danger',fn:()=>{}}
-  ]);
+  compareModal(keeperCmpObj(a),keeperCmpObj(b),
+    phenoSideActions('a',{kind:'keeper',keeperId:a.id,strainId:a.strainId,strainName:a.strainName,phenoNum:a.phenoNum,rarity:a.rarity})
+    .concat(phenoSideActions('b',{kind:'keeper',keeperId:b.id,strainId:b.strainId,strainName:b.strainName,phenoNum:b.phenoNum,rarity:b.rarity}))
+    .concat([{label:'CLOSE',cls:'ge-btn-danger',fn:()=>{}}]));
 }
 
 function pickComparePartner(idA){
@@ -3385,6 +3996,8 @@ function takeClone(motherId){
   p.pheno=g;
   S.plants.push(p);
   mo.clonesTaken++; S.stats.clonesTaken++; S.stats.plantsStarted++;
+  try{ ME_first('plant',{strainId:p.strainId,name:ME_strainName(p.strainId),day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+  try{ codexOnGrown(mo.strainId); codexNote(mo.strainId,'Clone taken from mother '+mo.strainName+' #'+mo.phenoNum+' \u2014 identical genetics'); }catch(e){} /* P2-W2 */
   const kk=S.keepers.find(x=>x.id===mo.keeperId); if(kk) kk.clonesGrown++;
   addP0('cultivation',1); gainXP(10);
   toast(icon('dna','ge-ic-md')+' Clone taken: '+esc(mo.strainName)+' #'+mo.phenoNum+' — identical genetics preserved.');
@@ -3911,6 +4524,8 @@ function WX_eventDayTick(ev){
     var rise=ev.data.vent?2:4;
     S.env.temp=clamp(num(S.env.temp,76)+rise,60,95);
   }
+  /* P2-4: decision-event day ticks (temporary ventilation heat climb) */
+  try{ if(typeof P2EV_dayTick==='function') P2EV_dayTick(ev); }catch(e){}
 }
 function WX_endEvent(uid,expired){
   var w=S.wx; if(!w) return;
@@ -4008,6 +4623,356 @@ function WX_bannerHTML(){
 function WX_envPenalty(){ return WX_activeEvent('wx-powerout')?15:0; }
 function WX_heatWave(){ return !!WX_activeEvent('wx-heatwave'); }
 function WX_equipDisabled(id){ var ev=WX_activeEvent('wx-equipfail'); return !!(ev&&ev.data.equip===id); }
+
+/* ============================================================
+   P2-4 RANDOM EVENTS + DISCOVERY MOMENTS
+   (a) 10 new decision-based global events, registered into the WX
+       engine so cooldowns, day-minimums, preconditions, DECIDE LATER,
+       banners, dismissal and expiry are all reused. Total daily event
+       cadence is unchanged (same 0.15 roll) — only variety grows.
+       Costs are modest; rewards are small and flow through EXISTING
+       price logic (pricePerOz / WX_sellMult). No printers.
+   (b) Unified discovery-moment beats: industrial-styled toast +
+       haptic, one-time per trigger (persisted seen-flags), reward-free
+       (the W1 elite systems own all elite rewards).
+   Events NEVER fire offline: the offline sim (NX_offlineSim) never
+   touches WX_tick / rollEvents / expansionTick. Untouched, sacrosanct.
+   ============================================================ */
+
+/* ---------------- P2-4 event defs (WX-engine compatible) ---------------- */
+const P2EV_DEFS=[
+ /* ---- HVAC MALFUNCTION (UNCOMMON) ---- */
+ { id:'p2ev-hvac', rarity:'UNCOMMON', weight:8, cd:16, dur:[3,4],
+   title:'HVAC MALFUNCTION',
+   text:function(){ return 'The HVAC is short-cycling — temperatures are swinging and the room is drifting out of range. Fix it now, patch it cheap, or move the plants.'; },
+   canRoll:function(){ return S.day>=6&&S.plants.length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'EMERGENCY REPAIR', sub:function(){ return 'Pay '+fmt$(120+40*int(S.facility,0))+' — full fix, today'; },
+     run:function(){ var c=120+40*int(S.facility,0); if(S.cash<c){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; toast(WX_ic('equipment','ge-ic-md')+' HVAC repaired. Climate stable.'); return 'end'; }},
+    {label:'TEMPORARY VENTILATION', sub:'Pay $40 — patched airflow, temps climb +2°F/day while active',
+     run:function(ev){ if(S.cash<40){ toast(WX_ic('x','ge-ic-md')+' Need $40.'); return; } S.cash-=40; ev.data.ventFix=true; toast(WX_ic('hvac','ge-ic-md')+' Temporary ventilation rigged. Watch the thermometers.'); }},
+    {label:'MOVE PLANTS', sub:'Pay $60 labor — plants stressed +12',
+     run:function(){ if(S.cash<60){ toast(WX_ic('x','ge-ic-md')+' Need $60.'); return; } S.cash-=60; S.plants.forEach(function(p){ p.stress=clamp(num(p.stress,0)+12,0,100); }); toast(WX_ic('users','ge-ic-md')+' Plants moved. Stress +12 across the room.'); return 'end'; }}
+   ]},
+ /* ---- HUMIDITY SPIKE (COMMON) ---- */
+ { id:'p2ev-humid', rarity:'COMMON', weight:7, cd:14, dur:[2,3],
+   title:'HUMIDITY SPIKE',
+   text:function(){ return 'Humidity just spiked to '+Math.round(num(S.env.humidity,52))+'%. Wet air invites mildew — act before the leaves tell on you.'; },
+   canRoll:function(){ return S.day>=5&&S.plants.length>0; },
+   onStart:function(){ S.env.humidity=clamp(num(S.env.humidity,52)+22,0,100); },
+   choices:[
+    {label:'DEHUMIDIFIER BLAST', sub:function(){ return num(S.equipment.dehumid,1)>=3?'Free — your dehumidifier eats the spike':'Pay $60 — rent a commercial unit'; },
+     run:function(){ if(num(S.equipment.dehumid,1)<3){ if(S.cash<60){ toast(WX_ic('x','ge-ic-md')+' Need $60.'); return; } S.cash-=60; } S.env.humidity=clamp(num(S.env.humidity,52)-28,0,100); toast(WX_ic('water','ge-ic-md')+' Humidity back under control.'); return 'end'; }},
+    {label:'EMERGENCY VENTING', sub:'Pay $30 — humidity -18, temps -2°F',
+     run:function(){ if(S.cash<30){ toast(WX_ic('x','ge-ic-md')+' Need $30.'); return; } S.cash-=30; S.env.humidity=clamp(num(S.env.humidity,52)-18,0,100); S.env.temp=clamp(num(S.env.temp,76)-2,50,100); toast(WX_ic('hvac','ge-ic-md')+' Vented. Air moving again.'); return 'end'; }},
+    {label:'RIDE IT OUT', sub:'Free — mildew risk on random plants',
+     run:function(){
+       if(Math.random()<0.45){
+         var cands=S.plants.slice(), n=Math.min(2,cands.length), i;
+         for(i=0;i<n;i++){ var p=cands.splice(rndi(0,cands.length-1),1)[0]; p.problems=p.problems||[]; if(p.problems.indexOf('Powdery mildew')<0) p.problems.push('Powdery mildew'); p.health=clamp(num(p.health,100)-8,0,100); }
+         toast(WX_ic('warn','ge-ic-md')+' Mildew took hold on '+n+' plant(s).');
+       } else toast(WX_ic('check','ge-ic-md')+' Lucky — the spike passed without mildew.');
+     }}
+   ]},
+ /* ---- IRRIGATION LINE BURST (COMMON) ---- */
+ { id:'p2ev-irrig', rarity:'COMMON', weight:7, cd:14, dur:[2,2],
+   title:'IRRIGATION LINE BURST',
+   text:function(){ return 'A main irrigation line burst overnight — the room lost water pressure and every plant is thirstier than it should be.'; },
+   canRoll:function(){ return S.day>=4&&S.plants.length>0; },
+   onStart:function(){ S.plants.forEach(function(p){ p.water=clamp(num(p.water,70)-25,0,100); }); },
+   choices:[
+    {label:'REPLACE THE PUMP', sub:'Pay $80 — fully fixed today',
+     run:function(){ if(S.cash<80){ toast(WX_ic('x','ge-ic-md')+' Need $80.'); return; } S.cash-=80; toast(WX_ic('water','ge-ic-md')+' New pump installed. Pressure restored.'); return 'end'; }},
+    {label:'PATCH THE LINES', sub:'Pay $25 — fixed, plants -10 water',
+     run:function(){ if(S.cash<25){ toast(WX_ic('x','ge-ic-md')+' Need $25.'); return; } S.cash-=25; S.plants.forEach(function(p){ p.water=clamp(num(p.water,70)-10,0,100); }); toast(WX_ic('check','ge-ic-md')+' Lines patched.'); return 'end'; }},
+    {label:'BUCKET BRIGADE', sub:'Free — water +15 today, +5 stress all plants',
+     run:function(){ S.plants.forEach(function(p){ p.water=clamp(num(p.water,70)+15,0,100); p.stress=clamp(num(p.stress,0)+5,0,100); }); toast(WX_ic('users','ge-ic-md')+' Bucket brigade done. Plants watered, crew tired.'); return 'end'; }}
+   ]},
+ /* ---- NUTRIENT LOCKOUT (UNCOMMON) ---- */
+ { id:'p2ev-nutr', rarity:'UNCOMMON', weight:6, cd:18, dur:[3,3],
+   title:'NUTRIENT LOCKOUT',
+   text:function(){ return 'pH drift locked out nutrients across the room — leaves are paling and every plant is running hungry.'; },
+   canRoll:function(){ return S.day>=7&&S.plants.length>0; },
+   onStart:function(){ S.plants.forEach(function(p){ p.nutrition=clamp(num(p.nutrition,60)-30,0,100); p.problems=p.problems||[]; if(p.problems.indexOf('Nutrient lockout')<0) p.problems.push('Nutrient lockout'); }); },
+   choices:[
+    {label:'FLUSH + REFEED', sub:'Pay $45 — nutrition reset to 60, +5 stress',
+     run:function(){ if(S.cash<45){ toast(WX_ic('x','ge-ic-md')+' Need $45.'); return; } S.cash-=45; S.plants.forEach(function(p){ p.nutrition=60; p.stress=clamp(num(p.stress,0)+5,0,100); p.problems=(p.problems||[]).filter(function(x){ return x!=='Nutrient lockout'; }); }); toast(WX_ic('flask','ge-ic-md')+' Flushed and refed. Back on schedule.'); return 'end'; }},
+    {label:'EMERGENCY FEED', sub:'Pay $20 — nutrition +25',
+     run:function(){ if(S.cash<20){ toast(WX_ic('x','ge-ic-md')+' Need $20.'); return; } S.cash-=20; S.plants.forEach(function(p){ p.nutrition=clamp(num(p.nutrition,60)+25,0,100); }); toast(WX_ic('flask','ge-ic-md')+' Emergency feed applied.'); return 'end'; }},
+    {label:'ADJUST THE REGIMEN', sub:'Free — nutrition +12, slow recovery',
+     run:function(){ S.plants.forEach(function(p){ p.nutrition=clamp(num(p.nutrition,60)+12,0,100); }); toast(WX_ic('check','ge-ic-md')+' Regimen adjusted. Slow recovery ahead.'); return 'end'; }}
+   ]},
+ /* ---- PEST SCOUT WARNING (COMMON) — early warning, distinct from the outbreak ---- */
+ { id:'p2ev-pestwarn', rarity:'COMMON', weight:7, cd:15, dur:[2,3],
+   title:'PEST SCOUT WARNING',
+   text:function(){ return 'Your scout found early pest pressure on the sticky traps — nothing established yet, but the window to act is now.'; },
+   canRoll:function(){ return S.day>=6&&S.plants.length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'PREVENTIVE NEEM', sub:'Pay $30 — threat eliminated',
+     run:function(){ if(S.cash<30){ toast(WX_ic('x','ge-ic-md')+' Need $30.'); return; } S.cash-=30; toast(WX_ic('spray','ge-ic-md')+' Preventive spray applied. Threat gone.'); return 'end'; }},
+    {label:'BENEFICIAL INSECTS', sub:'Pay $15 — nature handles it (+3 stress)',
+     run:function(){ if(S.cash<15){ toast(WX_ic('x','ge-ic-md')+' Need $15.'); return; } S.cash-=15; S.plants.forEach(function(p){ p.stress=clamp(num(p.stress,0)+3,0,100); }); toast(WX_ic('bug','ge-ic-md')+' Beneficials released.'); return 'end'; }},
+    {label:'WAIT AND WATCH', sub:'Free — 40% chance pests establish on 2 plants',
+     run:function(){
+       if(Math.random()<0.4){
+         var cands=S.plants.slice(), n=Math.min(2,cands.length), i;
+         for(i=0;i<n;i++){ var p=cands.splice(rndi(0,cands.length-1),1)[0]; p.problems=p.problems||[]; if(p.problems.indexOf('Pests')<0) p.problems.push('Pests'); p.health=clamp(num(p.health,100)-10,0,100); }
+         toast(WX_ic('warn','ge-ic-md')+' Pests established on '+n+' plant(s)!');
+       } else toast(WX_ic('check','ge-ic-md')+' False alarm — traps are clean.');
+     }}
+   ]},
+ /* ---- BREEDER OPPORTUNITY (RARE) — real cost/benefit tradeoff, generous 6-day window ---- */
+ { id:'p2ev-breeder', rarity:'RARE', weight:4, cd:22, dur:[6,6],
+   title:'BREEDER OPPORTUNITY',
+   text:function(ev){ var st=ev.data.offerId?getStrain(ev.data.offerId):null; return st?('A respected breeder offers "'+st.name+'" genetics at a premium of '+fmt$(num(st.seed,0)*5)+' — or book a consulting session to sharpen your own breeding program. Offer stands 6 days.'):('A breeder reached out, but the genetics fell through.'); },
+   canRoll:function(){ return S.day>=12&&S.lockedStrains.some(function(id){ var st=getStrain(id); return st&&st.lock&&(st.lock.t==='cash'||st.lock.t==='rep'); }); },
+   onStart:function(ev){ var cands=S.lockedStrains.filter(function(id){ var st=getStrain(id); return st&&st.lock&&(st.lock.t==='cash'||st.lock.t==='rep'); }); ev.data.offerId=cands.length?pick(cands):null; },
+   choices:[
+    {label:'BUY THE GENETICS', sub:function(ev){ var st=ev.data.offerId?getStrain(ev.data.offerId):null; return st?('Pay '+fmt$(num(st.seed,0)*5)+' — unlock it now'):'Offer expired'; },
+     run:function(ev){ var st=ev.data.offerId?getStrain(ev.data.offerId):null; if(!st) return 'end'; var cost=num(st.seed,0)*5; if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; } S.cash-=cost; if(typeof unlockStrain==='function') unlockStrain(st.id,true); if(typeof gainXP==='function') gainXP(50); return 'end'; }},
+    {label:'CONSULTING SESSION', sub:'Pay $100 — breeding wisdom (+60 XP, +2 P0 genetics)',
+     run:function(){ if(S.cash<100){ toast(WX_ic('x','ge-ic-md')+' Need $100.'); return; } S.cash-=100; if(typeof gainXP==='function') gainXP(60); if(typeof addP0==='function') addP0('genetics',2); toast(WX_ic('dna','ge-ic-md')+' Breeding session booked. Knowledge banked.'); return 'end'; }},
+    {label:'DECLINE', sub:'Pass on the offer', run:function(){ toast('The breeder moves on.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- SPECIAL CUSTOMER (UNCOMMON) — premium order, pays via EXISTING price logic ---- */
+ { id:'p2ev-customer', rarity:'UNCOMMON', weight:6, cd:20, dur:[5,5],
+   title:'SPECIAL CUSTOMER',
+   text:function(){ return 'A boutique buyer needs premium flower fast — top-shelf rates for up to 8 oz of your BEST inventory. No rush on your end: the offer stands 5 days.'; },
+   canRoll:function(){ return S.day>=8&&S.inventory.length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'FILL THE RUSH ORDER', sub:'Sell up to 8 oz of top-quality stock at premium rates',
+     run:function(){ var sold=P2EV_fillLots(8,'wx-premium'); if(sold.oz<=0){ toast(WX_ic('x','ge-ic-md')+' No sellable inventory.'); return; } if(typeof gainRep==='function') gainRep(3); toast(WX_ic('cash','ge-ic-md')+' Rush order filled: '+sold.oz+' oz for '+fmt$(sold.total)+'.'); return 'end'; }},
+    {label:'POLITELY DECLINE', sub:'Keep your stock', run:function(){ toast('You pass on the rush order.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- MARKET SHORTAGE (RARE) — decision hook: hold vs sell ---- */
+ { id:'p2ev-shortage', rarity:'RARE', weight:4, cd:24, dur:[4,4],
+   title:'MARKET SHORTAGE',
+   text:function(ev){ return 'Supply dried up across the city — buyers are desperate for '+(ev.data.tag||'quality flower')+'. Prices spike 1.5x for 4 days. Sell into it now, or hold and sell at your own pace.'; },
+   canRoll:function(){ return S.day>=10&&S.inventory.length>0; },
+   onStart:function(ev){ var tags=[]; S.inventory.forEach(function(it){ var st=getStrain(it.strainId); (st&&st.tags||[]).forEach(function(t){ if(tags.indexOf(t)<0) tags.push(t); }); }); ev.data.tag=tags.length?pick(tags):'Exotic'; P2EV_applyShortage(ev.data.tag,4); },
+   choices:[
+    {label:'SELL INTO THE SHORTAGE', sub:'Auto-sell up to 6 oz at shortage prices',
+     run:function(){ var sold=P2EV_fillLots(6,null); if(sold.oz<=0){ toast(WX_ic('x','ge-ic-md')+' No sellable inventory.'); return; } toast(WX_ic('chart','ge-ic-md')+' Sold into the shortage: '+sold.oz+' oz for '+fmt$(sold.total)+'.'); return 'end'; }},
+    {label:'HOLD FOR LATER', sub:'Keep the 4-day window — sell manually at boosted prices',
+     run:function(){ toast(WX_ic('clock','ge-ic-md')+' Holding. The shortage window stays open 4 days.'); }}
+   ]},
+ /* ---- HIGH-DEMAND PRODUCT REQUEST (UNCOMMON) ---- */
+ { id:'p2ev-demand', rarity:'UNCOMMON', weight:6, cd:18, dur:[5,5],
+   title:'HIGH-DEMAND REQUEST',
+   text:function(ev){ return 'A distributor wants high-terpene flower ('+num(ev.data.minTerp,70)+'+ terpenes) — up to 4 oz at standard rates, plus reputation for delivering. Offer stands 5 days.'; },
+   canRoll:function(){ return S.day>=9&&S.inventory.length>0; },
+   onStart:function(ev){ ev.data.minTerp=70; },
+   choices:[
+    {label:'FILL WITH BEST MATCH', sub:function(ev){ var n=S.inventory.filter(function(it){ return num(it.terpenes,0)>=num(ev.data.minTerp,70); }).length; return n?n+' matching lot(s) in stock':'No matching stock — offer an alternative'; },
+     run:function(ev){ var mt=S.inventory.filter(function(it){ return num(it.terpenes,0)>=num(ev.data.minTerp,70); }).sort(function(a,b){ return num(b.terpenes,0)-num(a.terpenes,0); }); if(!mt.length){ toast(WX_ic('x','ge-ic-md')+' No matching stock.'); return; } var by=(typeof BUYERS!=='undefined'&&BUYERS[0])?BUYERS[0].id:null; var sold=P2EV_fillMatch(mt[0].id,4,by); if(typeof gainRep==='function') gainRep(3); toast(WX_ic('cash','ge-ic-md')+' Request filled: '+sold.oz+' oz for '+fmt$(sold.total)+'. +3 rep'); return 'end'; }},
+    {label:'OFFER AN ALTERNATIVE', sub:'Sell your closest lot instead (+1 rep)',
+     run:function(){ var best=S.inventory.slice().sort(function(a,b){ return num(b.terpenes,0)-num(a.terpenes,0); })[0]; if(!best){ toast(WX_ic('x','ge-ic-md')+' No inventory.'); return; } var by=(typeof BUYERS!=='undefined'&&BUYERS[0])?BUYERS[0].id:null; var sold=P2EV_fillMatch(best.id,4,by); if(typeof gainRep==='function') gainRep(1); toast(WX_ic('cash','ge-ic-md')+' Alternative accepted: '+sold.oz+' oz for '+fmt$(sold.total)+'.'); return 'end'; }},
+    {label:'DECLINE', sub:'Pass on the request', run:function(){ toast('You pass on the request.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- EMPLOYEE ISSUE (UNCOMMON) — bonus / retrain / let go with morale effects ---- */
+ { id:'p2ev-crew', rarity:'UNCOMMON', weight:5, cd:20, dur:[4,4],
+   title:'EMPLOYEE ISSUE',
+   text:function(ev){ return (ev.data.empName||'An employee')+' is burning out — missed shifts, short temper. The crew is watching how you handle it.'; },
+   canRoll:function(){ try{ return S.day>=14&&typeof EX_ready==='function'&&EX_ready()&&S.ex.employees.length>0; }catch(e){ return false; } },
+   onStart:function(ev){ var e=pick(S.ex.employees); ev.data.empId=e.id; ev.data.empName=e.name; },
+   choices:[
+    {label:'PAY A BONUS', sub:'Pay $150 — morale +25',
+     run:function(ev){ if(S.cash<150){ toast(WX_ic('x','ge-ic-md')+' Need $150.'); return; } S.cash-=150; var e=P2EV_emp(ev); if(e) e.morale=clamp(num(e.morale,70)+25,0,100); toast(WX_ic('cash','ge-ic-md')+' Bonus paid. '+esc(e?e.name:'They')+' is back in the fight.'); return 'end'; }},
+    {label:'RETRAIN', sub:'Pay $50 — new skills (+40 xp), morale +10',
+     run:function(ev){ if(S.cash<50){ toast(WX_ic('x','ge-ic-md')+' Need $50.'); return; } S.cash-=50; var e=P2EV_emp(ev); if(e){ e.xp=num(e.xp,0)+40; try{ if(typeof EX_empLevelCheck==='function') EX_empLevelCheck(e,false); }catch(err){} e.morale=clamp(num(e.morale,70)+10,0,100); } toast(WX_ic('train','ge-ic-md')+' Retrained and re-motivated.'); return 'end'; }},
+    {label:'LET GO', sub:'Remove them — crew morale -10',
+     run:function(ev){ var e=P2EV_emp(ev); S.ex.employees=S.ex.employees.filter(function(x){ return x.id!==ev.data.empId; }); S.ex.employees.forEach(function(x){ x.morale=clamp(num(x.morale,70)-10,0,100); }); toast(WX_ic('users','ge-ic-md')+' '+esc(e?e.name:'They')+' was let go. The crew is rattled (-10 morale).'); return 'end'; }}
+   ]}
+];
+var P2EV_registered=false;
+function P2EV_register(){
+  if(P2EV_registered) return; P2EV_registered=true;
+  if(typeof WX_EVENT_DEFS==='undefined'||!Array.isArray(WX_EVENT_DEFS)) return;
+  P2EV_DEFS.forEach(function(d){
+    if(!WX_EVENT_DEFS.some(function(x){ return x&&x.id===d.id; })) WX_EVENT_DEFS.push(d);
+  });
+}
+P2EV_register();
+
+/* ---------------- P2-4 helpers ---------------- */
+function P2EV_emp(ev){
+  if(!S||!S.ex||!Array.isArray(S.ex.employees)) return null;
+  return S.ex.employees.find(function(x){ return x&&x.id===ev.data.empId; })||null;
+}
+/* sell `take` oz of one lot through EXISTING price logic (pricePerOz × WX_sellMult) */
+function P2EV_sellLot(it,take,buyerId){
+  var out={oz:0,total:0};
+  if(!it||typeof pricePerOz!=='function') return out;
+  take=Math.min(num(take,0),num(it.amount,0)); if(take<=0) return out;
+  var mult=1; try{ if(typeof WX_sellMult==='function') mult=num(WX_sellMult(it.strainId,it,buyerId),1); }catch(e){}
+  out.oz=Math.round(take*10)/10; out.total=Math.round(pricePerOz(it)*take*mult);
+  it.amount=num(it.amount,0)-take;
+  if(it.amount<=0.001) S.inventory=S.inventory.filter(function(x){ return x.id!==it.id; });
+  S.cash=num(S.cash,0)+out.total;
+  S.stats.lifetimeRevenue=num(S.stats.lifetimeRevenue,0)+out.total;
+  S.stats.sales=num(S.stats.sales,0)+1;
+  try{ if(typeof gainXP==='function') gainXP(15); }catch(e){}
+  try{ if(typeof checkMissions==='function') checkMissions(); }catch(e){}
+  try{ if(typeof checkAchievements==='function') checkAchievements(); }catch(e){}
+  return out;
+}
+function P2EV_fillLots(ozCap,buyerId){
+  var out={oz:0,total:0};
+  if(!S||!Array.isArray(S.inventory)||!S.inventory.length) return out;
+  var left=num(ozCap,0);
+  S.inventory.slice().sort(function(a,b){ return num(b.quality,0)-num(a.quality,0); }).forEach(function(it){
+    if(left<=0) return;
+    var sold=P2EV_sellLot(it,left,buyerId);
+    out.oz+=sold.oz; out.total+=sold.total; left-=sold.oz;
+  });
+  out.oz=Math.round(out.oz*10)/10;
+  return out;
+}
+function P2EV_fillMatch(invId,ozCap,buyerId){
+  var it=S.inventory.find(function(x){ return x.id===invId; });
+  return P2EV_sellLot(it,ozCap,buyerId);
+}
+function P2EV_applyShortage(tag,days){
+  if(typeof allStrains!=='function'||!S||!S.wx) return;
+  allStrains().forEach(function(st){
+    if(st.tags&&st.tags.indexOf(tag)>=0) S.wx.market[st.id]={demand:'high',mult:1.5,days:days};
+  });
+}
+/* per-day ticks for P2-4 events (wired into WX_eventDayTick) */
+function P2EV_dayTick(ev){
+  if(!ev||!ev.def||!S||!S.env) return;
+  if(ev.def==='p2ev-hvac'&&ev.data.ventFix) S.env.temp=clamp(num(S.env.temp,76)+2,50,100); /* temporary ventilation: env risk while active */
+}
+
+/* ---------------- P2-4 positive per-plant events ---------------- */
+function vigorousSeedlingEvent(p){
+  var st=getStrain(p.strainId);
+  return evModal(p,icon('grow','ge-ic-md')+' Unusually Vigorous Seedling',
+   'This '+st.name+' seedling is exploding out of the shell — exceptional early vigor.',
+   [['Nurture it (free trait boost)',function(){
+     if(p.pheno){ p.pheno.vigor=clamp(num(p.pheno.vigor,50)+8,5,100); p.pheno.rootVigor=clamp(num(p.pheno.rootVigor,50)+8,5,100); p.pheno.envTolerance=clamp(num(p.pheno.envTolerance,50)+6,5,100); }
+     p.germ=num(p.germ,0)+1;
+     toast(icon('grow','ge-ic-md')+' Vigorous seedling nurtured — +8 vigor, +8 root vigor, +6 env tolerance.');
+   }]]);
+}
+/* rare phenotype expression mid-grow: HOOK ONLY — no rewards (W1 elite systems own all elite rewards) */
+function eliteSightingEvent(p){
+  var st=getStrain(p.strainId);
+  p.eliteSighted=true;
+  try{ D_moment('elitesight-'+p.id,'ELITE EXPRESSION DETECTED',
+    st.name+' #'+(p.pheno&&p.pheno.num?p.pheno.num:'?')+' is showing elite traits weeks before harvest. Watch it closely.','trophy'); }catch(e){}
+  return evModal(p,icon('trophy','ge-ic-md')+' Rare Phenotype Expression',
+   'Your '+st.name+' is expressing something special — elite traits are showing weeks before harvest.',
+   [['Watch it closely',function(){ toast(icon('trophy','ge-ic-md')+' Noted. The elite hunt continues.'); }]]);
+}
+
+/* ---------------- DISCOVERY MOMENTS (unified, one-time, reward-free) ---------------- */
+function D_init(){
+  if(typeof S==='undefined'||!S) return false;
+  if(!S.disc||typeof S.disc!=='object') S.disc={seen:{},terpCombos:{}};
+  if(!S.disc.seen||typeof S.disc.seen!=='object') S.disc.seen={};
+  if(!S.disc.terpCombos||typeof S.disc.terpCombos!=='object') S.disc.terpCombos={};
+  return true;
+}
+function D_seen(key){ return !!(S&&S.disc&&S.disc.seen&&S.disc.seen[key]); }
+/* Fires once per trigger key. Returns true iff the beat fired. Reward-free by design. */
+function D_moment(key,title,sub,ic){
+  if(!D_init()) return false;
+  if(S.disc.seen[key]) return false; /* NEVER repeated for the same trigger */
+  S.disc.seen[key]=int(S.day,1);
+  D_toast(title,sub,ic);
+  try{ save(); }catch(e){}
+  return true;
+}
+/* industrial-styled beat: gold-ruled toast + haptic (native CAP bridge, web vibrate fallback) */
+function D_toast(title,sub,ic){
+  try{
+    var root=(typeof $==='function')?$('toast-root'):document.getElementById('toast-root');
+    if(!root) return;
+    var t=document.createElement('div'); t.className='ge-toast ge-toast-disc';
+    t.innerHTML='<span class="ge-disc-ic">'+icon(ic||'star','ge-ic-md')+'</span><span class="ge-disc-tx"><b>'+esc(title)+'</b>'+(sub?'<i>'+esc(sub)+'</i>':'')+'</span>';
+    root.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ t.remove(); },400); },4200);
+  }catch(e){}
+  try{ if(typeof PR_haptic==='function') PR_haptic('discovery'); }catch(e){}
+}
+function D_terpProfileOf(st){
+  try{ if(typeof GT_terpeneProfile==='function'&&st&&typeof st.id==='string'){ var p=GT_terpeneProfile(st); if(p&&p.length) return p; } }catch(e){}
+  var tags=(st&&st.tags)||[], prof=[];
+  if(tags.indexOf('Gassy')>=0) prof.push('Gas');
+  if(tags.indexOf('Fruit')>=0) prof.push('Sweet');
+  if(tags.indexOf('Skunky')>=0||tags.indexOf('Old School')>=0) prof.push('Funk');
+  if(tags.indexOf('Purple')>=0) prof.push('Berry');
+  if(!prof.length) prof.push('Earthy');
+  return prof.slice(0,4);
+}
+/* new terpene combination detector: fires once per unique sorted profile */
+function D_checkTerpCombo(st){
+  if(!D_init()||!st) return false;
+  var prof=D_terpProfileOf(st);
+  if(!prof.length) return false;
+  var key=prof.slice().sort().join('+');
+  if(S.disc.terpCombos[key]) return false;
+  S.disc.terpCombos[key]=int(S.day,1);
+  return D_moment('terpcombo-'+key,'NEW TERPENE COMBINATION',prof.join(' x ')+' — never seen in your garden before.','flask');
+}
+/* harvest-time discovery hooks: reuses the report's own detection (rare trait, keeper,
+   elite, P0, personal records); adds only the terpene-combo detector. Reward-free. */
+function P24_harvestDiscoveries(report,r){
+  if(!report||!r||!D_init()) return;
+  var uid=String(report.strainId||'?')+'#'+String(report.phenoNum||0);
+  var st=null; try{ st=getStrain(report.strainId); }catch(e){}
+  if(report.legendaryTrait)
+    D_moment('raretrait-'+uid,'RARE TRAIT FOUND',String(report.legendaryTrait)+' — a legendary expression. Preserve it.','dna');
+  if(report.rarity==='elite'||report.rarity==='legendary')
+    D_moment('eliteharv-'+uid,'ELITE EXPRESSION','An elite phenotype — a cut above the pack.','trophy');
+  var traits=Array.isArray(report.traits)?report.traits:[];
+  if(traits.indexOf('KEEPER CANDIDATE')>=0)
+    D_moment('keeper-'+uid,'KEEPER CANDIDATE','Outperformed the strain baseline by 7+ points. Vault-worthy genetics.','crown-gold');
+  var g0=(report.genetics&&typeof report.genetics==='object')?report.genetics:{};
+  var eliteExpr=report.rarity==='elite'||report.rarity==='legendary'||!!report.legendaryTrait;
+  if(eliteExpr||(num(g0.resinPot,0)>=88&&num(g0.terpenePot,0)>=88))
+    D_moment('p0cand-'+uid,'P0 CANDIDATE','Flagged for Project 0 preservation.','project0');
+  /* personal records: trigger = metric+value, so a HIGHER record is a new trigger */
+  if(Math.round(r.quality)>=Math.round(num(S.stats.bestQuality,0))&&r.quality>0)
+    D_moment('pr-quality-'+Math.round(r.quality),'PERSONAL RECORD','Quality '+Math.round(r.quality)+' — your best ever harvest.','trophy');
+  if(r.yieldOz>=num(S.stats.biggestHarvest,0)&&r.yieldOz>0)
+    D_moment('pr-yield-'+String(r.yieldOz),'PERSONAL RECORD','Yield '+r.yieldOz+' oz — your biggest haul.','trophy');
+  var bestPot=0; try{ bestPot=num(typeof NX_bestPotency==='function'?NX_bestPotency():0,0); }catch(e){}
+  if(r.potency>=bestPot&&r.potency>0)
+    D_moment('pr-potency-'+Math.round(r.potency),'PERSONAL RECORD','Potency '+Math.round(r.potency)+' — your strongest flower.','trophy');
+  if(st) D_checkTerpCombo(st);
+}
+/* breeding discovery: exceptional cross (beats both parents) + novel terp combo */
+function P24_breedingDiscovery(cross,A,B){
+  if(!cross||!D_init()) return;
+  var avg=function(o){ return (num(o.yld,0)+num(o.pot,0)+num(o.terp,0)+num(o.resin,0))/4; };
+  var cAvg=avg(cross), pMax=Math.max(A?avg(A):0,B?avg(B):0);
+  if(cAvg>=pMax+4)
+    D_moment('breed-'+String(cross.id),'BREEDING DISCOVERY','"'+String(cross.name||'Untitled Cross')+'" outclasses both parents (+'+Math.round(cAvg-pMax)+' potential).','dna');
+  D_checkTerpCombo(cross);
+}
+/* genetic unlock clue: a locked strain's cash/rep requirement is >=75% met — one clue per day */
+function P24_unlockClueScan(){
+  if(!D_init()) return;
+  if(typeof STRAINS==='undefined'||!Array.isArray(S.lockedStrains)) return;
+  for(var i=0;i<STRAINS.length;i++){
+    var st=STRAINS[i]; if(!st.lock) continue;
+    if(S.lockedStrains.indexOf(st.id)<0) continue;
+    if(S.disc.seen['unlockclue-'+st.id]) continue;
+    var prog=0, need='';
+    if(st.lock.t==='cash'){ var cost=num(st.seed,0)*3; if(cost<=0) continue; prog=num(S.cash,0)/cost; need=fmt$(cost); }
+    else if(st.lock.t==='rep'){ var rv=num(st.lock.v,0); if(rv<=0) continue; prog=num(S.reputation,0)/rv; need=rv+' rep'; }
+    else continue;
+    if(prog>=0.75&&prog<1){
+      if(D_moment('unlockclue-'+st.id,'GENETIC UNLOCK CLUE',st.name+' is almost within reach ('+need+'). Keep pushing.','lock')) return;
+    }
+  }
+}
+
 
 /* ============================================================
    2. DYNAMIC MARKET
@@ -6166,6 +7131,7 @@ RENDER.home=function(){
   html+='</div>';
   try{ html+=P14_cardHTML(); }catch(e){} /* P1.4 ALMOST THERE */
   try{ html+=NT_cardsHTML(); }catch(e){} /* P1.6 one-more-thing stack */
+  try{ html+=RH_hooksHTML(); }catch(e){} /* P2.5 ON THE HORIZON - return hooks */
   html+='<div class="ge-section-title">EMPIRE AT A GLANCE</div><div class="ge-home-glance">'+
    '<button class="ge-metric-tile ge-card-tap" data-ex-go="grow"><span class="ge-metric-value ge-num">'+S.plants.length+'</span><span class="ge-metric-label">GROWING</span></button>'+
    '<button class="ge-metric-tile ge-card-tap" data-ex-go="genetics"><span class="ge-metric-value ge-num">'+hunts+'</span><span class="ge-metric-label">PHENO HUNTS</span></button>'+
@@ -7645,7 +8611,13 @@ const TY_EVENTS=[
    title:'EXCEPTIONAL PHENOTYPE', text:function(){ return 'A seed in your stash just showed impossible vigor. A <b>rare phenotype</b> wants to be grown.'; },
    canRoll:function(){ return S.plants.length<50; },
    onStart:function(ev){},
-   choices:[ {label:'PLANT IT', sub:'Free elite seedling', run:function(){ try{ const st=getStrain('queens-revenge-s1')||allStrains()[0]; if(st&&typeof plantSeed==='function'){ plantSeed(st.id); const p=S.plants[S.plants.length-1]; if(p&&p.pheno){ p.pheno.rarity='elite'; } TY_notify(icon('grow','ge-ic-md')+' Exceptional phenotype planted!','good'); } }catch(e){} return 'end'; }} ]}
+   choices:[ {label:'PLANT IT', sub:'Exceptional seedling', run:function(){ try{ const st=getStrain('queens-revenge-s1')||allStrains()[0]; if(st&&typeof plantSeed==='function'){ plantSeed(st.id); const p=S.plants[S.plants.length-1];
+     /* P2.1: elite rarity is EARNED by the grow, never granted — plant a hot seedling
+        (boosted base) and let genPheno's genuine rarity roll decide. No forced rarity. */
+     if(p&&p.pheno){ const b={}; for(const k in st) b[k]=st[k];
+       ['vigor','stab','yld','pot','resin','terp'].forEach(k=>{ b[k]=clamp(num(b[k],50)+14,5,100); });
+       const nn=p.pheno.num, hid=p.pheno.huntId; p.pheno=genPheno(b); p.pheno.num=nn; p.pheno.huntId=hid; }
+     TY_notify(icon('grow','ge-ic-md')+' Exceptional phenotype planted!','good'); } }catch(e){} return 'end'; }} ]}
 ];
 
 function TY_pickEmp(){ try{ const l=(S.ex.employees||[]).filter(e=>e.assigned); return l.length?pick(l):null; }catch(e){ return null; } }
@@ -7999,6 +8971,7 @@ function GT_filteredStrains(){
 
 function GT_strainCard(st){
   const locked=!isUnlocked(st.id);
+  const cx=codexHist(st.id); /* P2-W2 Living Codex */
   const ph=S.phenoHistory[st.id];
   const keepers=(S.keepers||[]).filter(k=>k.strainId===st.id).length;
   const mothers=(S.mothers||[]).filter(m=>m.strainId===st.id).length;
@@ -8009,15 +8982,17 @@ function GT_strainCard(st){
   if(locked){
     const l=st.lock||{t:'rep',v:999};
     lockHtml='<div class="ge-spec-lock"><p class="ge-caption">'+icon('lock','ge-ic-md')+' '+esc(lockReasonText(l,st.seed*3))+'</p>';
+    const clue=codexClue(st); /* P2-W2: mystery hint per unlock route - a hint, never a spoiler */
+    if(clue) lockHtml+='<p class="codex-clue">'+icon('inspect','ge-ic-sm')+' <i>'+esc(clue)+'</i></p>';
     if(l.t==='cash') lockHtml+='<button class="ge-btn ge-btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(st.seed*3)+'</button>';
     lockHtml+='</div>';
   }
   const lineage=st.lineage?esc(st.lineage):'Foundation genetics';
-  return '<div class="ge-card ge-card-tap ge-spec-card gt-card strain-card" data-strain="'+st.id+'">'+
+  return '<div class="ge-card ge-card-tap ge-spec-card gt-card strain-card'+((cx&&cx.completed)?' codex-complete':'')+'" data-strain="'+st.id+'">'+
     '<div class="ge-spec-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
     '<div class="ge-spec-main">'+
     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(strainDisplayName(st))+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
-    '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+
+    '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+((cx&&cx.completed)?'<span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span>':'')+
       (keepers>0?'<span class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'KEEPER ×'+keepers+'</span>':'')+
       (mothers>0?'<span class="ge-badge ge-badge-mother">'+icon('mothers','ge-ic-sm')+'MOTHER</span>':'')+
       '<span class="ge-badge ge-badge-common">PHENO '+phenoNo+'</span></div>'+
@@ -8112,6 +9087,40 @@ function GT_terpeneProfile(st){
   if(!prof.length) prof.push('Earthy');
   return prof.slice(0,4);
 }
+
+/* P2-W2 Living Codex: the player's relationship history with this genetic, rendered
+   as its own section on the strain detail screen. Every field is stamped at its own
+   lifecycle point (acquire / grow / harvest / keeper / breed) - never conflated
+   with strainOwned or the harvest aggregates. */
+function GT_codexHistoryHTML(st){
+  try{
+    const cx=codexHist(st.id);
+    const has=cx&&(cx.acquiredDay>0||cx.grown>0||cx.harvested>0||cx.crossesCreated>0||cx.genNotes.length>0);
+    const done=cx&&cx.completed;
+    const dash='\u2014';
+    const row=(l,v)=>'<div class="ge-datarow"><span>'+l+'</span><b class="ge-num">'+v+'</b></div>';
+    let inner;
+    if(!has){
+      inner='<p class="ge-muted">No codex history yet. Acquire this genetic to begin its story.</p>';
+    }else{
+      inner=
+        row('Acquired',(cx.acquiredDay>0?('Day '+cx.acquiredDay):dash))+
+        row('Times grown',int(cx.grown,0))+
+        row('Times harvested',int(cx.harvested,0))+
+        row('Best yield',(num(cx.bestYield,0)>0?fmtW(cx.bestYield):dash))+
+        row('Best potency',(num(cx.bestPotency,0)>0?Math.round(cx.bestPotency):dash))+
+        row('Best terpenes',(num(cx.bestTerpene,0)>0?Math.round(cx.bestTerpene):dash))+
+        row('Best resin',(num(cx.bestResin,0)>0?Math.round(cx.bestResin):dash))+
+        row('Phenos evaluated',int(cx.phenosEvaluated,0))+
+        row('Keeper pheno',(cx.keeperPheno?esc(cx.keeperPheno):dash))+
+        row('Crosses created',int(cx.crossesCreated,0))+
+        (cx.genNotes.length?'<div class="codex-notes">'+cx.genNotes.slice(-4).map(n=>'<p class="codex-note">'+icon('scroll','ge-ic-sm')+' '+esc(n)+'</p>').join('')+'</div>':'');
+    }
+    return '<div class="ge-card'+(done?' codex-complete':'')+'"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>LIVING CODEX</h3>'+
+      (done?'<span class="ge-spread"><span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span></span>':'')+'</div>'+inner+'</div>';
+  }catch(e){ return ''; }
+}
+
 RENDER.strain=function(){
   const r=$('strain-root'); if(!r) return;
   const st=getStrain(strainDetailId);
@@ -8162,6 +9171,7 @@ RENDER.strain=function(){
     (sg?'<div class="ge-datarow"><span>Times grown</span><b class="ge-num">'+int(sg.count,0)+'</b></div>':'<p class="ge-muted">Never grown yet.</p>')+
     (bq>0?'<div class="ge-datarow"><span>Best keeper quality</span><b class="ge-num">Q'+Math.round(bq)+'</b></div><div class="ge-datarow"><span>Best keeper yield</span><b class="ge-num">'+by+' oz</b></div>':'')+
     '<div class="ge-datarow"><span>Market popularity</span><b>'+GT_demandPill(st)+' <span class="ge-num ge-muted">'+Math.round(pop)+'/100</span></b></div></div>';
+  html+=GT_codexHistoryHTML(st); /* P2-W2 Living Codex: YOUR HISTORY section */
   /* clones */
   const clonesTaken=mothers.reduce((s,m)=>s+int(m.clonesTaken,0),0);
   html+='<div class="ge-card"><div class="ge-card-head">'+icon('clone','ge-ic-md')+'<h3>CLONES</h3></div>'+
@@ -9804,9 +10814,14 @@ function NX_offlineCheck(){
 }
 let NX_welcome=null;
 function NX_offlineSim(days){
-  const sum={grown:0,irr:0,orders:0,rev:0,attn:0,attnNames:[]};
+  /* P2.5: enrichment counters only - sim behavior (incl. the NEVER-die guarantee) is untouched. */
+  const sum={grown:0,irr:0,feed:0,orders:0,rev:0,attn:0,attnNames:[],repPlus:0,missionsMet:0,p0Levels:[],unlockedNow:[]};
   const cash0=num(S.cash,0);
   let served0=0; try{ served0=num(S.ct&&S.ct.servedToday,0); }catch(e){}
+  const rep0=int((typeof TY_repOverall==='function')?TY_repOverall():S.reputation,0);
+  const mis0=WB_missionsReady().length;
+  const p0Before={}; try{ (typeof P0_TRACKS!=='undefined'?P0_TRACKS:[]).forEach(t=>{ p0Before[t.id]=(typeof p0Level==='function')?p0Level(t.id):0; }); }catch(e){}
+  let locked0=[]; try{ locked0=(S.lockedStrains||[]).slice(); }catch(e){}
   for(let d=0; d<days; d++){
     try{ if(typeof AM_dayTick==='function') AM_dayTick(); }catch(e){}
     const autoW=S.am&&S.am.water&&S.am.water.owned&&S.am.water.on;
@@ -9814,7 +10829,7 @@ function NX_offlineSim(days){
     S.plants.forEach(p=>{
       p.day=num(p.day,0)+0.9; sum.grown++;
       if(autoW) sum.irr++; else p.water=clamp(num(p.water,80)-14,5,100);
-      if(!autoF) p.nutrition=clamp(num(p.nutrition,80)-6,5,100);
+      if(autoF) sum.feed++; else p.nutrition=clamp(num(p.nutrition,80)-6,5,100);
       /* balanced: plants stall and thirst, they NEVER die while you're away */
       p.health=clamp(num(p.health,90)-4,25,100);
       p.stress=clamp(num(p.stress,20)+6,0,80);
@@ -9833,6 +10848,11 @@ function NX_offlineSim(days){
   }
   try{ sum.orders=Math.max(0,num(S.ct&&S.ct.servedToday,0)-served0); }catch(e){}
   sum.rev=Math.round(num(S.cash,0)-cash0);
+  /* P2.5: read-only deltas for the welcome-back summary, computed from the already-applied sim */
+  try{ sum.repPlus=Math.max(0,int((typeof TY_repOverall==='function')?TY_repOverall():S.reputation,0)-rep0); }catch(e){}
+  try{ sum.missionsMet=Math.max(0,WB_missionsReady().length-mis0); }catch(e){}
+  try{ (typeof P0_TRACKS!=='undefined'?P0_TRACKS:[]).forEach(t=>{ const to=(typeof p0Level==='function')?p0Level(t.id):0, from=num(p0Before[t.id],0); if(to>from) sum.p0Levels.push({track:t.id,from:from,to:to}); }); }catch(e){}
+  try{ sum.unlockedNow=(S.lockedStrains||[]).length<locked0.length?locked0.filter(id=>(S.lockedStrains||[]).indexOf(id)<0):[]; }catch(e){}
   S.plants.forEach(p=>{
     if(num(p.water,100)<25||num(p.nutrition,100)<20||num(p.health,100)<50){
       sum.attn++;
@@ -9847,27 +10867,261 @@ function NX_fmtElapsed(ms){
 }
 RENDER.welcome=function(){
   const r=$('welcome-root'); if(!r) return;
-  const w=NX_welcome||{days:0,elapsed:0,sum:{grown:0,irr:0,orders:0,rev:0,attn:0,attnNames:[]}};
+  try{ if(typeof CAP_haptic==='function') CAP_haptic('mission'); }catch(e){} /* P2.5: single tasteful buzz on return */
+  const w=NX_welcome||{days:0,elapsed:0,sum:{grown:0,irr:0,feed:0,orders:0,rev:0,attn:0,attnNames:[],repPlus:0,missionsMet:0,p0Levels:[],unlockedNow:[]}};
   const s=w.sum, prof=NX_activeProfile();
   const grower=prof?prof.grower:'GUEST';
   let rank='STREET ROOKIE'; try{ rank=TY_rankName(); }catch(e){}
-  r.innerHTML='<div class="ge-term-bg" aria-hidden="true"><div class="ge-term-smoke s1"></div><div class="ge-term-scan"></div></div>'+
-  '<div class="ge-welcome ge-anim-rise"><div class="ge-display ge-w-title">WELCOME BACK</div>'+
-  '<div class="ge-w-name">'+esc(grower)+'</div>'+
-  '<div class="ge-w-sub">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
-  '<div class="ge-label ge-muted">Offline: '+NX_fmtElapsed(w.elapsed)+' ('+w.days+' game day'+(w.days>1?'s':'')+')</div>'+
-  '<p class="ge-label ge-gold-text">YOUR EMPIRE CONTINUED WHILE YOU WERE AWAY</p>'+
-  '<div class="ge-card">'+
-   PF_kv(icon('grow','ge-ic-sm')+' Plants progressed','<b class="ge-num">'+s.grown+'</b>')+
-   PF_kv(icon('water','ge-ic-sm')+' Irrigation cycles','<b class="ge-num">'+s.irr+'</b>')+
-   PF_kv(icon('cart','ge-ic-sm')+' Dispensary orders filled','<b class="ge-num">'+s.orders+'</b>')+
-   PF_kv(icon('cash','ge-ic-sm')+' Revenue generated','<b class="ge-num">'+fmt$(s.rev)+'</b>')+
-   (s.attn?PF_kv(icon('warn','ge-ic-sm')+' Plants need attention','<b class="ge-num ge-red">'+s.attn+'</b>')+'<p class="ge-caption ge-muted">'+s.attnNames.map(esc).join(', ')+(s.attn>3?'…':'')+'</p>'
+  /* P2.5: WHILE YOU WERE AWAY - read-only enrichment of the already-applied
+     offline sim. This render NEVER grants rewards (idempotent; safe to re-render). */
+  const grownH=Math.round(num(s.grown,0)*21.6); /* the sim advances each plant 0.9 day per offline day */
+  let flags=''; try{ flags=WB_flagsHTML(s); }catch(e){}
+  r.innerHTML='<div class=\"ge-term-bg\" aria-hidden=\"true\"><div class=\"ge-term-smoke s1\"></div><div class=\"ge-term-scan\"></div></div>'+
+  '<div class=\"ge-welcome ge-anim-rise\"><div class=\"ge-display ge-w-title\">WELCOME BACK</div>'+
+  '<div class=\"ge-w-name\">'+esc(grower)+'</div>'+
+  '<div class=\"ge-w-sub\">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
+  '<div class=\"ge-label ge-muted\">Offline: '+NX_fmtElapsed(w.elapsed)+' ('+w.days+' game day'+(w.days>1?'s':'')+')</div>'+
+  '<p class=\"ge-label ge-gold-text\">WHILE YOU WERE AWAY</p>'+
+  '<div class=\"ge-card\">'+
+   PF_kv(icon('grow','ge-ic-sm')+' Plants grew','<b class=\"ge-num\">'+grownH+'h</b>')+
+   PF_kv(icon('water','ge-ic-sm')+' Auto-water cycles','<b class=\"ge-num\">'+int(s.irr,0)+'</b>')+
+   PF_kv(icon('grow','ge-ic-sm')+' Auto-feed cycles','<b class=\"ge-num\">'+int(s.feed,0)+'</b>')+
+   PF_kv(icon('cart','ge-ic-sm')+' Dispensary orders filled','<b class=\"ge-num\">'+int(s.orders,0)+'</b>')+
+   PF_kv(icon('cash','ge-ic-sm')+' Dispensary revenue','<b class=\"ge-num\">'+fmt$(num(s.rev,0))+'</b>')+
+   PF_kv(icon('missions','ge-ic-sm')+' Mission progress','<b class=\"ge-num\">+'+int(s.missionsMet,0)+'</b>')+
+   PF_kv(icon('star','ge-ic-sm')+' Reputation','<b class=\"ge-num\">+'+int(s.repPlus,0)+'</b>')+
+   (num(s.attn,0)?PF_kv(icon('warn','ge-ic-sm')+' Plants need attention','<b class=\"ge-num ge-red\">'+int(s.attn,0)+'</b>')+'<p class=\"ge-caption ge-muted\">'+(s.attnNames||[]).map(esc).join(', ')+(s.attn>3?'\u2026':'')+'</p>'
     :PF_kv(icon('check','ge-ic-sm')+' Everything stable','<b>—</b>'))+
-  '</div><p class="ge-caption ge-muted ge-center">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
-  '<button class="ge-btn ge-btn-primary ge-btn-block" id="nx-enter">ENTER EMPIRE</button></div>';
-  $('nx-enter').onclick=()=>{ NX_welcome=null; show('splash'); };
+  '</div>'+flags+
+  '<p class=\"ge-caption ge-muted ge-center\">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
+  '<button class=\"ge-btn ge-btn-primary ge-btn-block\" id=\"nx-enter\">ENTER EMPIRE</button></div>';
+  $('nx-enter').onclick=()=>{ NX_welcome=null;
+    /* P2.5: settle offline mission progress through the normal idempotent path
+       (checkMissions only completes un-completed missions - no double-grant). */
+    try{ if(typeof checkMissions==='function') checkMissions(); }catch(e){}
+    show('splash');
+  };
 };
+
+/* ================= P2.5: RETURN-TO-GAME + HOOKS + PLAYER MEMORY =================
+   (a) Welcome-back enrichment: WB_missionsReady() is a read-only completable scan;
+       WB_flagsHTML() renders meaningful return flags, shown only when true. The
+       summary NEVER grants rewards - it reads the already-applied offline sim only.
+       Mission grants settle through the normal checkMissions() path when the player
+       taps ENTER EMPIRE (idempotent via the missionsDone guard - no double-grant).
+   (b) Return hooks: RH_hooks() returns real-state anticipation descriptors
+       {ico,t,s,go,tab}; RH_hooksHTML() renders them as ON THE HORIZON on Home.
+       Informational only - no urgency, no countdown pressure, no expiring nudges.
+       The descriptor array is reusable by nextThing-style cards later.
+   (c) Player memory: S.memory = {firsts:{...}, records:{...}} - migration-safe,
+       honestly backfilled for legacy saves ({unknown:true} where detail is lost).
+       S.stats stays the authoritative numbers (biggestHarvest, bestQuality...);
+       S.memory carries the human detail for the future Grower Profile.
+       Longest-preserved genetic (ME_longestKept) and most-grown strain (ME_mostGrown)
+       are DERIVED live from keepers/strainGrown - never stored, never stale.
+   Shape:
+     firsts: { plant:{strainId,name,day}, harvest:{strainId,strainName,oz,quality,day},
+               keeper:{strainId,strainName,phenoNum,rarity,day},
+               elite:{strainId,strainName,phenoNum,rarity,day}, custom:{id,name,day} }
+     records:{ largestHarvest:{oz,strainName,day}, potency:{val,strainName,day},
+               terpenes:{val,strainName,day}, resin:{val,strainName,day} }
+*/
+function WB_missionsReady(){
+  /* read-only: missions whose goal is met but not yet processed. Never grants. */
+  const out=[];
+  try{
+    (typeof MISSIONS!=='undefined'?MISSIONS:[]).forEach(m=>{
+      if((S.missionsDone||[]).indexOf(m.id)>=0) return;
+      let cur=0,target=1;
+      try{ const p=m.prog(S); cur=p[0]; target=p[1]; }catch(e){ return; }
+      if(cur>=target) out.push(m);
+    });
+  }catch(e){}
+  return out;
+}
+function WB_flagsHTML(s){
+  /* meaningful return flags - rendered only when true. Pure read, no grants. */
+  const out=[];
+  const flag=(ico,title,body)=>{
+    out.push('<div class=\"ge-wflag\"><span class=\"ge-wflag-ico\">'+icon(ico,'ge-ic-md')+'</span>'+
+      '<span><b>'+title+'</b><span class=\"ge-body ge-muted\">'+body+'</span></span></div>');
+  };
+  try{ /* HARVEST READY */
+    let ready=0; (S.plants||[]).forEach(p=>{ try{ if(stageOf(p)>=5) ready++; }catch(e){} });
+    if(ready>0) flag('harvest','HARVEST READY',ready+' plant'+(ready===1?'':'s')+' finished while you were away. Waiting whenever you are.');
+  }catch(e){}
+  if(num(s.attn,0)>0) /* PLANT NEEDS ATTENTION (from the sim's own attention scan) */
+    flag('warn','PLANT NEEDS ATTENTION',int(s.attn,0)+' plant'+(s.attn===1?' needs':'s need')+' water, food or care.'+
+      ((s.attnNames||[]).length?' '+s.attnNames.map(esc).join(', ')+(s.attn>3?'\u2026':''):''));
+  try{ /* NEW GENETIC AVAILABLE - unlocked while away, or requirement now met */
+    const un=(s.unlockedNow||[]).map(id=>{ try{ const st=getStrain(id); return st?st.name:id; }catch(e){ return id; } });
+    if(un.length) flag('genetics','NEW GENETIC AVAILABLE',un.slice(0,3).map(esc).join(', ')+(un.length>3?'\u2026':'')+' unlocked while you were away.');
+    else{
+      const g=(typeof P14_nearestGenetic==='function')?P14_nearestGenetic():null;
+      if(g&&num(g.rel,1)===0) flag('genetics','NEW GENETIC AVAILABLE',esc(g.st.name)+' - requirement met. Unlock it in Genetics.');
+    }
+  }catch(e){}
+  try{ /* PROJECT 0 OBJECTIVE COMPLETE - track levels gained during the sim */
+    (s.p0Levels||[]).forEach(lv=>{
+      const t=((typeof P0_TRACKS!=='undefined')?P0_TRACKS:[]).find(x=>x.id===lv.track);
+      flag('project0','PROJECT 0 OBJECTIVE COMPLETE',esc(t?t.name:String(lv.track).toUpperCase())+' reached LV '+int(lv.to,0)+'.');
+    });
+  }catch(e){}
+  try{ /* MARKET OPPORTUNITY - real multiplier, no pressure */
+    if(typeof WX_marketMult==='function'){ const mm=num(WX_marketMult('all'),1); if(mm>1.05) flag('chart','MARKET OPPORTUNITY','Prices are running hot - market \u00d7'+mm.toFixed(2)+'. Worth a look before you sell.'); }
+  }catch(e){}
+  try{ /* UNUSUAL PHENOTYPE TRAIT DETECTED - hidden legendary expression in the grow */
+    const weird=(S.plants||[]).filter(p=>{ try{ return p&&p.pheno&&p.pheno.legendaryTrait&&p.pheno.legendaryHidden; }catch(e){ return false; } });
+    if(weird.length) flag('dna','UNUSUAL PHENOTYPE TRAIT DETECTED','An unknown expression is forming on '+esc(ME_strainName(weird[0].strainId))+'. Inspect it in the grow room.');
+  }catch(e){}
+  try{ /* MISSION READY - goals met offline; rewards settle via checkMissions on entry */
+    const ready=WB_missionsReady();
+    if(ready.length) flag('missions','MISSION READY',ready.length+' mission goal'+(ready.length===1?'':'s')+' met while you were away: '+ready.slice(0,2).map(m=>esc(m.name)).join(', ')+(ready.length>2?'\u2026':'')+'. Rewards land as you enter.');
+  }catch(e){}
+  if(!out.length) return '';
+  return '<div class=\"ge-wflags\"><p class=\"ge-label ge-gold-text\">WORTH A LOOK</p>'+out.join('')+'</div>';
+}
+function RH_hooks(){
+  /* return hooks: natural anticipation from REAL state. Read-only descriptors. */
+  const out=[];
+  try{
+    /* 1. next harvest ETA */
+    let best=null, ready=0;
+    (S.plants||[]).forEach(p=>{
+      try{
+        if(stageOf(p)>=5){ ready++; return; }
+        const st=getStrain(p.strainId); if(!st) return;
+        const left=Math.ceil(num(st.ft,60)-num(p.day,0));
+        if(left>0&&(!best||left<best.left)) best={left:left};
+      }catch(e){}
+    });
+    if(best) out.push({ico:'harvest',t:'Next harvest in ~'+best.left+'d',s:'Your crop is finishing up - no rush, just a heads-up.',go:'grow',tab:null});
+    else if(ready>0) out.push({ico:'harvest',t:ready+' plant'+(ready===1?'':'s')+' ready to harvest',s:'Waiting whenever you are.',go:'grows',tab:null});
+    /* 2. genetic unlock progress (x/y) */
+    try{
+      const g=(typeof P14_nearestGenetic==='function')?P14_nearestGenetic():null;
+      if(g){
+        const l=g.st.lock||{}; let prog=g.closeText;
+        if(l.t==='rep'){ const v=int(l.v,0), rep=int((typeof TY_repOverall==='function')?TY_repOverall():S.reputation,0); prog=Math.min(rep,v)+'/'+v+' rep'; }
+        else if(l.t==='cash'){ const c=num(g.st.seed,0)*3; prog=fmt$(Math.min(num(S.cash,0),c))+' / '+fmt$(c); }
+        out.push({ico:'genetics',t:'Next genetics: '+g.st.name,s:prog+(num(g.rel,1)===0?' - requirement met':' - '+g.closeText),go:'genetics',tab:null});
+      }
+    }catch(e){}
+    /* 3. pending pheno comparison available */
+    try{
+      if((S.keepers||[]).length>=2) out.push({ico:'scroll',t:'Keeper comparison available',s:S.keepers.length+' keepers in the vault - put two side by side.',go:'keepers',tab:null});
+    }catch(e){}
+    /* 4. Project 0 objective x/y */
+    try{
+      const ths=(typeof P0_LEVEL_PTS!=='undefined')?P0_LEVEL_PTS:[];
+      let b=null;
+      ((typeof P0_TRACKS!=='undefined')?P0_TRACKS:[]).forEach(t=>{
+        const lvl=(typeof p0Level==='function')?p0Level(t.id):0;
+        if(lvl>=ths.length-1) return;
+        const th=num(ths[lvl+1],0), pts=num(S.project0.tracks[t.id],0), gap=Math.max(0,th-pts), rel=th>0?gap/th:1;
+        if(!b||rel<b.rel) b={t:t,lvl:lvl,th:th,pts:pts,gap:gap,rel:rel};
+      });
+      if(b) out.push({ico:'project0',t:'Project 0: '+b.t.name+' \u2192 LV '+(b.lvl+1),s:Math.floor(b.pts)+'/'+b.th+' pts'+(b.gap>0?' - '+b.gap+' to go':' - level up pending'),go:'project0',tab:null});
+    }catch(e){}
+    /* 5. processing batch ETA */
+    try{
+      const procs=(((S.ty||{}).proc)||[]);
+      if(procs.length){
+        const m=Math.min.apply(null,procs.map(j=>num(j.daysLeft,0)));
+        let pn='Processing batch'; try{ const pt=(typeof TY_PRODUCTS!=='undefined')?TY_PRODUCTS.find(x=>x.id===procs[0].ptype):null; if(pt) pn=pt.name; }catch(e){}
+        out.push({ico:'flask',t:'Batch finishing in ~'+Math.max(0,Math.ceil(m))+'d',s:pn+' - the pipeline keeps moving.',go:'production',tab:null});
+      }
+    }catch(e){}
+    /* 6. production chain: next stage remaining */
+    try{
+      const prods=(((S.ty||{}).prod)||[]).filter(p=>!p.packaged);
+      const nproc=(((S.ty||{}).proc)||[]).length;
+      if(prods.length) out.push({ico:'box',t:prods.length+' finished product'+(prods.length===1?'':'s')+' to package',s:'Packaging is the next stage of the chain.',go:'production',tab:null});
+      else if(nproc>0) out.push({ico:'flask',t:'Chain stage: processing \u2192 packaging',s:'Finished batches will need packaging before sale.',go:'production',tab:null});
+    }catch(e){}
+  }catch(e){}
+  return out;
+}
+function RH_hooksHTML(){
+  /* ON THE HORIZON - calm anticipation, tappable cards reusing home wiring. */
+  try{
+    const hooks=RH_hooks(); if(!hooks.length) return '';
+    let html='<div class=\"ge-section-title\">ON THE HORIZON</div><div class=\"ge-home-onemore ge-horizon\">';
+    hooks.forEach(h=>{
+      html+='<button class=\"ge-card ge-card-tap ge-onemore-card ge-anim-rise\" data-ex-go=\"'+esc(h.go)+'\"'+(h.tab?' data-ex-tab=\"'+esc(h.tab)+'\"':'')+'>'+
+        '<div class=\"ge-onemore-head\">'+icon(h.ico||'star','ge-ic-md')+'<b>'+esc(h.t)+'</b></div>'+
+        '<p class=\"ge-body ge-muted\">'+h.s+'</p></button>';
+    });
+    return html+'</div>';
+  }catch(e){ return ''; }
+}
+/* ---------- P2.5 player memory ---------- */
+function ME_ensure(){
+  try{
+    if(!S||typeof S!=='object') return;
+    if(!S.memory||typeof S.memory!=='object') S.memory={};
+    if(!S.memory.firsts||typeof S.memory.firsts!=='object') S.memory.firsts={};
+    if(!S.memory.records||typeof S.memory.records!=='object') S.memory.records={};
+  }catch(e){}
+}
+function ME_migrate(){
+  /* migration-safe: create the namespace; backfill HONESTLY for legacy saves */
+  try{
+    ME_ensure();
+    const m=S.memory, st=(S.stats&&typeof S.stats==='object')?S.stats:{};
+    const unk=()=>({unknown:true,day:1});
+    if(!m.firsts.plant&&num(st.plantsStarted,0)>0) m.firsts.plant=unk();
+    if(!m.firsts.harvest&&num(st.harvests,0)>0) m.firsts.harvest=unk();
+    if(!m.firsts.keeper&&(num(st.keepersFound,0)>0||(S.keepers||[]).length>0)) m.firsts.keeper=unk();
+    if(!m.firsts.elite&&(num(st.eliteFound,0)>0||num(st.legendaryFound,0)>0)) m.firsts.elite=unk();
+    if(!m.firsts.custom&&(S.customStrains||[]).length>0) m.firsts.custom=unk();
+    if(!m.records.largestHarvest&&num(st.biggestHarvest,0)>0) m.records.largestHarvest={oz:num(st.biggestHarvest,0),strainName:'',day:1,unknown:true};
+  }catch(e){}
+}
+function ME_strainName(id){ try{ const st=getStrain(id); return st?st.name:String(id); }catch(e){ return String(id); } }
+function ME_first(key,detail){
+  /* record-once: returns true only when this is genuinely the first */
+  try{
+    ME_ensure();
+    if(!S.memory.firsts[key]){ S.memory.firsts[key]=detail; try{ save(); }catch(e){} return true; }
+  }catch(e){}
+  return false;
+}
+function ME_eliteDetail(strainId,ph,rarity){
+  try{ ME_first('elite',{strainId:strainId,strainName:ME_strainName(strainId),phenoNum:int(ph&&ph.num,0),rarity:rarity,day:int(S.day,1)}); }catch(e){}
+}
+function ME_recordHarvest(st,oz,potency,terpenes,resin){
+  /* records only ever move UP - ties keep the earlier harvest */
+  try{
+    ME_ensure();
+    const rec=S.memory.records, day=int(S.day,1), nm=st?st.name:'';
+    if(!rec.largestHarvest||num(oz,0)>num(rec.largestHarvest.oz,0)) rec.largestHarvest={oz:num(oz,0),strainName:nm,day:day};
+    [['potency',potency],['terpenes',terpenes],['resin',resin]].forEach(kv=>{
+      const v=num(kv[1],0);
+      if(v>num(rec[kv[0]]&&rec[kv[0]].val,0)) rec[kv[0]]={val:Math.round(v),strainName:nm,day:day};
+    });
+    try{ save(); }catch(e){}
+  }catch(e){}
+}
+function ME_longestKept(){
+  /* derived live from the vault - the oldest keeper still preserved */
+  try{
+    const ks=S.keepers||[]; if(!ks.length) return null;
+    const day=int(S.day,1); let b=null;
+    ks.forEach(k=>{ const kept=Math.max(0,day-int(k.dayFound,day));
+      if(!b||kept>b.daysKept) b={strainName:String(k.strainName||''),phenoNum:int(k.phenoNum,0),dayFound:int(k.dayFound,day),daysKept:kept}; });
+    return b;
+  }catch(e){ return null; }
+}
+function ME_mostGrown(){
+  /* derived live from S.stats.strainGrown - most-run strain */
+  try{
+    const sg=(S.stats&&S.stats.strainGrown)||{}; let b=null;
+    Object.keys(sg).forEach(id=>{ const c=num(sg[id]&&sg[id].count,0);
+      if(c>0&&(!b||c>b.count)) b={strainId:id,strainName:ME_strainName(id),count:c,best:Math.round(num(sg[id].best,0))}; });
+    return b;
+  }catch(e){ return null; }
+}
 
 function NX_activeProfile(){
   if(!NX_KEY||NX_KEY==='soge_save_v1') return null;
@@ -10173,6 +11427,8 @@ function NX_rerunKeeper(id){
   if(S.plants.length>=FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].slots){ toast(icon('x','ge-ic-md')+' No open plant slots.'); return; }
   const p=NX_makeKeeperPlant(k);
   S.plants.push(p); S.stats.plantsStarted++;
+  try{ ME_first('plant',{strainId:p.strainId,name:ME_strainName(p.strainId),day:int(S.day,1)}); }catch(e){} /* P2.5 player memory */
+  try{ codexOnGrown(k.strainId); }catch(e){} /* P2-W2: keeper rerun counts as grown */
   save(); updateHUD();
   toast(icon('grow','ge-ic-md')+' Rerunning '+esc(k.strainName)+' #'+k.phenoNum+' — same genetics, new run.');
   show('grow');
@@ -10278,7 +11534,7 @@ function NX_maybeReview(){
   if(S.nx.reviews.length>30) S.nx.reviews.length=30;
   if(stars>=4){ gainRep(2); try{ if(typeof TY_repMirror==='function') TY_repMirror(2); }catch(e){} }
   else if(stars<=2){ gainRep(-1); }
-  NX_notify((stars>=4?'⭐':stars===3?'💬':'👎')+' Customer review: '+stars+'/5 — "'+txt+'"', stars>=4?'trophy':'alert','dispensary');
+  NX_notify('Customer review: '+stars+'/5 — "'+txt+'"', stars>=4?'trophy':'alert','dispensary');
   save();
 }
 function NX_dispExtras(){
@@ -10322,7 +11578,7 @@ function NX_compareProduct(id){
    '<div id="nx-cmp-out"></div><button class="btn" id="nx-cmp-x">CLOSE</button>');
   const render=()=>{
     const b=S.inventory.find(x=>x.id===+m.querySelector('#nx-cmp-sel').value); if(!b) return;
-    const row=(l,va,vb,hi)=>{ const w=hi?(va>=vb):(va<=vb); return '<div class="kv"><span>'+l+'</span><b>'+(w?'👉 ':'')+va+' vs '+vb+'</b></div>'; };
+    const row=(l,va,vb,hi)=>{ const w=hi?(va>=vb):(va<=vb); return '<div class="kv"><span>'+l+'</span><b>'+(w?'→ ':'')+va+' vs '+vb+'</b></div>'; };
     m.querySelector('#nx-cmp-out').innerHTML='<div class="card">'+row('Quality',a.quality,b.quality,true)+row('Potency %',a.potency,b.potency,true)+
      row('Terpenes',a.terpenes,b.terpenes,true)+row('Freshness',Math.round(NX_freshFactor(a)*100)+'%',Math.round(NX_freshFactor(b)*100)+'%',true)+
      row('Amount oz',a.amount,b.amount,true)+'</div>';
@@ -10661,7 +11917,7 @@ function CAP_applyPrefs(){
 }
 
 /* ---------- haptics (native only; silent on web) ---------- */
-const CAP_HAPTIC_STYLE={harvest:'MEDIUM',purchase:'LIGHT',mission:'MEDIUM',achievement:'HEAVY',keeper:'MEDIUM',rankup:'HEAVY',alert:'HEAVY'};
+const CAP_HAPTIC_STYLE={harvest:'MEDIUM',purchase:'LIGHT',mission:'MEDIUM',achievement:'HEAVY',keeper:'MEDIUM',rankup:'HEAVY',alert:'HEAVY',discovery:'MEDIUM'};
 function CAP_haptic(kind){
   try{
     if(!CAP_prefs().haptics) return;
@@ -10754,6 +12010,8 @@ function CAP_wireHaptics(){
 /* ---------- Android back button ---------- */
 function CAP_backHandler(){
   try{
+    /* 0. plant focus sheet -> close it first (P2-W6: it appends to body, bypassing the router) */
+    try{ const __sh=document.getElementById('plant-focus'); if(__sh&&typeof closeFocus==='function'){ closeFocus(); CAP_sfx('click'); return; } }catch(e){}
     /* 1. popup open -> close the topmost one */
     const root=document.getElementById('modal-root');
     if(root&&root.lastElementChild){

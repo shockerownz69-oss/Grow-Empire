@@ -752,6 +752,17 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .p-flower svg{width:100%;height:100%;display:block;}
 /* Genetics collectible cards */
 .strain-card{overflow:hidden;}
+/* ---- P2-W2 Living Codex ---- */
+.codex-clue{color:var(--muted);font-size:12px;margin:6px 0 2px;}
+.codex-clue i{color:var(--amber);font-style:italic;}
+.strain-card.codex-complete{border:1px solid var(--gold);box-shadow:0 0 14px rgba(212,160,23,.28);}
+.strain-card.codex-complete .strain-hero{border-bottom:1px solid var(--gold);}
+.ge-card.codex-complete{border:1px solid var(--gold);box-shadow:0 0 14px rgba(212,160,23,.28);}
+.codex-hist-head{display:flex;align-items:center;gap:8px;margin:10px 0 4px;flex-wrap:wrap;}
+.codex-hist-head h4{margin:0;font-size:11px;letter-spacing:2px;color:var(--muted);}
+.codex-notes{margin-top:6px;border-top:1px dashed #4a3410;padding-top:2px;}
+.codex-note{font-size:12px;color:var(--muted);margin:4px 0;}
+
 .strain-hero{margin:-14px -14px 10px;height:112px;overflow:hidden;position:relative;
   border-bottom:1px solid var(--deepred);}
 .strain-hero svg{width:100%;height:100%;display:block;object-fit:cover;}
@@ -866,7 +877,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .p-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
 .p-actions .btn{padding:10px 4px;font-size:11px;}
 /* micro-animations: water droplets */
-.fx-drops i{position:absolute;top:-14px;width:7px;height:11px;background:#5ac8fa;border-radius:50% 50% 60% 60%;animation:drop .7s ease-in forwards;}
+.fx-drops i{position:absolute;top:-14px;width:7px;height:11px;background:#9fb2c4;border-radius:50% 50% 60% 60%;animation:drop .7s ease-in forwards;}
 .fx-drops i:nth-child(1){left:38%;animation-delay:0s;}
 .fx-drops i:nth-child(2){left:47%;animation-delay:.08s;}
 .fx-drops i:nth-child(3){left:55%;animation-delay:.15s;}
@@ -2047,6 +2058,12 @@ svg.ge-ic-xl{width:var(--ge-ic-xl);height:var(--ge-ic-xl)}
 .ge-toast-bad{border-left-color:var(--ge-danger)} .ge-toast-bad svg{color:var(--ge-danger)}
 .ge-toast-warn{border-left-color:var(--ge-amber)} .ge-toast-warn svg{color:var(--ge-amber)}
 .ge-toast-info{border-left-color:var(--ge-red)} .ge-toast-info svg{color:var(--ge-red)}
+/* P2-4 discovery moments: industrial beat — gold-ruled, dark, letter-spaced */
+.ge-toast-disc{border-left:3px solid var(--ge-gold);background:linear-gradient(135deg,rgba(24,15,5,.94),rgba(10,8,9,.94));
+  box-shadow:0 0 0 1px rgba(212,160,23,.28),var(--ge-sh-2)}
+.ge-toast-disc .ge-disc-ic{color:var(--ge-gold);flex:none;display:flex}
+.ge-toast-disc .ge-disc-tx b{display:block;font-family:var(--ge-font-display);font-size:12px;letter-spacing:.22em;color:var(--ge-gold)}
+.ge-toast-disc .ge-disc-tx i{display:block;font-style:normal;font-size:12.5px;color:var(--ge-ink);margin-top:2px;line-height:1.45}
 
 /* ---- empty / loading / error ---- */
 .ge-empty{text-align:center;padding:var(--ge-sp-8) var(--ge-sp-4);color:var(--ge-muted)}
@@ -3322,7 +3339,7 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 .pr-kicker{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:var(--ge-sp-2);
   font-family:var(--ge-font-display);font-size:11px;letter-spacing:.28em;color:var(--ge-faint)}
 .pr-kicker-bar{display:inline-block;width:34px;height:2px;background:var(--pr-red)}
-.pr-glitch{position:relative;text-shadow:2px 0 0 rgba(224,32,32,.55),-2px 0 0 rgba(120,180,255,.25)}
+.pr-glitch{position:relative;text-shadow:2px 0 0 rgba(224,32,32,.55),-2px 0 0 rgba(255,122,26,.28)}
 .pr-prog{margin:var(--ge-sp-2) 0;letter-spacing:.22em}
 .pr-stage{min-height:210px;display:flex;flex-direction:column;justify-content:center}
 .pr-beat{border:1px solid var(--ge-line);border-left:3px solid var(--pr-red);
@@ -3348,6 +3365,15 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 .pr-banner-tx b{display:block;font-family:var(--ge-font-display);font-size:14px;letter-spacing:.18em;color:var(--ge-ink)}
 .pr-banner-tx i{display:block;font-style:normal;font-size:12px;color:var(--ge-faint);margin-top:3px;line-height:1.45}
 .pr-banner-gold{border-left-color:var(--pr-gold)}
+/* P2-W6: story-arc chapter card (shared vocabulary) */
+.ge-chain-chapter{position:relative;border:1px solid var(--ge-line);border-left:3px solid var(--ge-red);border-radius:var(--radius);padding:var(--ge-sp-3);margin-bottom:var(--ge-sp-3);background:rgba(255,255,255,.02)}
+.ge-chain-chapter .ge-kicker{font-size:11px;letter-spacing:2px;color:var(--ge-red)}
+.ge-chain-chapter h3{margin:4px 0;font-size:16px;color:var(--ge-white)}
+.ge-chain-chapter .ge-desc{font-size:13px;color:var(--ge-muted)}
+.ge-chain-chapter .ge-progress{margin-top:8px}
+.ge-chain-chapter.is-done{border-left-color:var(--ge-gold)}
+.ge-chain-chapter.is-locked{opacity:.75}
+.ge-chain-chapter .btn{min-height:44px}
 .pr-banner-gold .pr-banner-ic{color:var(--pr-gold)}
 .pr-banner-legend{border-left-color:var(--pr-gold);box-shadow:inset 0 0 24px rgba(212,160,23,.08)}
 .pr-banner-legend .pr-banner-ic{color:var(--pr-gold)}
@@ -4337,6 +4363,14 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 /* P1.4 ALMOST THERE + P1.6 ONE MORE THING (read-only progress UI) */
 .ge-home-onemore{display:flex;flex-direction:column;gap:10px}
 .ge-onemore-card{position:relative}
+/* P2.5 WELCOME BACK flags + ON THE HORIZON hooks (industrial, calm) */
+.ge-wflags{margin-top:var(--ge-sp-4);text-align:left}
+.ge-wflags .ge-label{margin-bottom:var(--ge-sp-2);display:block}
+.ge-wflag{display:flex;gap:var(--ge-sp-3);align-items:flex-start;padding:var(--ge-sp-3);border:1px solid var(--ge-line);border-radius:var(--radius);margin-bottom:var(--ge-sp-2);background:rgba(255,255,255,.02)}
+.ge-wflag-ico{flex:0 0 auto;color:var(--ge-gold);margin-top:2px}
+.ge-wflag b{display:block;letter-spacing:.08em;font-size:12px;color:var(--ge-white)}
+.ge-wflag .ge-body{display:block;margin-top:2px}
+.ge-horizon .ge-onemore-card{text-align:left;width:100%}
 .ge-onemore-x{position:absolute;top:4px;right:4px;background:none;border:none;color:inherit;opacity:.55;padding:10px;cursor:pointer}
 .ge-onemore-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-right:28px}
 .ge-onemore-head b{font-size:13px;letter-spacing:.04em}
@@ -4348,3 +4382,26 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 .ge-locked{opacity:.55;}
 .ge-navdock-btn.nav-locked{opacity:.45;filter:grayscale(.6);}
 .ge-tease-card{margin-bottom:10px;}
+
+/* ================= P2.1: ELITE EXPRESSION ceremony (industrial scan/smoke/glitch) ================ */
+/* black / charcoal / crimson / burnt orange; SVG only, no emoji, no casino chrome */
+.cine-elite .cine-stage{background:radial-gradient(ellipse at 50% 30%,rgba(204,85,0,.10),transparent 60%),#0b0b0d;}
+.elite-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.elite-stage .pr-smoke,.elite-stage .pr-scan{position:absolute;}
+.elite-kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.28em;color:#ff7a1a;font-weight:800;position:relative;z-index:1;}
+.elite-art{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;}
+.elite-dna{width:74px;height:auto;filter:drop-shadow(0 0 18px rgba(255,122,26,.7));}
+.elite-plant{width:150px;filter:drop-shadow(0 0 26px rgba(224,32,32,.6)) drop-shadow(0 0 52px rgba(204,85,0,.35));animation:revealPop .7s ease-out;}
+.elite-title{font-size:30px;color:#ff7a1a;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.75);margin:6px 0 2px;animation:countPop .55s ease-out;position:relative;z-index:1;text-align:center;}
+.elite-name{font-size:18px;font-weight:900;letter-spacing:1px;position:relative;z-index:1;}
+.elite-pheno{color:#ff7a1a;}
+.elite-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:420px;position:relative;z-index:1;}
+.elite-cell{background:linear-gradient(180deg,#16161a,#0d0d0f);border:1px solid #3a2a20;border-left:3px solid #cc5500;border-radius:10px;padding:10px 6px;animation:countPop .45s ease-out backwards;}
+.elite-cell span{display:block;font-size:9px;letter-spacing:1.5px;color:#8b8b93;font-weight:700;}
+.elite-cell b{display:block;font-size:22px;font-weight:800;color:#ffb066;font-variant-numeric:tabular-nums;margin-top:2px;}
+.elite-sub{color:#8b8b93;font-size:13px;font-style:italic;position:relative;z-index:1;}
+.elite-stage .ge-btn-block{position:relative;z-index:1;max-width:330px;}
+/* ================= P2.1: compare per-side action groups ================= */
+.ge-cmp-side{margin-top:10px;}
+.ge-cmp-side-name{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;color:#8b8b93;margin-bottom:6px;text-transform:uppercase;}
+.ge-cmp-overall td{background:rgba(204,85,0,.06);}
