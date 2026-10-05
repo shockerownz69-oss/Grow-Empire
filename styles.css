@@ -1205,7 +1205,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .gx-node.gx-rar-legendary b{ color:#ffe9a8; }
 .gx-node.gx-rar-promising{ border-color:#8a8f98; }
 .gx-foundation{ margin-top:.6rem; }
-.gx-linbtn{ margin-top:.6rem;width:100%; }
+.gx-linbtn{margin:0}
 
 /* ---------- grade report ---------- */
 .gx-grade{
@@ -1913,7 +1913,7 @@ svg.ge-ic-xl{width:var(--ge-ic-xl);height:var(--ge-ic-xl)}
 .ge-btn-sm{min-height:40px;padding:0 13px;font-size:11px;border-radius:var(--ge-r-sm)}
 .ge-btn-block{width:100%}
 .ge-btn-icon{width:44px;height:44px;min-height:44px;padding:0;border-radius:var(--ge-r-sm)}
-.ge-btn-row{display:flex;gap:var(--ge-sp-2);margin:var(--ge-sp-3) 0}
+.ge-btn-row{display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);margin:var(--ge-sp-3) 0}
 .ge-btn-row .ge-btn{flex:1}
 
 /* ---- icon buttons (wishlist: 44px hit area even when glyph is small) ---- */

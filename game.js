@@ -4554,12 +4554,16 @@ function GX_wireGenetics(root){
     if(!sid) return;
     var h3=card.querySelector('h3');
     if(h3&&!h3.querySelector('.gx-rarbadge')) h3.insertAdjacentHTML('beforeend',' '+GX_rarityBadge(GX_strainRarity(sid)));
+    /* injected actions share one wrapping design-system row so they can
+       never overflow the card on narrow phones */
+    var row=card.querySelector('.ge-btn-row.gx-extra-row');
+    if(!row){ row=document.createElement('div'); row.className='ge-btn-row gx-extra-row'; card.appendChild(row); }
     var b=document.createElement('button');
-    b.className='btn btn-small gx-linbtn';
+    b.className='ge-btn ge-btn-sm ge-btn-ghost gx-linbtn';
     b.setAttribute('data-gx-lineage',sid);
-    b.innerHTML=icon('dna','b-ico')+' VIEW LINEAGE';
+    b.innerHTML=icon('dna','ge-ic-sm')+' VIEW LINEAGE';
     b.onclick=(function(id){ return function(){ GX_lineageModal(id); }; })(sid);
-    card.appendChild(b);
+    row.appendChild(b);
   });
 }
 /* ============================================================
@@ -7116,11 +7120,13 @@ function TY_wrapRenders(){
             const ds=idBtn.dataset;
             const sid=ds.growseed||ds.hunt||ds.vkeepers||ds.buygen||ds.preserve;
             if(!sid) return;
+            var row=card.querySelector('.ge-btn-row.gx-extra-row');
+            if(!row){ row=document.createElement('div'); row.className='ge-btn-row gx-extra-row'; card.appendChild(row); }
             const b=document.createElement('button');
-            b.className='btn btn-small'; b.setAttribute('data-ty-profile',sid);
+            b.className='ge-btn ge-btn-sm ge-btn-ghost'; b.setAttribute('data-ty-profile',sid);
             b.textContent='GENETIC PROFILE';
             b.onclick=(function(id){ return function(){ TY_profileModal(id); }; })(sid);
-            card.appendChild(b);
+            row.appendChild(b);
           });
         }catch(e){}
       };
@@ -11148,31 +11154,19 @@ function MS_rewardHTML(m){
 function MS_objHTML(m,pr){
   const done=pr.cur>=pr.target;
   const cur=Math.min(pr.cur,pr.target);
-  let lis='';
-  if(pr.target>1&&pr.target<=10){
-    /* multi-part objectives: one row per part (e.g. "Objective 1 of 3") */
-    for(let i=1;i<=pr.target;i++){
-      const pd=i<=cur;
-      lis+='<li class="ms-obj'+(pd?' is-done':'')+'">'+
-       '<span class="ms-check">'+icon(pd?'check':'clock','ge-ic-sm')+'</span>'+
-       '<span class="ms-objt">Objective '+i+' of '+pr.target+'</span>'+
-       '<span class="ge-pill '+(pd?'ge-pill-optimal':'ge-pill-neutral')+'">'+(pd?'DONE':'OPEN')+'</span></li>';
-    }
-  }else{
-    /* numeric progress: single compact row — never one row per unit */
-    lis='<li class="ms-obj'+(done?' is-done':'')+'">'+
-     '<span class="ms-check">'+icon(done?'check':'clock','ge-ic-sm')+'</span>'+
-     '<span class="ms-objt">'+esc(m.desc)+'</span>'+
-     '<b class="ge-num">'+cur+'/'+pr.target+'</b></li>';
-  }
+  /* One compact objective row carrying the mission's real description plus
+     live progress. Never renders one row per unit (a 50k/1M target would
+     create tens of thousands of meaningless "Objective N of M" rows). */
+  const lis='<li class="ms-obj'+(done?' is-done':'')+'">'+
+   '<span class="ms-check">'+icon(done?'check':'clock','ge-ic-sm')+'</span>'+
+   '<span class="ms-objt">'+esc(m.desc)+'</span>'+
+   '<b class="ge-num">'+cur+'/'+pr.target+'</b></li>';
   return '<ul class="ms-objs">'+lis+'</ul>';
 }
 function MS_cardHTML(m,cat,pr,done,started){
-  const multi=pr.target>1;
   return '<div class="ge-card ge-mission'+(done?' is-done':'')+'">'+
    '<div class="ms-top"><span class="ms-cat">'+esc(cat)+'</span>'+MS_statePill(done,started)+MS_diffBadge(m)+'</div>'+
    '<h3 class="ms-title">'+(done?icon('check','ge-ic-sm'):'')+esc(m.name)+'</h3>'+
-   (multi?'<p class="ge-muted">'+esc(m.desc)+'</p>':'')+
    MN_timedHTML(m)+
    MS_objHTML(m,pr)+
    '<div class="ge-progress-meta"><span>'+icon('level','ge-ic-sm')+'PROGRESS</span><b class="ge-num">'+Math.min(pr.cur,pr.target)+'/'+pr.target+'</b></div>'+
