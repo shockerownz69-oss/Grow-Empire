@@ -478,6 +478,7 @@ inspect:'<circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.3 15.3L21 21"/>',
 harvest:'<path d="M12 21V8"/><path d="M12 8C12 4.8 9.5 3 5.5 3c0 4 2.5 5.5 6.5 5z"/><path d="M12 8c0-3.2 2.5-5 6.5-5 0 4-2.5 5.5-6.5 5z"/><path d="M12 13c-2.4 0-4-1.4-4-4M12 13c2.4 0 4-1.4 4-4"/>',
 clone:'<path d="M4 21h16"/><path d="M8.5 21v-5.5M8.5 15.5c-1.7 0-2.9-1.2-2.9-2.9 1.7 0 2.9 1.2 2.9 2.9zM8.5 15.5c1.7 0 2.9-1.2 2.9-2.9-1.7 0-2.9 1.2-2.9 2.9z"/><path d="M15.5 21v-5.5M15.5 15.5c-1.7 0-2.9-1.2-2.9-2.9 1.7 0 2.9 1.2 2.9 2.9zM15.5 15.5c1.7 0 2.9-1.2 2.9-2.9-1.7 0-2.9 1.2-2.9 2.9z"/>',
 sell:'<path d="M3.5 3.5H11L20.5 13l-7.5 7.5L3.5 11z"/><circle cx="8" cy="8" r="1.7"/>',
+trash:'<path d="M4 7h16"/><path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M6.5 7l.9 12.2a1.8 1.8 0 0 0 1.8 1.7h5.6a1.8 1.8 0 0 0 1.8-1.7L17.5 7"/><path d="M10 11v6M14 11v6"/>',
 /* --- HUD --- */
 cash:'<circle cx="12" cy="12" r="8.6"/><path d="M12 7v10M14.6 9.2c-.5-.9-1.5-1.4-2.6-1.4-1.6 0-2.9.9-2.9 2.2 0 2.9 5.8 1.4 5.8 4.2 0 1.3-1.3 2.2-2.9 2.2-1.1 0-2.1-.5-2.6-1.4"/>',
 rep:'<path d="M12 3l2.7 5.7 6.2.8-4.6 4.2 1.2 6.1L12 16.7l-5.5 3.1 1.2-6.1-4.6-4.2 6.2-.8z"/>',
@@ -1875,6 +1876,31 @@ function doAction(pid,action){
 }
 function refreshGrowUI(){ if(current==='grow') RENDER.grow(); if(current==='grows') RENDER.grows(); }
 
+/* QA GE-705: inventory stack merge — stacks merge ONLY when every gameplay-relevant
+   property matches: strain/genetics id, pheno id, quality, potency, terpenes,
+   bagAppeal, resin, processing state (type), weight unit (derived from type:
+   edible counts units, flower/concentrate count oz), and custom flag.
+   Price basis (pricePerOz) is a pure function of quality/potency/type plus
+   global reputation/difficulty, so it cannot differ when the key matches.
+   Any difference in any of these => separate stack. Single linear scan matches
+   the codebase's existing inventory access pattern (S.inventory.find). */
+function INV_mergeKey(it){
+  var unit=it.type==='edible'?'unit':'oz';
+  return [it.strainId==null?'':it.strainId,
+    it.phenoNum==null?'':it.phenoNum,
+    num(it.quality,0),num(it.potency,0),num(it.terpenes,0),num(it.bagAppeal,0),num(it.resin,0),
+    it.type||'flower',unit,it.custom?1:0].join('|');
+}
+function INV_add(item){
+  if(!Array.isArray(S.inventory)) S.inventory=[];
+  var key=INV_mergeKey(item);
+  var ex=S.inventory.find(function(x){ return x&&INV_mergeKey(x)===key; });
+  if(ex){ ex.amount=Math.round((num(ex.amount,0)+num(item.amount,0))*10)/10; return ex; }
+  item.id=S.nextInvId++;
+  S.inventory.push(item);
+  return item;
+}
+
 /* ---------------- Harvest ---------------- */
 function harvestPlant(p){
   if(!p||p.harvested) return; /* QA GE-303: idempotency — already harvested (flag survives detached refs) */
@@ -1904,7 +1930,7 @@ function harvestPlant(p){
   const terpenes=clamp(G.terp*0.6+quality*0.4,5,100);
   const bagAppeal=clamp(ph.bagAppeal*0.5+quality*0.5,5,100);
   const resin=clamp(G.resin*0.65+quality*0.35,5,100);
-  S.inventory.push({ id:S.nextInvId++, strainId:st.id, strainName:st.name, amount:Math.round(yieldOz*10)/10,
+  const newInv=INV_add({ strainId:st.id, strainName:st.name, phenoNum:ph.num, amount:Math.round(yieldOz*10)/10,
     quality:Math.round(quality), potency:Math.round(potency), terpenes:Math.round(terpenes),
     bagAppeal:Math.round(bagAppeal), resin:Math.round(resin), type:'flower', custom:!!st.custom });
   S.plants=S.plants.filter(x=>x.id!==p.id);
@@ -1920,7 +1946,7 @@ function harvestPlant(p){
         envScore:(typeof envEval==='function'?envEval().score:80),
         equipAvg:(q.lights+q.hvac+q.humid+q.dehumid+q.co2sys+q.irrigation+q.nutrients+q.sensors+q.drycure)/9,
         harvestDay:S.day,flowerDays:p.day});
-      const gxInv=S.inventory[S.inventory.length-1];
+      const gxInv=newInv;
       if(gxInv) gxInv.gxGrade=gxG.grade;
     }
   }catch(e){}
@@ -2442,7 +2468,7 @@ function pricePerOz(it){
   const D=DIFFS[S.difficulty];
   const base=it.quality*2.4+it.potency*0.9;
   const repMult=1+S.reputation/2000;
-  const typeMult=it.type==='concentrate'?6:it.type==='edible'?2.5:1;
+  const typeMult=it.type==='concentrate'?6:it.type==='edible'?0.20:1; /* GE-329: per-UNIT edible price must be a fraction of per-oz flower price (was 2.5 x 10u/oz = ~25x printer) */
   return Math.max(5,base*repMult*typeMult*D.econMult);
 }
 RENDER.dispensary=function(){
@@ -2490,7 +2516,7 @@ RENDER.dispensary=function(){
   });
   if(dispTab==='flower'&&items.length){
     html+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('flask','ge-ic-md')+'PROCESSING</h3></div>'+
-     '<p class="ge-body ge-muted">Turn flower into concentrates (6x price, 18% yield, $30/oz) or edibles (2.5x price, 10 units/oz, $25/oz). Use PROCESS on an item above.</p></div>';
+     '<p class="ge-body ge-muted">Turn flower into concentrates (6x price, 18% yield, $20/oz) or edibles (6 units/oz, $25/oz — needs PROCESSING LAB Lv 2). Use PROCESS on an item above.</p></div>';
   }
   r.innerHTML=html;
   r.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{ dispTab=t.dataset.tab; RENDER.dispensary(); });
@@ -2501,8 +2527,8 @@ RENDER.dispensary=function(){
     const m=modal('<h3 class="ge-h2">'+icon('flask','ge-ic-lg')+'PROCESS '+esc(it.strainName)+'</h3>'+
      '<p class="ge-body ge-muted">'+it.amount+' oz available.</p>'+
      '<label class="ge-label" for="proc-amt">Amount (oz)</label><input class="ge-dp-input" type="number" id="proc-amt" min="1" max="'+it.amount+'" value="1">'+
-     '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="proc-conc">CONCENTRATE<br><span class="ge-caption ge-muted">→18%/oz $30</span></button>'+
-     '<button class="ge-btn ge-btn-gold" id="proc-ed">EDIBLES<br><span class="ge-caption ge-muted">→10u/oz $25</span></button></div>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="proc-conc">CONCENTRATE<br><span class="ge-caption ge-muted">→18%/oz $20</span></button>'+
+     '<button class="ge-btn ge-btn-gold" id="proc-ed">EDIBLES<br><span class="ge-caption ge-muted">→6u/oz $25 • LAB LV2+</span></button></div>'+
      '<button class="ge-btn ge-btn-ghost ge-btn-block" id="proc-x">'+icon('x','ge-ic-md')+'CANCEL</button>');
     m.querySelector('#proc-x').onclick=()=>closeModal(m);
     let procDone=false; /* QA GE-313: per-modal idempotency — detached button replays must not re-fire */
@@ -2510,13 +2536,17 @@ RENDER.dispensary=function(){
       if(procDone) return;
       const amt=clamp(+m.querySelector('#proc-amt').value||0,1,Math.max(0,it.amount));
       if(!(amt>0)||!S.inventory.some(x=>x.id===it.id)){ toast(icon('x','ge-ic-md')+' Nothing left to process.'); return; }
-      const cost=kind==='concentrate'?30*amt:25*amt;
+      if(kind==='edible'){ /* GE-329: edibles are the advanced path - Processing Lab Lv 2+; portioned to input potency (no +8) */
+        let labLv=1; try{ labLv=(typeof EX_buildingLevel==='function')?EX_buildingLevel('processing'):1; }catch(e){ labLv=1; }
+        if(labLv<2){ toast(icon('x','ge-ic-md')+' Edibles need PROCESSING LAB Lv 2 — upgrade in EMPIRE.'); return; }
+      }
+      const cost=kind==='concentrate'?20*amt:25*amt;
       if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
       procDone=true;
       S.cash-=cost; it.amount=Math.round((it.amount-amt)*10)/10;
-      const outAmt=kind==='concentrate'?Math.round(amt*0.18*10)/10:Math.round(amt*10);
-      S.inventory.push({ id:S.nextInvId++, strainId:it.strainId, strainName:it.strainName, amount:outAmt,
-        quality:it.quality, potency:Math.min(100,it.potency+8), terpenes:it.terpenes, bagAppeal:it.bagAppeal,
+      const outAmt=kind==='concentrate'?Math.round(amt*0.18*10)/10:Math.round(amt*6);
+      INV_add({ strainId:it.strainId, strainName:it.strainName, phenoNum:it.phenoNum, amount:outAmt,
+        quality:it.quality, potency:kind==='concentrate'?Math.min(100,it.potency+8):it.potency, terpenes:it.terpenes, /* GE-329: extraction tests stronger; edibles portioned to input potency */ bagAppeal:it.bagAppeal,
         resin:it.resin, type:kind, custom:it.custom });
       if(it.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==it.id);
       S.stats.processedOz+=amt; gainXP(10);
@@ -2634,6 +2664,7 @@ RENDER.empire=function(){
     toast(icon('users','ge-ic-md')+' Hired '+esc(c.name));
     save(); updateHUD(); checkMissions(); RENDER.empire();
   });
+  r.querySelectorAll('[data-fire]').forEach(b=>b.onclick=()=>{ fireCrew(b.dataset.fire); }); /* QA GE-405 */
   r.querySelectorAll('[data-buymother]').forEach(b=>b.onclick=()=>{
     const cost=MOTHER_CAP_COSTS[S.motherCapacity];
     if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
@@ -9166,6 +9197,13 @@ function NX_offlineSim(days){
     try{ if(typeof CT_dayTick==='function') CT_dayTick(); }catch(e){}
     try{ if(typeof EX_tick==='function') EX_tick(); }catch(e){}
     S.day=Math.max(1,int(S.day,1)+1); S.stats.daysAdvanced=num(S.stats.daysAdvanced,0)+1;
+    /* QA GE-504: timed missions tick offline. Each offline game-day runs the
+       missions module's day tick so timed-mission expiry is evaluated per day
+       instead of late (late evaluation left expired missions completable).
+       Offline game-days come from NX_offlineCheck: 8 real hours = 1 game day,
+       min 45 min elapsed, clamped to 1..3 days. MN_dayTick is idempotent per
+       game-day via S.mn.lastTickDay, so this call is safe. */
+    try{ if(typeof MN_dayTick==='function') MN_dayTick(); }catch(e){}
   }
   try{ sum.orders=Math.max(0,num(S.ct&&S.ct.servedToday,0)-served0); }catch(e){}
   sum.rev=Math.round(num(S.cash,0)-cash0);
@@ -10677,6 +10715,24 @@ function EM_equipmentHTML(){
   h+=EM_amSummary();
   return h;
 }
+/* QA GE-405: fire a basic-crew member. Confirm-first; NO severance and NO hire-cost
+   refund by design (a refund path is exactly what would enable dupe-cash exploits, so
+   none exists). Root-cause guards: every crew bonus reads S.crew[id] directly and the
+   payroll tick sums only truthy S.crew keys, so setting the flag false clears bonuses
+   AND payroll entries atomically — no parallel registries to desync, no ghost charges,
+   and the boolean map makes double crew slots impossible. Mirrors the staff EX_fireEmp
+   pattern. */
+function fireCrew(id){
+  const c=CREW_DEFS.find(x=>x.id===id);
+  if(!c||!S.crew[c.id]) return false; /* not hired or bad id: no-op, never pays or refunds */
+  confirmModal('Fire '+c.name+'?', c.name+' will leave the crew immediately. No severance, no refund of the '+fmt$(c.hire)+' hire cost. Their bonus ends and the '+fmt$(c.wage)+'/day wage stops.', ()=>{
+    if(!S.crew[c.id]) return; /* already gone: never fire twice (confirmModal also disarms, QA GE-702) */
+    S.crew[c.id]=false;
+    toast(icon('x','ge-ic-md')+' Fired '+esc(c.name)+'.');
+    save(); updateHUD(); checkMissions(); RENDER.empire();
+  });
+  return true;
+}
 function EM_crewHTML(){
   let h='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('crew','ge-ic-lg')+'CREW</h3></div>'+
    '<p class="ge-caption ge-muted">Crew members charge a daily wage, deducted each day. Named professionals live under the STAFF tab.</p></div>';
@@ -10687,7 +10743,7 @@ function EM_crewHTML(){
     h+='<p class="ge-caption ge-muted">'+esc(c.desc)+'</p>';
     h+='<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Hire cost</span><b class="ge-num">'+fmt$(c.hire)+'</b></div>';
     h+='<div class="ge-datarow"><span>'+icon('day','ge-ic-md')+'Daily wage</span><b class="ge-num">'+fmt$(c.wage)+'</b></div>';
-    h+=hired?'':'<button class="ge-btn ge-btn-primary ge-btn-block" data-hire="'+c.id+'">'+icon('crew','ge-ic-md')+'HIRE</button>';
+    h+=hired?'<button class="ge-btn ge-btn-danger ge-btn-block" data-fire="'+c.id+'">'+icon('x','ge-ic-md')+'FIRE</button>':'<button class="ge-btn ge-btn-primary ge-btn-block" data-hire="'+c.id+'">'+icon('crew','ge-ic-md')+'HIRE</button>';
     h+='</div></div>';
   });
   return h;
