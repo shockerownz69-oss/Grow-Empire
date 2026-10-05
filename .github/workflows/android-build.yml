@@ -20,8 +20,8 @@ on:
       - '.github/workflows/android-build.yml'
 
 concurrency:
-  group: android-debug-${{ github.ref }}
-  cancel-in-progress: true
+  group: android-debug-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   build-debug-apk:
