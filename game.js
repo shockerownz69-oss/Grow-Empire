@@ -156,11 +156,14 @@ const MISSIONS = [
  {id:'tut-plant',cat:'Tutorial',name:'First Seed',desc:'Plant your first seed.',prog:s=>[Math.min(s.stats.plantsStarted,1),1],reward:{cash:50,xp:20}},
  {id:'tut-germ',cat:'Tutorial',name:'First Sprout',desc:'Germinate a seed into a seedling.',prog:s=>[Math.min(num(s.stats.sprouted,0),1),1],reward:{cash:50,xp:20}},
  {id:'tut-water',cat:'Tutorial',name:'Stay Hydrated',desc:'Water plants 5 times.',prog:s=>[Math.min(s.stats.waterings,5),5],reward:{cash:50,xp:20}},
+ {id:'tut-envtouch',cat:'Tutorial',name:'Touch the Climate',desc:'Adjust any climate control (temperature, humidity, light or CO2) in the grow room.',prog:s=>[Math.min(num(s.stats.envAdjustments,0),1),1],reward:{cash:50,xp:20}},
  {id:'tut-days',cat:'Tutorial',name:'One Week In',desc:'Advance 7 days.',prog:s=>[Math.min(s.stats.daysAdvanced,7),7],reward:{cash:75,xp:30}},
+ {id:'tut-discovery',cat:'Tutorial',name:'Hidden Potential',desc:'Reveal your first ??? trait on a growing plant. Traits unlock as the plant matures — inspect often.',prog:s=>[Math.min(num(s.stats.traitsRevealed,0),1),1],reward:{cash:75,xp:30}},
  {id:'tut-harvest',cat:'Tutorial',name:'First Harvest',desc:'Complete your first harvest.',prog:s=>[Math.min(s.stats.harvests,1),1],reward:{cash:100,xp:50,p0:2}},
  {id:'tut-sell',cat:'Tutorial',name:'First Sale',desc:'Sell product at the dispensary.',prog:s=>[Math.min(s.stats.sales,1),1],reward:{cash:100,xp:50}},
  {id:'tut-upgrade',cat:'Tutorial',name:'First Upgrade',desc:'Buy any equipment level from the Equipment Depot.',prog:s=>[Math.min(s.stats.equipmentBought,1),1],reward:{cash:100,xp:50}},
  {id:'tut-dialin',cat:'Tutorial',name:'Dial It In',desc:'Hold temp (70-82F) and humidity (40-60%) in range for a full day.',prog:s=>[Math.min(s.stats.envInRangeDays,1),1],reward:{cash:100,xp:50}},
+ {id:'tut-keeper',cat:'Tutorial',name:'The Keeper\u2019s Call',desc:'Decide a phenotype\u2019s fate: mark your first keeper in a harvest report. Keepers are the genetics worth preserving.',prog:s=>[Math.min(num(s.stats.keepersFound,0),1),1],reward:{cash:150,xp:60,p0:2}},
  // GROW CHALLENGES
  {id:'grow-healthy',cat:'Grow Challenges',name:'Vibrant',desc:'Harvest a plant at 90%+ health.',prog:s=>[Math.min(s.stats.highHealthHarvests,1),1],reward:{cash:150,xp:60}},
  {id:'grow-flawless',cat:'Grow Challenges',name:'Flawless Victory',desc:'Finish a grow with health never dropping below 80%.',prog:s=>[Math.min(s.stats.flawlessGrows,1),1],reward:{cash:300,xp:120,p0:2}},
@@ -296,6 +299,7 @@ function defaultState(){
     project0:{ points:0, tracks:{genetics:0,nocompromise:0,preservation:0,cultivation:0,family:0,freedom:0,resin:0,knowledge:0}, titles:[] },
     p0vault:{}, /* P3-W3: per-genetic Project 0 preservation tiers (CANDIDATE..LEGACY) */
     msDone:{}, /* P3-W6: major-milestone ledger (id -> {day}) - exactly-once, save-safe */
+    p4sales:{}, /* P4: per-strain sales ledger (strainId -> {strainName,oz,revenue}) */
     stats:{ plantsStarted:0,waterings:0,feedings:0,trainings:0,inspects:0,daysAdvanced:0,harvests:0,
       lifetimeHarvestOz:0,lifetimeRevenue:0,bestQuality:0,bestBagAppeal:0,biggestHarvest:0,
       q80Harvests:0,highHealthHarvests:0,flawlessGrows:0,keepers:0,fastestGrow:0,quickTurnarounds:0,
@@ -304,7 +308,7 @@ function defaultState(){
       phenoTested:0,phenoHarvested:0,eliteFound:0,legendaryFound:0,clonesTaken:0,cloneHarvests:0,
       phenoHuntsDone:0,huntsCompleted10:0,keepersFound:0,mothersCreated:0,comparesDone:0,
       keeperCapUpgrades:0,vaultFilledOnce:0,provenCut:0,bestPhenoScore:0,
-      equipmentBought:0,envInRangeDays:0 }, /* P1.5 */
+      equipmentBought:0,envInRangeDays:0,envAdjustments:0,traitsRevealed:0 }, /* P1.5, P4.1 */
     achievements:[],
     titles:[],
     /* --- Phenotype / keeper system --- */
@@ -372,12 +376,13 @@ function codexHist(id){
     let h=S.codexHist[id];
     if(!h||typeof h!=='object') h=S.codexHist[id]={};
     h.acquiredDay=Math.max(0,int(h.acquiredDay,0));
-    ['grown','harvested','phenosEvaluated','crossesCreated','completedDay'].forEach(k=>{ h[k]=Math.max(0,int(h[k],0)); });
+    ['grown','harvested','phenosEvaluated','crossesCreated','completedDay','masteredDay'].forEach(k=>{ h[k]=Math.max(0,int(h[k],0)); });
     ['bestYield','bestPotency','bestTerpene','bestResin','keeperPhenoOverall'].forEach(k=>{ h[k]=Math.max(0,num(h[k],0)); });
     if(!Array.isArray(h.genNotes)) h.genNotes=[];
     else h.genNotes=h.genNotes.filter(n=>typeof n==='string').slice(-24);
     if(typeof h.keeperPheno!=='string') h.keeperPheno=null;
     h.completed=!!h.completed;
+    h.mastered=!!h.mastered; /* P4: MASTERED = owned+grown+harvested+bred, stamped once */
     return h;
   }catch(e){ return null; }
 }
@@ -413,8 +418,8 @@ function codexCheckComplete(id,silent){
   return false;
 }
 /* stamping helpers - called at the correct lifecycle points only */
-function codexOnAcquired(id){ try{ const h=codexHist(id); if(h&&!h.acquiredDay){ h.acquiredDay=Math.max(1,int(S.day,1)); } codexCheckComplete(id); }catch(e){} }
-function codexOnGrown(id){ try{ const h=codexHist(id); if(!h) return; h.grown++; h.phenosEvaluated++; codexCheckComplete(id); }catch(e){} }
+function codexOnAcquired(id){ try{ const h=codexHist(id); if(h&&!h.acquiredDay){ h.acquiredDay=Math.max(1,int(S.day,1)); } codexCheckComplete(id); try{ if(typeof P4_checkCodexMilestones==='function') P4_checkCodexMilestones(); }catch(e){} }catch(e){} }
+function codexOnGrown(id){ try{ const h=codexHist(id); if(!h) return; h.grown++; h.phenosEvaluated++; codexCheckComplete(id); try{ if(typeof P4_checkCodexMilestones==='function') P4_checkCodexMilestones(); }catch(e){} }catch(e){} }
 function codexOnHarvest(id,rec){
   try{
     const h=codexHist(id); if(!h) return;
@@ -426,6 +431,8 @@ function codexOnHarvest(id,rec){
       h.bestResin=Math.max(h.bestResin,num(rec.resin,0));
     }
     codexCheckComplete(id);
+    try{ if(typeof P4_maybeMastered==='function') P4_maybeMastered(id); }catch(e){} /* P4: mastered check at harvest */
+    try{ if(typeof P4_checkCodexMilestones==='function') P4_checkCodexMilestones(); }catch(e){} /* P4: live discovery milestones */
   }catch(e){}
 }
 function codexOnKeeper(strainId,k,silent){
@@ -434,11 +441,14 @@ function codexOnKeeper(strainId,k,silent){
     const ov=num(k.overall,0), ref='PHENO #'+int(k.phenoNum,0);
     if(!h.keeperPheno||ov>h.keeperPhenoOverall){ h.keeperPheno=ref; h.keeperPhenoOverall=ov; }
     codexCheckComplete(strainId,silent);
+    if(!silent){ try{ if(typeof P4_checkCodexMilestones==='function') P4_checkCodexMilestones(); }catch(e){} } /* P4: silent backfill path stays silent */
   }catch(e){}
 }
 function codexOnBreedParent(parentId,childName){
   try{ const h=codexHist(parentId); if(!h) return; h.crossesCreated++;
-    codexNote(parentId,'Bred into \u201c'+String(childName||'Untitled Cross').slice(0,28)+'\u201d'); }catch(e){}
+    codexNote(parentId,'Bred into \u201c'+String(childName||'Untitled Cross').slice(0,28)+'\u201d');
+    try{ if(typeof P4_maybeMastered==='function') P4_maybeMastered(parentId); }catch(e){}
+    try{ if(typeof P4_checkCodexMilestones==='function') P4_checkCodexMilestones(); }catch(e){} }catch(e){} /* P4: mastered check at breeding + live discovery milestones */
 }
 function codexNote(id,note){
   try{
@@ -447,12 +457,137 @@ function codexNote(id,note){
     if(h.genNotes.length>24) h.genNotes=h.genNotes.slice(-24);
   }catch(e){}
 }
+/* ================= P4: LIVING CODEX — 8-STATE MODEL + HONEST DISCOVERY % =================
+   The codex tracks the player's relationship with each genetic across 8 states,
+   from UNKNOWN (name hidden) to MASTERED (the full journey). Each accessor returns
+   the HIGHEST state achieved — states never conflate:
+   - UNKNOWN:    mission-locked and not unlocked — the name itself is hidden (???).
+   - DISCOVERED: name visible but no relationship yet (locked behind rep/cash/breed/hunt).
+   - UNLOCKED:   unlocked, but never acquired.
+   - OWNED:      acquired (seed bought / custom bred), never grown.
+   - GROWN:      grown at least once, never harvested.
+   - HARVESTED:  harvested at least once, never bred.
+   - BRED:       used as a breeding parent (or bred as a custom), not yet mastered.
+   - MASTERED:   owned + grown + harvested + bred. The highest bar in the archive.
+   MASTERED is deliberately stricter than CODEX COMPLETE (owned+grown+harvested):
+   it proves the player carried the genetic through its entire lifecycle, including
+   breeding the line forward. Completion % counts only strains with a real codex
+   relationship — opening the Codex grants nothing. */
+function P4_codexMastered(id){
+  try{
+    const st=getStrain(id); if(!st) return false;
+    const h=codexHist(id); if(!h) return false;
+    const owned=!!(S.strainOwned&&S.strainOwned[id])||!!st.custom;
+    const bred=h.crossesCreated>0||!!st.custom;
+    return owned&&h.grown>0&&h.harvested>0&&bred;
+  }catch(e){ return false; }
+}
+function P4_codexState(id){
+  try{
+    if(P4_codexMastered(id)) return 'MASTERED';
+    const st=getStrain(id);
+    const h=codexHist(id);
+    const bred=!!(h&&h.crossesCreated>0)||!!(st&&st.custom);
+    if(h&&h.harvested>0) return bred?'BRED':'HARVESTED';
+    if(bred) return 'BRED';
+    if(h&&h.grown>0) return 'GROWN';
+    const owned=!!(S.strainOwned&&S.strainOwned[id])||!!(st&&st.custom);
+    if(owned||(h&&h.acquiredDay>0)) return 'OWNED';
+    let locked=true; try{ locked=!isUnlocked(id); }catch(e){}
+    if(!locked) return 'UNLOCKED';
+    if(st&&st.lock&&st.lock.t==='mission') return 'UNKNOWN';
+    return 'DISCOVERED';
+  }catch(e){ return 'UNKNOWN'; }
+}
+function P4_codexDiscovered(id){
+  /* actual player discovery: a real codex relationship, never mere availability */
+  try{
+    const st=getStrain(id); if(!st) return false;
+    const h=codexHist(id);
+    if(h&&(h.acquiredDay>0||h.grown>0||h.harvested>0||h.crossesCreated>0||h.keeperPheno||h.genNotes.length>0)) return true;
+    if(S.strainOwned&&S.strainOwned[id]) return true;
+    if(st.custom) return true;
+    return false;
+  }catch(e){ return false; }
+}
+function P4_codexDiscoveredCount(){
+  try{ return allStrains().filter(st=>P4_codexDiscovered(st.id)).length; }catch(e){ return 0; }
+}
+function P4_codexTotal(){
+  try{ return allStrains().length; }catch(e){ return 1; }
+}
+function P4_codexPct(){
+  try{ return Math.round(P4_codexDiscoveredCount()/Math.max(1,P4_codexTotal())*100); }catch(e){ return 0; }
+}
+function P4_masteredCount(){
+  try{ return allStrains().filter(st=>P4_codexMastered(st.id)).length; }catch(e){ return 0; }
+}
+function P4_p0EntryCount(){
+  /* deduped: vault entries + ceremony submissions (a custom can sit in both) */
+  try{
+    const seen={};
+    Object.keys(S.p0vault||{}).forEach(k=>{ seen[k]=1; });
+    (S.customStrains||[]).forEach(c=>{ if(c&&c.p0Submitted) seen[c.id]=1; });
+    return Object.keys(seen).length;
+  }catch(e){ return 0; }
+}
+var P4_p0Quiet=false; /* P4: true while load migration creates vault entries (stays silent) */
+var P4_STATE_META={
+  UNKNOWN:{label:'???',ico:'lock'}, DISCOVERED:{label:'DISCOVERED',ico:'inspect'},
+  UNLOCKED:{label:'UNLOCKED',ico:'check'}, OWNED:{label:'OWNED',ico:'box'},
+  GROWN:{label:'GROWN',ico:'grow'}, HARVESTED:{label:'HARVESTED',ico:'harvest'},
+  BRED:{label:'BRED',ico:'dna'}, MASTERED:{label:'MASTERED',ico:'crown-gold'}
+};
+function P4_stateBadge(id){
+  try{
+    const s=P4_codexState(id), m=P4_STATE_META[s]||P4_STATE_META.UNKNOWN;
+    return '<span class="p4st p4st-'+s.toLowerCase()+'">'+icon(m.ico,'ge-ic-sm')+m.label+'</span>';
+  }catch(e){ return ''; }
+}
+/* Enhanced mystery clue: the original hint (never a spoiler) plus honest route
+   progress — rep x/y, cash price, or the mission name. codexClue() itself is
+   untouched so existing copy stays stable. */
+function P4_enhancedClue(st){
+  try{
+    const base=codexClue(st); if(!base) return null;
+    const l=st&&st.lock; if(!l) return base;
+    let extra='';
+    if(l.t==='rep'){ const v=int(l.v,0); if(v>0){ let rep=int(S.reputation,0); try{ if(typeof TY_repOverall==='function') rep=int(TY_repOverall(),0); }catch(e){} extra=' ('+Math.min(rep,v)+' / '+v+' rep)'; } }
+    else if(l.t==='cash'){ extra=' \u2014 '+fmt$(num(st.seed,0)*3); }
+    else if(l.t==='mission'){ const mn=lockMissionName(l.v); if(mn) extra=' \u2014 \u201c'+mn+'\u201d'; }
+    else if(l.t==='breed'){ extra=' \u2014 pair two unlocked genetics in the breeding lab'; }
+    else if(l.t==='hunt'){ extra=' \u2014 run phenotype hunts to find it'; }
+    return base+extra;
+  }catch(e){ return null; }
+}
+/* MASTERED stamp: exactly-once per strain, one tasteful toast, then the
+   first-mastered milestone check. Called at harvest and at breeding. */
+function P4_maybeMastered(id){
+  try{
+    const h=codexHist(id); if(!h||h.mastered) return false;
+    if(!P4_codexMastered(id)) return false;
+    h.mastered=true; h.masteredDay=Math.max(1,int(S.day,1));
+    codexNote(id,'MASTERED \u2014 owned, grown, harvested, bred. A complete genetic legacy.');
+    const st=getStrain(id);
+    toast(icon('crown-gold','ge-ic-md')+' <b>GENETIC MASTERED</b> \u2014 '+esc(st?st.name:id)+'. Owned, grown, harvested, bred.');
+    try{ if(typeof MS_check==='function') MS_check('first-mastered'); }catch(e){}
+    try{ save(); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+/* Codex discovery milestones (25/50/75/100%): checked live whenever the player's
+   discovery count can change — acquisition, grow, harvest, breeding, keeper.
+   Exactly-once via MS_fire (satisfying, no spam); MS_backfill covers legacy saves. */
+function P4_checkCodexMilestones(){
+  try{ ['codex-25','codex-50','codex-75','codex-100'].forEach(id=>{ try{ if(typeof MS_check==='function') MS_check(id); }catch(e){} }); }catch(e){}
+}
 function unlockStrain(id, acquired=false){
   if(!S.lockedStrains.includes(id)) return false;
   S.lockedStrains = S.lockedStrains.filter(x=>x!==id);
   if(acquired) markStrainOwned(id); /* QA: availability != owned — stamp only on genuine acquisition */
   const st = getStrain(id);
-  toast(icon('dna','ge-ic-md')+' Unlocked genetics: '+(st?st.name:id));
+  /* P4D: genetics unlock = MINOR */
+  try{ P4_celebrate('minor',{title:'GENETICS UNLOCKED',sub:esc(st?st.name:id),icon:'dna'}); }catch(e){ toast(icon('dna','ge-ic-md')+' Unlocked genetics: '+(st?st.name:id)); }
   try{ NT_onStrainUnlock(id); }catch(e){} /* P1.6: strain unlock -> grow-it-now (read-only) */
   return true;
 }
@@ -469,7 +604,8 @@ function normalizeState(){
    'lifetimeHarvestOz','lifetimeRevenue','bestQuality','bestBagAppeal','biggestHarvest',
    'q80Harvests','highHealthHarvests','flawlessGrows','keepers','fastestGrow','quickTurnarounds',
    'crosses','secondGenCrosses','compsEntered','compsWon','breederCupWins','sales','processedOz',
-   'missionsDone','maxConcurrent','preserved','equipmentBought','envInRangeDays','chainsDone'].forEach(k=>{ st[k]=num(st[k],0); }); /* P1.5, P2.3 */
+   'missionsDone','maxConcurrent','preserved','equipmentBought','envInRangeDays','chainsDone',
+   'envAdjustments','traitsRevealed'].forEach(k=>{ st[k]=num(st[k],0); }); /* P1.5, P2.3, P4.1 */
   if(!st.strainGrown||typeof st.strainGrown!=='object') st.strainGrown={};
   S.stats=st;
   const e=(S.env&&typeof S.env==='object')?S.env:{};
@@ -484,6 +620,8 @@ function normalizeState(){
   if(!S.crew||typeof S.crew!=='object'||Array.isArray(S.crew)) S.crew={};
   ["assistant","irrigation","health","breeder","harvest","manager"].forEach(k=>{ S.crew[k]=!!S.crew[k]; });
   try{ if(typeof P3W5_migrate==='function') P3W5_migrate(); }catch(e){} /* P3-W5: people+business state (save-safe) */
+  try{ if(typeof P4L_migrate==='function') P4L_migrate(); }catch(e){} /* P4-W6 4L: sales journal (save-safe) */
+  try{ if(typeof P4M_migrate==='function') P4M_migrate(); }catch(e){} /* P4-W6 4M: operation stage (save-safe) */
   try{ if(typeof MS_backfill==='function') MS_backfill(); }catch(e){} /* P3-W6: milestone backfill - silent, legacy saves */
   /* QA GE-506: a corrupt difficulty bricks advanceDay — fall back to grower */
   if(typeof DIFFS==='undefined'||!DIFFS[S.difficulty]) S.difficulty='grower';
@@ -540,6 +678,7 @@ function normalizeState(){
   if(!Array.isArray(S.customStrains)) S.customStrains=[];
   S.customStrains.forEach(s=>{ try{ P3B_backfillCustom(s); }catch(e){} });
   S.customStrains.forEach(s=>{ try{ P3W2_backfillCustom(s); }catch(e){} }); /* P3-W2: ceremony/p0/lineage fields (save v3) */
+  try{ P4_keeperBackfill(); }catch(e){} /* P4_4F: keeper hall-of-fame fields (migration-safe) */
   /* first-acquisition backfill (save v3): legacy saves never tracked per-strain acquisition.
      LEGACY-ONLY (version<3 — QA GE-DP-211): treat every currently-unlocked base strain as
      acquired so "Own X genetics" progress is preserved. Current-era (v3) saves track
@@ -627,6 +766,8 @@ function normalizeState(){
   try{ if(typeof CT_migrate==='function') CT_migrate(); }catch(e){}
   /* --- P2.3 mission chains: migration-safe state + anti-skip validation --- */
   try{ if(typeof CHA_migrate==='function') CHA_migrate(); }catch(e){}
+  /* P4 (4J): deep story arcs — migration-safe state + anti-skip validation */
+  try{ if(typeof P4_CHA_migrate==='function') P4_CHA_migrate(); }catch(e){}
   /* --- P2.5 player memory (migration-safe, honestly backfilled) --- */
   try{ if(typeof ME_migrate==='function') ME_migrate(); }catch(e){}
   /* --- P3-W3 preservation tiers: sane defaults for legacy saves --- */
@@ -1156,7 +1297,22 @@ function plantVisOpts(p){
   return o;
 }
 /* ---------------- missions: next suggested objective ---------------- */
-function nextMission(){ return MISSIONS.find(m=>!S.missionsDone.includes(m.id))||null; }
+function nextMission(){
+  /* P4X: feature the mission CLOSEST TO COMPLETION (progress ratio), not the
+     first incomplete in array order. Array order left early tutorial missions
+     (e.g. Stay Hydrated) featured forever once their chore was automated.
+     Ties keep array order, so fresh games still surface the tutorial first.
+     Guidance only — all four callers (nextUpCard, missions header, home
+     actions, profile row) want the most relevant next objective. */
+  let best=null, bestR=-1;
+  for(const m of MISSIONS){
+    if(!m||(S.missionsDone||[]).indexOf(m.id)>=0) continue;
+    let r=0;
+    try{ const p=missionProg(m); r=(p.target>0)?(p.cur/p.target):0; }catch(e){}
+    if(r>bestR){ bestR=r; best=m; }
+  }
+  return best;
+}
 function nextUpCard(){
   const m=nextMission(); if(!m) return '';
   const pr=missionProg(m), pct=clamp(pr.cur/pr.target*100,0,100);
@@ -1219,6 +1375,74 @@ function flowerSVG(seedStr,cls){
   const svg='<svg class="flower-art '+(cls||'')+'" viewBox="0 0 120 120" aria-hidden="true">'+inner+'</svg>';
   if(Object.keys(GE_flowerCache).length<400) GE_flowerCache[ckey]=svg;
   return svg;
+}
+/* ================= P4 ART DEDUP (Wave 7, 4S) =================
+   flowerSVG/plantSVG output is deterministic per input key and already
+   string-memoized, but every list row inlined the full 7-9KB SVG, so the
+   keepers SEED STOCK tab hit ~1.1MB of HTML (~1.4s innerHTML parse in jsdom;
+   far worse on a mid-range phone). These drop-in replacements keep
+   pixel-identical visuals (same outer classes + viewBox) while each row
+   references a single shared <symbol> in a body-level defs store that
+   survives show() navigation. Behavior-preserving: falls back to the full
+   inline SVG if the symbol store is full or anything throws. */
+let P4_symN=0;
+const P4_symIds={};
+function P4_artDefs(){
+  try{
+    let d=document.getElementById('P4_artdefs');
+    if(d) return d;
+    const holder=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    holder.setAttribute('aria-hidden','true');
+    holder.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden;');
+    const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.setAttribute('id','P4_artdefs');
+    holder.appendChild(defs);
+    document.body.appendChild(holder);
+    return defs;
+  }catch(e){ return null; }
+}
+function P4_symbolFor(key,fullSvg,viewBox){
+  try{
+    if(P4_symIds[key]) return P4_symIds[key];
+    if(P4_symN>=600) return null; /* store full: caller falls back to inline */
+    const m=/^<svg[^>]*>([\s\S]*)<\/svg>\s*$/.exec(fullSvg||'');
+    if(!m) return null;
+    const defs=P4_artDefs(); if(!defs) return null;
+    const id='P4F'+(++P4_symN);
+    const sym=document.createElementNS('http://www.w3.org/2000/svg','symbol');
+    sym.setAttribute('id',id); sym.setAttribute('viewBox',viewBox);
+    /* innerHTML on SVGElement: fine in WebView/modern browsers; guarded by try */
+    sym.innerHTML=m[1];
+    defs.appendChild(sym);
+    P4_symIds[key]=id;
+    return id;
+  }catch(e){ return null; }
+}
+function P4_flowerRef(seedStr,cls){
+  try{
+    const full=flowerSVG(seedStr,cls);
+    const id=P4_symbolFor('f|'+seedStr+'|'+(cls||''),full,'0 0 120 120');
+    if(id) return '<svg class="flower-art '+(cls||'')+'" viewBox="0 0 120 120" aria-hidden="true"><use href="#'+id+'"></use></svg>';
+    return full;
+  }catch(e){ try{ return flowerSVG(seedStr,cls); }catch(e2){ return ''; } }
+}
+/* canonical visual-input signature for plantSVG (all o.* flags read inside it) */
+function P4_plantFlags(o){
+  o=o||{};
+  return ['overwater','defic','exceptional','wilt','tall','short','bushy','trained','pests','dense','purple','frost','burn','lightStress','heat']
+    .map(k=>k+'='+(o[k]?o[k]:0)).join(';');
+}
+function P4_plantRef(stage,seedStr,cls,opts){
+  try{
+    const key='p|'+stage+'|'+seedStr+'|'+(cls||'')+'|'+P4_plantFlags(opts);
+    let id=P4_symIds[key];
+    if(!id){
+      const full=plantSVG(stage,seedStr,cls,opts);
+      id=P4_symbolFor(key,full,'0 0 120 140');
+    }
+    if(id) return '<svg class="plant-art '+(cls||'')+'" viewBox="0 0 120 140" aria-hidden="true"><use href="#'+id+'"></use></svg>';
+    return plantSVG(stage,seedStr,cls,opts);
+  }catch(e){ try{ return plantSVG(stage,seedStr,cls,opts); }catch(e2){ return ''; } }
 }
 /* ---- grow-room scene banner: lights react to S.env ---- */
 function roomSceneSVG(){
@@ -1465,7 +1689,7 @@ function checkP0Rewards(){
       if(rw.rep){ gainRep(rw.rep); toast(icon('project0','ge-ic-md')+' Project 0: +'+rw.rep+' rep'); }
       if(rw.xp){ gainXP(rw.xp); }
       if(rw.gen){ rw.gen.forEach(g=>unlockStrain(g,true)); }
-      if(rw.title){ S.project0.titles.push(rw.title); S.titles.push(rw.title); toast(icon('trophy','ge-ic-md')+' Title earned: '+rw.title); }
+      if(rw.title){ S.project0.titles.push(rw.title); S.titles.push(rw.title); try{ P4_celebrate('minor',{title:'TITLE EARNED',sub:esc(rw.title),icon:'trophy'}); }catch(e){} }
     }
   });
 }
@@ -1494,7 +1718,8 @@ function checkMissions(){
       if(r.p0) addP0('knowledge',r.p0);
       if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,m.name); }catch(e){} }
       const nm=m.name;
-      setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Mission complete: <b>'+esc(nm)+'</b>'),50);
+      /* P4D: flat mission complete = MINOR (subtle); the chain itself is MAJOR */
+      setTimeout(()=>{ try{ P4_celebrate('minor',{title:'MISSION COMPLETE',sub:'<b>'+esc(nm)+'</b>',icon:'trophy'}); }catch(e){} },50);
       // mission-locked strain p0-50
       if(m.id==='p0-50') unlockStrain('project-zero-og',true);
       if(m.id==='tut-sell'){ try{ TU_onFirstSale(); }catch(e){} } /* P1.5: fire tease cards once */
@@ -1502,6 +1727,8 @@ function checkMissions(){
   });
   /* P2.3: mission chains advance on the same sweep (flat mission logic above untouched) */
   try{ if(typeof CHA_check==='function') CHA_check(); }catch(e){}
+  /* P4 (4J): deep story arcs advance on the same sweep — separate registry/state, flat missions untouched */
+  try{ if(typeof P4_CHA_check==='function') P4_CHA_check(); }catch(e){}
 }
 
 /* ============================================================
@@ -1676,7 +1903,7 @@ function CHA_check(){
       if(!ok) break;
       if(cur>=target){
         ch.sdone[ch.stage]=1; ch.stage++;
-        try{ toast(icon('scroll','ge-ic-md')+' Story arc — stage complete: <b>'+esc(st.name)+'</b>'); }catch(e){}
+        try{ P4_celebrate('minor',{title:'STAGE COMPLETE',sub:esc(st.name),icon:'scroll'}); }catch(e){}
         continue;
       }
       break;
@@ -1696,7 +1923,7 @@ function CHA_grantReward(ch,def){
   if(r.p0){ try{ addP0('knowledge',r.p0); }catch(e){} }
   if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,def.name); }catch(e){} }
   S.stats.chainsDone=int(S.stats.chainsDone,0)+1;
-  try{ toast(icon('trophy','ge-ic-md')+' Story arc complete: <b>'+esc(def.name)+'</b>'); }catch(e){}
+  try{ P4_celebrate('major',{title:'STORY ARC COMPLETE',sub:esc(def.name),icon:'trophy'}); }catch(e){}
   try{ save(); }catch(e){}
 }
 function CHA_dayTick(){
@@ -1735,6 +1962,7 @@ function CHA_dayTick(){
       }
     }
   }catch(e){}
+  try{ if(typeof P4_CHA_dayTick==='function') P4_CHA_dayTick(); }catch(e2){} /* P4 (4J): climate-chain day hooks */
 }
 function CHA_onHarvest(p){
   if(!S||!p) return;
@@ -1772,8 +2000,342 @@ function CHA_storyHTML(){
      MS_rewardHTML(pseudo)+
     '</div>';
   });
+  try{ if(typeof P4_CHA_storyHTML==='function') html+=P4_CHA_storyHTML(); }catch(e){} /* P4 (4J): deep story arcs render below the originals */
   return html;
 }
+/* ============================================================
+   P4 — PHASE 4 MISSION CHAINS (4J)
+   Ten new story arcs in the additive CHAINS schema, kept in a separate
+   P4_CHAINS registry so the six original chains (and their regression
+   pins: 6 chains / 27 stages / S.chains shape) are untouched.
+   State lives in S.p4chains; the engine mirrors CHA_* semantics
+   (sequential stages, per-stage snapshots, anti-skip validation,
+   exactly-once rewards). Later stages get harder through SYSTEM DEPTH
+   — tighter thresholds, combined requirements, rarer conditions —
+   never just bigger numbers.
+   ============================================================ */
+const P4_CHAINS=[
+ {id:'ch-longhunt',name:'THE LONG HUNT',
+  story:'The pheno hunt was just the warm-up. Pick ONE genetic and hunt it properly: deep single-strain evaluation, lab comparisons, elite documentation, a crowned keeper, and a clone run to prove it.',
+  reward:{cash:800,xp:500,rep:15},
+  stages:[
+   {id:'focus',name:'Single-Genetic Focus',desc:'Evaluate 15 phenotypes of ONE genetic.',snap:['phenoHistory'],
+    prog:(s,snap)=>[Math.min(P4_maxPhenoDelta(snap,'tested'),15),15]},
+   {id:'compare4',name:'Lab Verdicts',desc:'Compare phenotypes 4 times in the lab.',snap:['stats.comparesDone'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.comparesDone'),4),4]},
+   {id:'elite2',name:'Elite Bloodlines',desc:'Document 2 ELITE+ phenotypes from one genetic.',snap:['phenoHistory'],
+    prog:(s,snap)=>[Math.min(P4_maxPhenoDelta(snap,'elitelegend'),2),2]},
+   {id:'crown',name:'Crown the Winner',desc:'Mark a keeper from your hunt.',snap:['stats.keepersFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.keepersFound'),1),1]},
+   {id:'prove',name:'Prove the Line',desc:'Grow the keeper clone to harvest.',snap:['stats.cloneHarvests'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.cloneHarvests'),1),1]}
+  ]},
+ {id:'ch-climate',name:'CLIMATE MASTERY',
+  story:'Dialed-in was the tutorial. Master the invisible: hold VPD in the sweet spot, stack perfect days, then carry one plant from seed to harvest without the room ever slipping.',
+  reward:{cash:600,xp:400,rep:12},
+  stages:[
+   {id:'vpd3',name:'Sweet Spot',desc:'Hold VPD in the 0.8–1.2 kPa band for 3 consecutive days.',snap:[],
+    prog:(s,snap,ch)=>[Math.min(int(ch.data.vpdStreak,0),3),3]},
+   {id:'perfect5',name:'Five Perfect Days',desc:'Hold 95+ env score for 5 consecutive days.',snap:[],
+    prog:(s,snap,ch)=>[Math.min(int(ch.data.streak95,0),5),5]},
+   {id:'wholerun',name:'The Perfect Run',desc:'Take a seedling to harvest with the room never dropping below 90.',snap:[],
+    prog:(s,snap,ch)=>[ch.data.wholeRun?1:0,1]}
+  ]},
+ {id:'ch-breeder',name:'MASTER BREEDER',
+  story:'Pollen chucking is easy. Breeding is a discipline: self a line, pull it back, push generations forward, and stabilize something worth naming.',
+  reward:{cash:700,xp:450,rep:15},
+  stages:[
+   {id:'cross1',name:'First Cross',desc:'Create a cross in the breeding lab.',snap:['stats.crosses'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.crosses'),1),1]},
+   {id:'s1',name:'Know Thyself',desc:'Self a plant — create an S1 and preserve the line.',snap:[],
+    prog:()=>[(P4_hasS1()?1:0),1]},
+   {id:'bx1',name:'Pull It Back',desc:'Create a BX1 backcross.',snap:[],
+    prog:()=>[(P4_hasBX()?1:0),1]},
+   {id:'f3',name:'Third Generation',desc:'Breed a line to F3 or deeper.',snap:[],
+    prog:()=>[(P4_hasGen(3)?1:0),1]},
+   {id:'stable90',name:'Stabilized',desc:'Stabilize any custom to 90%+ stability.',snap:[],
+    prog:()=>[(P4_hasStable(90)?1:0),1]}
+  ]},
+ {id:'ch-dispensary',name:'MAIN STREET',
+  story:'Growing it is half the business. Move product, earn regulars, keep them happy at volume, and close real wholesale contracts.',
+  reward:{cash:800,xp:400,rep:12},
+  stages:[
+   {id:'sales10',name:'Open for Business',desc:'Make 10 dispensary sales.',snap:['stats.sales'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.sales'),10),10]},
+   {id:'regulars5',name:'Regulars',desc:'Build 5 regular customers.',snap:['ty'],
+    prog:(s,snap)=>[Math.min(P4_regularsDelta(snap),5),5]},
+   {id:'sat80',name:'Five-Star at Volume',desc:'Hold 80%+ satisfaction across 30+ customers served.',snap:[],
+    prog:()=>{ try{ const st=S.ty.cust.stats; const ok=st.satN>=30&&(st.sat/Math.max(1,st.satN))>=80; return [ok?1:0,1]; }catch(e){ return [0,1]; } }},
+   {id:'contracts3',name:'Wholesale Closer',desc:'Complete 3 wholesale contracts.',snap:['wx'],
+    prog:(s,snap)=>{ let d=0; try{ d=num(S.wx.stats.contractsDone,0)-num(((snap['wx']||{}).stats||{}).contractsDone,0); }catch(e){} return [Math.min(Math.max(0,d),3),3]; }}
+  ]},
+ {id:'ch-crew',name:'THE CREW',
+  story:'One grower is a hobby. A crew is an empire: hire, train, keep morale high, and staff the specialists that make the machine hum.',
+  reward:{cash:600,xp:400,rep:10},
+  stages:[
+   {id:'hire1',name:'First Hire',desc:'Hire your first employee.',snap:['ex'],
+    prog:(s,snap)=>{ let d=0; try{ d=((S.ex&&S.ex.employees)||[]).length-(((snap['ex']||{}).employees||[]).length); }catch(e){} return [Math.min(Math.max(0,d),1),1]; }},
+   {id:'lvl3',name:'Trained Up',desc:'Train an employee to level 3.',snap:[],
+    prog:()=>{ try{ return [((S.ex.employees||[]).some(e=>e&&int(e.lvl,0)>=3)?1:0),1]; }catch(e){ return [0,1]; } }},
+   {id:'morale80',name:'Happy Crew',desc:'Hold 80+ average morale with 3+ crew on staff.',snap:[],
+    prog:()=>{ try{ const em=(S.ex&&S.ex.employees)||[]; if(em.length<3) return [0,1]; const avg=em.reduce((a,e)=>a+num(e.morale,70),0)/em.length; return [avg>=80?1:0,1]; }catch(e){ return [0,1]; } }},
+   {id:'specialists',name:'Specialists',desc:'Staff a breeding specialist AND a trimmer.',snap:[],
+    prog:()=>{ try{ const em=(S.ex&&S.ex.employees)||[]; const has=r=>em.some(e=>e&&e.role===r); return [(has('breeding')&&has('trimmer')?1:0),1]; }catch(e){ return [0,1]; } }}
+  ]},
+ {id:'ch-facility',name:'BUILT TO LAST',
+  story:'Tents grow plants. Facilities grow empires: expand the rooms, stack the equipment, and max out a line like you mean it.',
+  reward:{cash:900,xp:500,rep:12},
+  stages:[
+   {id:'growroom',name:'Grow Room',desc:'Expand to the Grow Room (facility tier 2).',snap:[],
+    prog:()=>[(int(S.facility,0)>=1?1:0),1]},
+   {id:'depot5',name:'Stacked Depot',desc:'Buy 5 equipment levels from the depot.',snap:['stats.equipmentBought'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.equipmentBought'),5),5]},
+   {id:'warehouse',name:'Warehouse',desc:'Reach the Warehouse (facility tier 4).',snap:[],
+    prog:()=>[(int(S.facility,0)>=3?1:0),1]},
+   {id:'maxline',name:'Maxed Out',desc:'Max out any equipment line.',snap:[],
+    prog:()=>{ try{ const ok=(typeof EQUIP_DEFS!=='undefined')&&EQUIP_DEFS.some(d=>d&&num(S.equipment[d.id],1)>=num(d.max,9)); return [ok?1:0,1]; }catch(e){ return [0,1]; } }}
+  ]},
+ {id:'ch-p0oath',name:'THE OATH',
+  story:'"It\'s never about the money — only the genetics." Take the oath properly: earn preservation score, walk two tracks deep, submit your own genetics, earn a title.',
+  reward:{xp:500,rep:20,p0:10},
+  stages:[
+   {id:'pts25',name:'First Fruits',desc:'Earn 25 Project 0 points.',snap:['project0.points'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'project0.points'),25),25]},
+   {id:'tracks2',name:'Two Paths',desc:'Reach level 2 in two Project 0 tracks.',snap:[],
+    prog:()=>{ try{ let n=0; (typeof P0_TRACKS!=='undefined'?P0_TRACKS:[]).forEach(t=>{ try{ if(p0Level(t.id)>=2) n++; }catch(e){} }); return [Math.min(n,2),2]; }catch(e){ return [0,2]; } }},
+   {id:'submit',name:'Give Back',desc:'Submit a custom genetic to Project 0.',snap:[],
+    prog:()=>{ try{ return [((S.customStrains||[]).some(c=>c&&c.p0Submitted)?1:0),1]; }catch(e){ return [0,1]; } }},
+   {id:'title',name:'Named Among Keepers',desc:'Earn a Project 0 title.',snap:['project0'],
+    prog:(s,snap)=>{ let d=0; try{ d=((S.project0&&S.project0.titles)||[]).length-(((snap['project0']||{}).titles||[]).length); }catch(e){} return [Math.min(Math.max(0,d),1),1]; }}
+  ]},
+ {id:'ch-vault',name:'THE VAULT',
+  story:'Project 0 is a preservation program, not a points bar. Walk a genetic the whole road: candidate, documented, verified — then seal it yourself.',
+  reward:{xp:600,rep:25,p0:12},
+  stages:[
+   {id:'flag',name:'Flagged',desc:'Flag a genetic for the preservation pipeline.',snap:['p0vault'],
+    prog:(s,snap)=>{ let d=0; try{ d=Object.keys(S.p0vault||{}).length-Object.keys((snap['p0vault']||{})).length; }catch(e){} return [Math.min(Math.max(0,d),1),1]; }},
+   {id:'doc',name:'Documented',desc:'Walk a genetic to DOCUMENTED.',snap:[],
+    prog:()=>[(P4_vaultTierAt(1)?1:0),1]},
+   {id:'ver',name:'Verified',desc:'Walk a genetic to VERIFIED.',snap:[],
+    prog:()=>[(P4_vaultTierAt(2)?1:0),1]},
+   {id:'seal',name:'Sealed',desc:'Seal a genetic PRESERVED — your explicit commitment.',snap:[],
+    prog:()=>[(P4_vaultTierAt(3)?1:0),1]}
+  ]},
+ {id:'ch-rarehunt',name:'RARE AIR',
+  story:'Elite is earned. Legendary is a rumor until you see it. Chase the expressions most growers never witness — and be there when the room shows you something impossible.',
+  reward:{cash:700,xp:500,rep:15},
+  stages:[
+   {id:'elite1',name:'Elite Blood',desc:'Discover an ELITE phenotype.',snap:['stats.eliteFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.eliteFound'),1),1]},
+   {id:'sighting',name:'Caught in the Act',desc:'Witness an elite expression mid-grow.',snap:['disc'],
+    prog:(s,snap)=>[Math.min(P4_discDelta(snap,'elitesight-'),1),1]},
+   {id:'legendary1',name:'The Impossible',desc:'Discover a LEGENDARY phenotype.',snap:['stats.legendaryFound'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.legendaryFound'),1),1]}
+  ]},
+ {id:'ch-customdev',name:'SIGNATURE STRAIN',
+  story:'Anyone can chuck pollen. Build YOUR strain: breed it, grow it out, push the generations, stabilize it — then give it to Project 0 forever.',
+  reward:{cash:800,xp:500,rep:15},
+  stages:[
+   {id:'breed',name:'The Cross',desc:'Breed a custom cross.',snap:['stats.crosses'],
+    prog:(s,snap)=>[Math.min(CHA_d(snap,'stats.crosses'),1),1]},
+   {id:'growout',name:'Grow It Out',desc:'Harvest one custom line 5 times.',snap:[],
+    prog:()=>{ try{ let m=0; (S.customStrains||[]).forEach(c=>{ if(!c||!c.id) return; const n=int((((S.stats||{}).strainGrown||{})[c.id]||{}).count,0); if(n>m) m=n; }); return [Math.min(m,5),5]; }catch(e){ return [0,5]; } }},
+   {id:'f2line',name:'Second Generation',desc:'Advance a custom line to F2 or deeper.',snap:[],
+    prog:()=>[(P4_hasGen(2)?1:0),1]},
+   {id:'submit90',name:'Forever',desc:'Stabilize a custom to 90%+ and submit it to Project 0.',snap:[],
+    prog:()=>{ try{ const ok=(S.customStrains||[]).some(c=>c&&num(c.stabilityPct,0)>=90&&c.p0Submitted); return [ok?1:0,1]; }catch(e){ return [0,1]; } }}
+  ]}
+];
+/* max single-genetic delta of a phenoHistory counter since the snapshot.
+   kind 'tested' -> tested; 'elitelegend' -> elite+legendary. */
+function P4_maxPhenoDelta(snap,kind){
+  let m=0;
+  try{
+    const cur=(S&&S.phenoHistory)||{}, base=(snap&&snap['phenoHistory'])||{};
+    for(const gid in cur){
+      const c=cur[gid]||{}, b=base[gid]||{};
+      let d=0;
+      if(kind==='elitelegend') d=(num(c.elite,0)+num(c.legendary,0))-(num(b.elite,0)+num(b.legendary,0));
+      else d=num(c[kind],0)-num(b[kind],0);
+      if(d>m) m=d;
+    }
+  }catch(e){}
+  return Math.max(0,m);
+}
+function P4_hasS1(){ try{ return (S.customStrains||[]).some(c=>c&&c.tags&&c.tags.indexOf('S1')>=0); }catch(e){ return false; } }
+function P4_hasBX(){ try{ return (S.customStrains||[]).some(c=>c&&c.genLabel&&String(c.genLabel).indexOf('BX')===0); }catch(e){ return false; } }
+function P4_hasGen(n){ try{ return (S.customStrains||[]).some(c=>c&&num(c.genNum,0)>=n); }catch(e){ return false; } }
+function P4_hasStable(bar){ try{ return (S.customStrains||[]).some(c=>c&&num(c.stabilityPct,0)>=bar); }catch(e){ return false; } }
+function P4_regularsDelta(snap){
+  try{
+    const cur=Object.keys((S.ty&&S.ty.cust&&S.ty.cust.regulars)||{}).length;
+    const base=Object.keys((((snap||{})['ty']||{}).cust||{}).regulars||{}).length;
+    return Math.max(0,cur-base);
+  }catch(e){ return 0; }
+}
+function P4_discDelta(snap,prefix){
+  try{
+    const cur=Object.keys((S.disc&&S.disc.seen)||{}).filter(k=>k.indexOf(prefix)===0).length;
+    const base=Object.keys((((snap||{})['disc']||{}).seen||{}).filter(k=>k.indexOf(prefix)===0)).length;
+    return Math.max(0,cur-base);
+  }catch(e){ return 0; }
+}
+function P4_vaultTierAt(t){
+  try{ return Object.keys(S.p0vault||{}).some(gid=>{ const e=S.p0vault[gid]; return e&&int(e.tier,0)>=t; }); }
+  catch(e){ return false; }
+}
+/* ---- P4 chain engine: mirrors CHA_* semantics on S.p4chains ---- */
+function P4_CHA_def(id){ return P4_CHAINS.find(c=>c.id===id)||null; }
+function P4_CHA_freshChain(){ return {stage:0,done:false,reward:false,sdone:{},snaps:{},data:{}}; }
+function P4_CHA_state(id){
+  const def=P4_CHA_def(id); if(!def) return null;
+  if(!S.p4chains||typeof S.p4chains!=='object') S.p4chains={};
+  let ch=S.p4chains[id];
+  if(!ch||typeof ch!=='object'){ ch=P4_CHA_freshChain(); S.p4chains[id]=ch; }
+  return P4_CHA_validateChain(def,ch);
+}
+function P4_CHA_ensureSnap(def,ch){
+  const st=def.stages[ch.stage]; if(!st) return;
+  if(!ch.snaps[st.id]) ch.snaps[st.id]=CHA_snapOf(st.snap);
+}
+function P4_CHA_validateChain(def,ch){
+  const n=def.stages.length;
+  ch.stage=clamp(int(ch.stage,0),0,n);
+  if(!ch.sdone||typeof ch.sdone!=='object') ch.sdone={};
+  if(!ch.snaps||typeof ch.snaps!=='object') ch.snaps={};
+  if(!ch.data||typeof ch.data!=='object') ch.data={};
+  Object.keys(ch.sdone).forEach(k=>{ const i=int(k,-1); if(i<0||i>=n) delete ch.sdone[k]; });
+  let firstOpen=0; while(firstOpen<n&&ch.sdone[firstOpen]) firstOpen++;
+  if(ch.stage>firstOpen) ch.stage=firstOpen;
+  if(ch.done&&firstOpen<n){ ch.done=false; ch.reward=false; }
+  for(let i=0;i<firstOpen;i++){
+    const st=def.stages[i], snap=ch.snaps[st.id];
+    if(!snap) continue;
+    let ok=false, isDone=false;
+    try{ const p=st.prog(S,snap,ch); isDone=(p[0]>=p[1]); ok=true; }catch(e){}
+    if(ok&&!isDone){
+      for(let j=i;j<n;j++) delete ch.sdone[j];
+      Object.keys(ch.snaps).forEach(k=>{
+        const idx=def.stages.findIndex(x=>x.id===k); if(idx>=i) delete ch.snaps[k]; });
+      ch.stage=i; ch.done=false; ch.reward=false;
+      break;
+    }
+  }
+  return ch;
+}
+function P4_CHA_migrate(){
+  try{
+    if(!S||typeof S!=='object') return;
+    if(!S.p4chains||typeof S.p4chains!=='object') S.p4chains={};
+    Object.keys(S.p4chains).forEach(id=>{
+      const def=P4_CHA_def(id);
+      if(!def){ delete S.p4chains[id]; return; }
+      P4_CHA_validateChain(def,S.p4chains[id]);
+    });
+  }catch(e){}
+}
+function P4_CHA_check(){
+  if(!S) return;
+  P4_CHAINS.forEach(def=>{
+    const ch=P4_CHA_state(def.id); if(!ch) return;
+    if(ch.done){ if(!ch.reward) P4_CHA_grantReward(ch,def); return; }
+    let guard=0;
+    while(guard++<16&&ch.stage<def.stages.length){
+      P4_CHA_ensureSnap(def,ch);
+      const st=def.stages[ch.stage];
+      let cur=0,target=1,ok=false;
+      try{ const p=st.prog(S,ch.snaps[st.id]||{},ch); cur=p[0]; target=p[1]; ok=true; }catch(e){}
+      if(!ok) break;
+      if(cur>=target){
+        ch.sdone[ch.stage]=1; ch.stage++;
+        try{ toast(icon('scroll','ge-ic-md')+' Story arc — stage complete: <b>'+esc(st.name)+'</b>'); }catch(e){}
+        continue;
+      }
+      break;
+    }
+    if(ch.stage>=def.stages.length&&!ch.done){ ch.done=true; P4_CHA_grantReward(ch,def); }
+  });
+}
+function P4_CHA_grantReward(ch,def){
+  if(!ch||ch.reward) return;
+  ch.reward=true;
+  const r=def.reward||{};
+  const D=(typeof DIFFS!=='undefined'&&DIFFS[S.difficulty])||{missionReward:1};
+  if(r.cash) S.cash+=Math.round(r.cash*(D.missionReward||1));
+  if(r.rep){ try{ gainRep(r.rep); }catch(e){} }
+  if(r.xp){ try{ gainXP(r.xp); }catch(e){} }
+  if(r.gen) r.gen.forEach(g=>{ try{ unlockStrain(g,true); }catch(e){} });
+  if(r.p0){ try{ addP0('knowledge',r.p0); }catch(e){} }
+  if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,def.name); }catch(e){} }
+  try{ toast(icon('trophy','ge-ic-md')+' Story arc complete: <b>'+esc(def.name)+'</b>'); }catch(e){}
+  try{ save(); }catch(e){}
+}
+/* per-day data hooks for the climate chain (mirrors CHA_dayTick) */
+function P4_CHA_dayTick(){
+  if(!S) return;
+  try{
+    const def=P4_CHA_def('ch-climate'), ch=def?P4_CHA_state('ch-climate'):null;
+    if(ch&&!ch.done){
+      const d=ch.data;
+      let sc=0, vpd=NaN;
+      try{ sc=(typeof envEval==='function')?envEval().score:0; }catch(e){}
+      try{ if(typeof TY_envVals==='function'&&(S.plants||[]).length) vpd=num(TY_envVals().vpd,NaN); }catch(e){}
+      if(ch.stage===0){ d.vpdStreak=(!isNaN(vpd)&&vpd>=0.8&&vpd<=1.2)?int(d.vpdStreak,0)+1:0; }
+      else if(ch.stage===1){ d.streak95=(sc>=95)?int(d.streak95,0)+1:0; }
+      else if(ch.stage===2){
+        const p=(S.plants||[]).find(x=>x&&x.id===d.anchorId);
+        if(!p){
+          let best=null;
+          (S.plants||[]).forEach(x=>{ if(!x) return; if(!best||int(x.day,999999)<int(best.day,999999)) best=x; });
+          d.anchorId=best?best.id:null;
+          d.minEnv=(best&&sc>=90)?sc:null;
+        } else if(sc<90){ d.anchorId=null; d.minEnv=null; d.wholeRun=false; }
+        else if(d.minEnv==null){ d.minEnv=sc; }
+        else { d.minEnv=Math.min(num(d.minEnv,100),sc); }
+      }
+    }
+  }catch(e){}
+}
+/* harvest hook for the climate chain's perfect run */
+function P4_CHA_onHarvest(p){
+  if(!S||!p) return;
+  try{
+    const ch=P4_CHA_state('ch-climate'); if(!ch||ch.done) return;
+    if(ch.stage===2&&ch.data&&ch.data.anchorId===p.id&&num(ch.data.minEnv,0)>=90) ch.data.wholeRun=true;
+  }catch(e){}
+}
+function P4_CHA_storyHTML(){
+  let html='<div class="ge-section-title">DEEP STORY ARCS<span class="ge-spread ge-num">'+P4_CHAINS.length+'</span></div>';
+  P4_CHAINS.forEach(def=>{
+    const ch=P4_CHA_state(def.id); if(!ch) return;
+    const total=def.stages.length, doneN=Object.keys(ch.sdone).length, done=!!ch.done;
+    const pct=clamp(doneN/Math.max(1,total)*100,0,100);
+    const pseudo={name:def.name,desc:def.story,reward:def.reward};
+    html+='<div class="ge-card ge-mission'+(done?' is-done':'')+'">'+
+     '<div class="ms-top"><span class="ms-cat">STORY ARC</span>'+MS_statePill(done,doneN>0)+MS_diffBadge(pseudo)+'</div>'+
+     '<h3 class="ms-title">'+(done?icon('check','ge-ic-sm'):'')+icon('scroll','ge-ic-sm')+esc(def.name)+'</h3>'+
+     '<p class="ge-body ge-muted">'+esc(def.story)+'</p>'+
+     '<ul class="ms-objs">';
+    def.stages.forEach((st,i)=>{
+      const sdone=!!ch.sdone[i], locked=!sdone&&i>ch.stage;
+      let cur=0,target=1;
+      try{ const pr=st.prog(S,ch.snaps[st.id]||{},ch); cur=pr[0]; target=pr[1]; }catch(e){}
+      const rowDone=sdone||cur>=target;
+      html+='<li class="ms-obj'+(rowDone?' is-done':'')+(locked?' is-locked':'')+'">'+
+       '<span class="ms-check">'+icon(locked?'lock':(rowDone?'check':'clock'),'ge-ic-sm')+'</span>'+
+       '<span class="ms-objt"><b>'+esc(st.name)+'</b> — '+esc(st.desc)+
+       (locked?' <span class="ge-muted">(finish the previous stage)</span>':'')+'</span>'+
+       '<b class="ge-num">'+Math.min(Math.max(0,cur),target)+'/'+target+'</b></li>';
+    });
+    html+='</ul>'+
+     '<div class="ge-progress-meta"><span>'+icon('level','ge-ic-sm')+'ARC PROGRESS</span><b class="ge-num">'+doneN+'/'+total+'</b></div>'+
+     '<div class="ge-progress'+(done?' ge-progress-ok':'')+'"><i style="width:'+pct+'%"></i></div>'+
+     MS_rewardHTML(pseudo)+
+    '</div>';
+  });
+  return html;
+}
+
 
 /* ---------------- P1.5: First-Sale tease cards (fire once) ----------------
    After 'First Sale' completes, surface two informational cards linking to
@@ -1830,7 +2392,7 @@ function checkAchievements(){
   ACHIEVEMENTS.forEach(a=>{
     if(S.achievements.includes(a.id)) return;
     let ok=false; try{ ok=a.t(S); }catch(e){}
-    if(ok){ S.achievements.push(a.id); gainXP(100); setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Achievement: <b>'+esc(MS_stripEmoji(a.name))+'</b><br><span class="muted">'+esc(a.desc)+'</span>'),50); }
+    if(ok){ S.achievements.push(a.id); gainXP(100); setTimeout(()=>{ try{ P4_celebrate('major',{title:'ACHIEVEMENT UNLOCKED',sub:'<b>'+esc(MS_stripEmoji(a.name))+'</b><br><span class="muted">'+esc(a.desc)+'</span>',icon:'trophy'}); }catch(e){} },50); }
   });
 }
 
@@ -2011,10 +2573,10 @@ function strainCard(st,opts){
    cxRec('Crosses created','dna',int(cx.crossesCreated,0))+
    (cx.genNotes.length?'<div class="codex-notes">'+cx.genNotes.slice(-4).map(n=>'<p class="codex-note">'+icon('scroll','kv-ico')+' '+esc(n)+'</p>').join('')+'</div>':'')
   ):'';
-  const huntBtns=!locked?'<div class="btn-row"><button class="btn btn-small btn-green" data-growseed="'+st.id+'">'+icon('grow','ic')+'GROW</button>'+
+  const huntBtns=!locked?'<div class="btn-row"><button class="btn btn-small btn-primary" data-growseed="'+st.id+'">'+icon('grow','ic')+'GROW</button>'+
    '<button class="btn btn-small" data-hunt="'+st.id+'">'+icon('hunt','ic')+'PHENO HUNT</button>'+
    '<button class="btn btn-small btn-gold" data-vkeepers="'+st.id+'">'+icon('keepers','ic')+'KEEPERS</button></div>':'';
-  return '<div class="card strain-card'+((cx&&cx.completed)?' codex-complete':'')+'"><div class="strain-hero">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+  return '<div class="card strain-card'+((cx&&cx.completed)?' codex-complete':'')+'"><div class="strain-hero">'+P4_flowerRef(strainSeed(st),'strain-flower')+'</div>'+
     '<h3>'+esc(strainDisplayName(st))+' '+custom+'</h3>'+lin+
     '<div class="tags">'+st.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+
     statBar('Yield',st.yld)+statBar('Potency',st.pot)+statBar('Terpenes',st.terp)+
@@ -2025,7 +2587,11 @@ function strainCard(st,opts){
     '</div>';
 }
 function collectionHeadHTML(){
-  const all=allStrains(), un=unlockedCount(S), pct=Math.round(un/Math.max(1,all.length)*100);
+  /* P4 AUDIT FIX: "Completion" was unlockedCount(S)/allStrains().length — it counted base
+     strains merely unlocked (never touched), missed customs in the numerator entirely,
+     and mixed the two in the denominator. Completion now = ACTUAL player discovery
+     under the 7-state model (a real codex relationship only). */
+  const all=allStrains(), un=(typeof P4_codexDiscoveredCount==='function')?P4_codexDiscoveredCount():unlockedCount(S), pct=(typeof P4_codexPct==='function')?P4_codexPct():Math.round(un/Math.max(1,all.length)*100);
   const grown=Object.keys(S.stats.strainGrown||{}).length;
   let tested=0; Object.values(S.phenoHistory||{}).forEach(h=>{ tested+=int(h.tested,0); });
   return '<div class="card collect-head"><h3>'+icon('dna','ic-lg')+'GENETICS COLLECTION</h3>'+
@@ -2045,19 +2611,19 @@ RENDER.genetics=function(){
     const st=getStrain(b.dataset.buygen);
     const gdisc=(typeof WX_discount==='function')?WX_discount('genetics'):1;
     const cost=Math.round(st.seed*3*gdisc);
-    if(S.cash<cost){ toast('\u274C Not enough cash.'); return; }
+    if(S.cash<cost){ toast(icon('x','ge-ic-sm')+' Not enough cash.'); return; }
     S.cash-=cost; unlockStrain(st.id,true); save(); updateHUD(); RENDER.genetics();
   });
   r.querySelectorAll('[data-preserve]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.preserve;
-    if(S.cash<25){ toast('\u274C Preservation costs $25.'); return; }
+    if(S.cash<25){ toast(icon('x','ge-ic-sm')+' Preservation costs $25.'); return; }
     S.cash-=25; S.stats.preserved++;
     addP0('preservation',2); addP0('genetics',1); gainXP(10);
-    toast('\uD83C\uDFE6 '+esc(getStrain(id).name)+' preserved. +Project 0');
+    toast(icon('project0','ge-ic-sm')+' '+esc(getStrain(id).name)+' preserved. +Project 0');
     save(); updateHUD(); checkMissions();
   });
   r.querySelectorAll('[data-growseed]').forEach(b=>b.onclick=()=>{
-    if(plantSeed(b.dataset.growseed)) toast('\uD83C\uDF31 Planted '+esc(getStrain(b.dataset.growseed).name));
+    if(plantSeed(b.dataset.growseed)) toast(icon('grow','ge-ic-sm')+' Planted '+esc(getStrain(b.dataset.growseed).name));
     RENDER.genetics();
   });
   r.querySelectorAll('[data-hunt]').forEach(b=>b.onclick=()=>startPhenoHunt(b.dataset.hunt));
@@ -2071,17 +2637,46 @@ function breedPickList(sel,current){
   const avail=allStrains().filter(s=>isUnlocked(s.id));
   return '<select id="'+sel+'">'+avail.map(s=>'<option value="'+s.id+'"'+(s.id===current?' selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select>';
 }
+/* P4_4G: non-destructive peek at the Phase-2 pheno session hint (never consumes it). */
+function P4_peekPhenoHint(strainId){
+  try{
+    const h=(typeof window!=='undefined'&&window.__breedPhenoHint)||null;
+    if(h&&h.strainId&&String(h.strainId)===String(strainId)&&h.genetics) return P3B_sanitizePhenoGenetics(h.genetics);
+  }catch(e){}
+  return null;
+}
+/* P4_4G — pre-cross INHERITANCE FORECAST. Ranges and inheritance notes only: never
+   exact offspring numbers. Deterministic (no RNG): mirrors P3B_inherit's variance
+   math (P3B_BASE_W, stability-modulated half-width, generation-aware) so the
+   forecast honestly reflects the engine. The engine still rolls true values at
+   creation; each seed then hunts its own phenotype. */
 function predictTraits(a,b){
-  return [
-    {n:'HIGH RESIN',v:Math.round((a.resin+b.resin)/2)},
-    {n:'GAS',v:Math.round((a.terp+b.terp)/2)},
-    {n:'YIELD',v:Math.round((a.yld+b.yld)/2)},
-    {n:'COLOR',v:rndi(40,95)},
-    {n:'STABILITY',v:Math.round((a.stab+b.stab)/2)-5},
-    {n:'VIGOR',v:Math.round((a.vigor+b.vigor)/2)},
-    {n:'POTENCY',v:Math.round((a.pot+b.pot)/2)},
-    {n:'TERPENES',v:Math.round((a.terp+b.terp)/2)}
-  ];
+  const out=[];
+  try{
+    const hintA=P4_peekPhenoHint(a&&a.id);
+    const tA=P3B_parentTraits(a,hintA), tB=P3B_parentTraits(b,null);
+    const avgStab=(num(tA.stab,50)+num(tB.stab,50))/2;
+    let genMult=1.0;
+    try{ const gl=(typeof TY_genLabelOf==='function')?TY_genLabelOf({},a,b):null;
+      const fm=/^F(\d+)$/.exec(gl&&gl.label?String(gl.label):'F1'); const fn=fm?int(fm[1],1):1;
+      genMult=fn<=1?1.0:(fn===2?1.6:1.25);
+    }catch(e){}
+    const w=P3B_BASE_W*(1.5-avgStab/100)*genMult*((S&&S.crew&&S.crew.breeder)?0.92:1);
+    const defs=[['RESIN','resin'],['POTENCY','pot'],['YIELD','yld'],['TERPENES','terp'],['VIGOR','vigor'],['STABILITY','stab']];
+    defs.forEach(d=>{
+      const av=num(tA[d[1]],50), bv=num(tB[d[1]],50), mean=(av+bv)/2;
+      const lo=clamp(Math.round(mean-w),5,100), hi=clamp(Math.round(mean+w),5,100);
+      const gap=Math.abs(av-bv);
+      let note;
+      if(gap<=6) note='Even split — both parents agree.';
+      else if(av>bv) note='Parent A leaning'+(hintA?' (hunted pheno record, not the strain average)':'')+'.';
+      else note='Parent B leaning.';
+      if(w>=11) note+=' Wide spread — uncertain pairing.';
+      else if(gap>=16) note+=' Recessive surprise possible.';
+      out.push({n:d[0],lo:lo,hi:hi,note:note});
+    });
+  }catch(e){}
+  return out;
 }
 RENDER.breeding=function(){
   const r=$('breeding-root');
@@ -2104,10 +2699,11 @@ RENDER.breeding=function(){
       }
     }catch(e){}
     const traits=predictTraits(A,B);
-    html+='<div class="ge-card"><div class="ge-card-head">'+icon('inspect','ge-ic-md')+'<h3>PREDICTED OFFSPRING</h3></div>'+
-      traits.map(t=>'<div class="ge-progress-meta"><span>'+esc(t.n)+'</span><b>'+Math.round(num(t.v,0))+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(t.v,0)),0,100)+'%"></i></div>').join('')+'</div>';
+    html+='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>INHERITANCE FORECAST</h3></div>'+
+      '<p class="ge-caption ge-muted">Ranges, not promises — true values roll at creation, and every seed hunts its own phenotype.</p>'+
+      traits.map(t=>'<div class="ge-datarow"><span>'+esc(t.n)+'</span><b class="ge-num">'+t.lo+' – '+t.hi+'</b></div><p class="ge-caption ge-muted">'+esc(t.note)+'</p>').join('')+'</div>';
     html+='<div class="ge-card card"><div class="ge-card-head">'+icon('star','ge-ic-md')+'<h3>NAME YOUR CROSS</h3></div>'+
-      '<input type="text" id="cross-name" enterkeyhint="done" class="ge-input" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
+      '<input type="text" id="cross-name" enterkeyhint="done" autocapitalize="words" autocorrect="off" spellcheck="false" autocomplete="off" class="ge-input" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
       '<p class="ge-caption">Breeding fee: $150'+(S.crew.breeder?' (breeder bonus: more stable)':'')+'</p>'+
       '<button class="ge-btn ge-btn-primary ge-btn-block" id="btn-cross">'+icon('dna','ge-ic-md')+'CREATE CROSS</button></div>';
     html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>SELF POLLINATE (S1)</h3></div>'+
@@ -2132,6 +2728,36 @@ RENDER.breeding=function(){
   try{ if(typeof GX_wireBreeding==='function') GX_wireBreeding(r); }catch(e){}
 };
 
+/* ============================================================
+   P4_4G — CROSS CREATED reveal. Presentation only: the genetics engine is
+   untouched. Shows name, parents, generation, EXPECTED RANGE (never exact
+   offspring numbers), and lineage. True traits are discovered by growing.
+   ============================================================ */
+function P4_crossReveal(cross,A,B,inh){
+  try{
+    if(!cross) return false;
+    const w=num(inh&&inh.avgW,8);
+    const rows=[['RESIN','resin'],['POTENCY','pot'],['YIELD','yld'],['TERPENES','terp'],['VIGOR','vigor'],['STABILITY','stab']].map(d=>{
+      const v=num(cross[d[1]],50);
+      return [d[0],clamp(Math.round(v-w),5,100),clamp(Math.round(v+w),5,100)];
+    });
+    const gen=(inh&&inh.label)||cross.genLabel||cross.generation||'F1';
+    const m=modal(
+     '<div class="ge-modal-head">'+icon('dna','ge-ic-md')+'<h3>CROSS CREATED</h3></div>'+
+     '<div class="ge-modal-body"><p class="ge-body" style="font-size:22px"><b>'+esc(cross.name||'Untitled Cross')+'</b></p>'+
+     '<div class="ge-datarow"><span>'+icon('dna','ge-ic-sm')+' Parents</span><b>'+esc((A&&A.name)||'?')+' × '+esc((B&&B.name)||'?')+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+' Generation</span><b>'+esc(String(gen))+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('scroll','ge-ic-sm')+' Lineage</span><b>'+esc(cross.lineage||(((A&&A.name)||'?')+' × '+((B&&B.name)||'?')))+'</b></div>'+
+     '<div class="ge-progress-meta"><span>EXPECTED RANGE</span><b>±'+Math.round(w)+'</b></div>'+
+     rows.map(r=>'<div class="ge-datarow"><span>'+r[0]+'</span><b class="ge-num">'+r[1]+' – '+r[2]+'</b></div>').join('')+
+     '<p class="ge-caption ge-muted">True traits reveal only through growing. Pop a seed and hunt the standout.</p></div>'+
+     '<div class="ge-modal-foot"><button class="ge-btn ge-btn-gold ge-btn-block" id="p4-cr-ok">'+icon('grow','ge-ic-md')+'START THE HUNT</button></div>');
+    const ok=m.querySelector('#p4-cr-ok');
+    if(ok) ok.onclick=()=>closeModal(m);
+    try{ if(typeof PR_haptic==='function') PR_haptic('keeper'); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
 function createCross(name){
   if(!P3W2_validateLineage(breedA,breedB)){ toast(icon('x','ge-ic-md')+' Select two parents.'); return false; } /* P3-W2: lineage integrity — unknown parents rejected */
   const A2=getStrain(breedA), B2=getStrain(breedB);
@@ -2170,9 +2796,11 @@ function createCross(name){
   try{ if(typeof MS_onCross==='function') MS_onCross(cross); }catch(e){} /* P3-W6 milestones: FIRST CROSS / F2 / STABILIZED */
   if(A2.custom||B2.custom) S.stats.secondGenCrosses++;
   try{ P24_breedingDiscovery(cross,A2,B2); }catch(e){} /* P2-4: breeding discovery moment */
+  try{ P4_linkCrossToKeeper(cross); }catch(e){} /* P4_4F: keeper -> crosses-created record */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
   toast(icon('dna','ge-ic-md')+' New strain created: <b>'+esc(nm)+'</b>');
   save(); updateHUD(); checkMissions(); checkAchievements();
+  try{ P4_crossReveal(cross,A2,B2,inh); }catch(e){} /* P4_4G: CROSS CREATED reveal */
   if(current==='breeding') RENDER.breeding();
   return true;
 }
@@ -2215,9 +2843,11 @@ function selfCross(name){
   try{ if(typeof MS_onCross==='function') MS_onCross(cross); }catch(e){} /* P3-W6 milestones: FIRST CROSS / F2 / STABILIZED */
   if(A2.custom) S.stats.secondGenCrosses++;
   try{ P24_breedingDiscovery(cross,A2,A2); }catch(e){} /* P2-4: breeding discovery moment */
+  try{ P4_linkCrossToKeeper(cross); }catch(e){} /* P4_4F: keeper -> crosses-created record */
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
   toast(icon('dna','ge-ic-md')+' New S1 strain created: <b>'+esc(nm)+'</b>');
   save(); updateHUD(); checkMissions(); checkAchievements();
+  try{ P4_crossReveal(cross,A2,A2,inhS); }catch(e){} /* P4_4G: CROSS CREATED reveal */
   if(current==='breeding') RENDER.breeding();
   return true;
 }
@@ -2587,7 +3217,7 @@ function P3W2_showCeremony(c){
      '<div class="gen-lin">'+icon('dna','ge-ic-sm')+'<span>'+esc(lin)+'</span></div>'+
      '<div class="gen-grid">'+rows.map((t,i)=>'<div class="gen-cell" style="animation-delay:'+(0.4+i*0.2).toFixed(2)+'s"><span>'+t[0]+'</span><b>'+esc(String(t[1]))+'</b></div>').join('')+'</div>'+
      '<div class="gen-sub">A stabilized line. Name it, log it, hunt it \u2014 the archive remembers.</div>'+
-     '<div class="gen-namerow" id="gen-namerow" hidden><input type="text" id="gen-namein" enterkeyhint="done" class="ge-input" maxlength="28" value="'+esc(c.name)+'" aria-label="Genetic name">'+
+     '<div class="gen-namerow" id="gen-namerow" hidden><input type="text" id="gen-namein" enterkeyhint="done" autocapitalize="words" autocorrect="off" spellcheck="false" autocomplete="off" class="ge-input" maxlength="28" value="'+esc(c.name)+'" aria-label="Genetic name">'+
      '<button type="button" class="ge-btn ge-btn-gold" id="gen-nameok">SET</button></div>'+
      '<div class="ge-btn-grid">'+
       '<button type="button" class="ge-btn ge-btn-gold" id="gen-name">'+icon('star','ge-ic-md')+'NAME GENETIC</button>'+
@@ -2620,6 +3250,7 @@ function P3W2_showCeremony(c){
     const p0=q('#gen-p0'); if(p0){ if(c.p0Submitted) p0.disabled=true;
       p0.onclick=()=>{ if(c.p0Submitted) return;
         c.p0Submitted=true; try{ addP0('genetics',5); }catch(e){}
+        try{ if(typeof MS_onP0Entry==='function') MS_onP0Entry(); }catch(e){} /* P4: FIRST PROJECT 0 ENTRY */
         try{ codexNote(c.id,'Submitted to PROJECT 0 \u2014 the preservation archive.'); }catch(e){}
         try{ if(typeof P0T_sweep==='function') P0T_sweep(); }catch(e){} /* P3-W3: submit -> preservation pipeline */
         try{ save(); }catch(e){}
@@ -2627,9 +3258,8 @@ function P3W2_showCeremony(c){
         toast(icon('project0','ge-ic-md')+' <b>'+esc(c.name)+'</b> submitted to Project 0. The genetics are preserved.'); }; }
     back.addEventListener('click',e=>{ if(e&&e.target===back) setTimeout(P3W2_pumpCeremony,350); });
     /* haptics: heavy pulse then two beats — CAP bridge first, navigator.vibrate fallback */
-    try{ PR_haptic('alert'); }catch(e){}
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },350);
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },700);
+    /* P4D: new genetic created = LEGENDARY (rare by design) — same ceremony, unified feel */
+    try{ P4_legendHaptic(); }catch(e){}
     try{ if(typeof TY_notify==='function') TY_notify(icon('dna','ge-ic-md')+' <b>NEW GENETIC CREATED:</b> '+esc(c.name),'good'); }catch(e){}
     return true;
   }catch(e){ return false; }
@@ -2755,7 +3385,7 @@ function P3W2_seedsHtml(){
   all.forEach(st=>{
     const locked=!isUnlocked(st.id);
     const owned=!!st.custom||!!(S.strainOwned&&S.strainOwned[st.id]);
-    html+='<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+flowerSVG(strainSeed(st),'seed-flower')+'</div>'+
+    html+='<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+P4_flowerRef(strainSeed(st),'seed-flower')+'</div>'+
      '<div class="ge-spec-main"><div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(st.name)+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
      '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Seed cost</span><b class="ge-num">'+fmt$(num(st.seed,0))+'</b></div>'+
      '<div class="ge-datarow"><span>'+icon('box','ge-ic-sm')+'Stock</span><b>'+(locked?'LOCKED':(owned?'IN STOCK':'AVAILABLE'))+'</b></div>'+
@@ -2774,7 +3404,7 @@ function P3W2_customsHtml(){
   list.forEach(c=>{
     const bars=[['Stability',num(c.stabilityPct,0)],['Uniformity',num(c.uniformityPct,0)],['Herm risk',num(c.hermRiskPct,0)]];
     const honored=!!c.ceremonyFired;
-    html+='<div class="ge-card ge-spec-card r-'+(c.rarity||'common')+'"><div class="ge-spec-art">'+flowerSVG(strainSeed(c),'strain-flower')+'</div>'+
+    html+='<div class="ge-card ge-spec-card r-'+(c.rarity||'common')+'"><div class="ge-spec-art">'+P4_flowerRef(strainSeed(c),'strain-flower')+'</div>'+
      '<div class="ge-spec-main">'+
      '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(c.name)+' <span class="ge-badge">CUSTOM</span>'+(honored?' <span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'STABLE</span>':'')+'</h3></div>'+
      '<div class="ge-spec-badges"><span class="ge-pill ge-pill-neutral">'+esc(c.genLabel||c.generation||'F1')+'</span>'+
@@ -2812,7 +3442,7 @@ function P3W2_archiveHtml(){
 }
 
 function P3W2_p0Row(s,tag){
-  return '<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+flowerSVG(strainSeed(s),'strain-flower')+'</div>'+
+  return '<div class="ge-card ge-card-flat w2-vault-row"><div class="ge-spec-art">'+P4_flowerRef(strainSeed(s),'strain-flower')+'</div>'+
    '<div class="ge-spec-main"><div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(s.name)+(s.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
    '<div class="ge-spec-badges"><span class="ge-badge ge-badge-legendary">'+icon('project0','ge-ic-sm')+tag+'</span></div>'+
    '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span class="ge-truncate">'+esc(s.lineage||'Foundation genetics')+'</span></div>'+
@@ -2881,6 +3511,8 @@ function P0T_entry(gid,create){
     if((!e||typeof e!=='object')&&create){
       e=S.p0vault[gid]={tier:0,day:{0:Math.max(1,int(S.day,1))},vCine:false,
         stressTested:false,stressTestDay:0,perkGranted:false,gname:P0T_name(gid)};
+      /* P4: the milestone moment — a genetic genuinely entered the pipeline. */
+      try{ if(!P4_p0Quiet&&typeof MS_onP0Entry==='function') MS_onP0Entry(); }catch(e2){}
     }
     return (e&&typeof e==='object')?e:null;
   }catch(e2){ return null; }
@@ -2925,7 +3557,12 @@ function P0T_docReqs(gid){
   const tested=int(ph.tested,0);
   let linMet=false, linLabel='Lineage documented';
   if(st&&st.custom){ linMet=!!(st.motherId&&st.fatherId); linLabel='Lineage documented (parents recorded)'; }
-  else { linMet=!!st; linLabel='Catalog lineage (strain registry)'; } /* base strains are canonical registry genetics */
+  else {
+    /* P4-2 (4I audit): registry lineage was auto-met. Genuine documentation means
+       you have actually grown the genetic — a harvest on record in the strain ledger. */
+    const sg=(((S.stats||{}).strainGrown||{})[gid])||{};
+    linMet=int(sg.count,0)>=1; linLabel='Grown out (harvest on record)';
+  }
   let notes=0; try{ const hx=codexHist(gid); notes=hx&&Array.isArray(hx.genNotes)?hx.genNotes.length:0; }catch(e){}
   return [
     {id:'phenos',label:'Phenotypes evaluated',cur:tested,need:P0T_DOC_PHENOS,met:tested>=P0T_DOC_PHENOS},
@@ -2942,13 +3579,39 @@ function P0T_verReqs(gid){
      harvestPlant's clone branch) — it cannot be faked by flags alone. */
   let stabMet=false, stabLabel='Stability proven';
   if(st&&st.custom){ const v=Math.round(num(st.stabilityPct,0)); stabMet=v>=P3W2_STABLE_BAR; stabLabel='Stability '+v+'% / '+P3W2_STABLE_BAR+'% bar'; }
-  else { try{ const hx=codexHist(gid); stabMet=!!(hx&&hx.keeperPheno); }catch(e){} stabLabel='Keeper documented in the codex'; }
+  else {
+    /* P4-1 (4I audit): the old "keeper documented in the codex" check was auto-met
+       the moment a keeper was selected. Genuine stability proof now: the keeper's
+       documented best harvest quality clears 85 — earned in the grow room. */
+    try{
+      const hx=codexHist(gid);
+      let kq=0;
+      keepers.forEach(k=>{ kq=Math.max(kq,num(k.bestQuality,0)); });
+      stabMet=!!(hx&&hx.keeperPheno)&&kq>=85;
+    }catch(e){ stabMet=false; }
+    stabLabel='Stability proven (keeper best quality 85+)';
+  }
   const harv=int((((S.stats||{}).strainGrown||{})[gid]||{}).count,0);
+  /* P4-3 (4I audit): rare-trait evidence — the vault only verifies genuinely
+     exceptional genetics: an elite/legendary keeper, a legendary trait on record,
+     or an elite-expression discovery moment for this genetic. */
+  let P4_rareMet=false;
+  const P4_RARE_LABEL='Rare trait documented (elite+ keeper or elite expression)';
+  try{
+    for(const k of keepers){
+      if(k&&(k.rarity==='elite'||k.rarity==='legendary'||k.legendaryTrait)){ P4_rareMet=true; break; }
+    }
+    if(!P4_rareMet){
+      const seen=(S.disc&&S.disc.seen)||{}, pre='p0cand-'+gid+'#';
+      for(const kk in seen){ if(kk.indexOf(pre)===0){ P4_rareMet=true; break; } }
+    }
+  }catch(e){}
   return [
     {id:'keeper',label:'Keeper selected',cur:keepers.length,need:1,met:keepers.length>=1},
     {id:'clonever',label:'Clone verification (keeper clone grown to harvest)',met:cloneVer},
     {id:'stab',label:stabLabel,met:stabMet},
-    {id:'harv',label:'Successful harvests',cur:harv,need:P0T_VER_HARVESTS,met:harv>=P0T_VER_HARVESTS}
+    {id:'harv',label:'Successful harvests',cur:harv,need:P0T_VER_HARVESTS,met:harv>=P0T_VER_HARVESTS},
+    {id:'raretrait',label:P4_RARE_LABEL,met:P4_rareMet}
   ];
 }
 function P0T_presReqs(gid){
@@ -3008,14 +3671,16 @@ function P0T_sweep(opts){
       const e=S.p0vault[gid]; if(!e||typeof e!=='object') return;
       let t=clamp(int(e.tier,0),0,4), guard=0;
       while(guard++<6){
-        if(t===0&&P0T_reqsMet(P0T_docReqs(gid))){ t=1; P0T_stampTier(e,1); }
+        if(t===0&&P0T_reqsMet(P0T_docReqs(gid))){ t=1; P0T_stampTier(e,1); try{ if(typeof P4_onTierUp==='function') P4_onTierUp(gid,1); }catch(e2){} }
         else if(t===1&&P0T_reqsMet(P0T_verReqs(gid))){
           t=2; P0T_stampTier(e,2);
           if(opts.silent){ e.vCine=true; } /* grandfathered on load: no popup, moment kept */
           else P0T_verifiedCeremony(gid);
+          try{ if(typeof P4_onTierUp==='function') P4_onTierUp(gid,2); }catch(e2){}
         }
         else if(t===3&&P0T_reqsMet(P0T_legReqs(gid))){
           t=4; P0T_stampTier(e,4);
+          try{ if(typeof P4_onTierUp==='function') P4_onTierUp(gid,4); }catch(e2){}
           if(!opts.silent){ try{ toast(icon('crown-gold','ge-ic-md')+' <b>PROJECT 0 LEGACY</b> \u2014 '+esc(P0T_name(gid))+' enters the permanent archive.'); }catch(e2){} }
         }
         else break;
@@ -3069,9 +3734,8 @@ function P0T_verifiedCeremony(gid){
       const btn=back.querySelector('#p0v-ok');
       if(btn) btn.onclick=()=>{ back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),300); };
     }
-    try{ PR_haptic('alert'); }catch(e2){}
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e2){} },350);
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e2){} },700);
+    /* P4D: Project 0 verification = LEGENDARY — same ceremony, unified feel */
+    try{ P4_legendHaptic(); }catch(e2){}
     try{ save(); }catch(e2){}
     return true;
   }catch(e){ return false; }
@@ -3084,6 +3748,60 @@ function P0T_perkTotal(){
   try{ Object.keys(S.p0vault||{}).forEach(gid=>{ const e=S.p0vault[gid]; if(e&&e.perkGranted) n+=P0T_PERK_REP; }); }catch(e){}
   return Math.min(n,P0T_PERK_CAP);
 }
+
+/* ============================================================
+   P4-4 — PROJECT 0 PRESTIGE PERKS (Phase 4I)
+   Tier advancement grants prestigious CONTENT unlocks — never cash,
+   never multipliers, never yield. "IT'S NEVER ABOUT THE MONEY —
+   ONLY THE GENETICS."
+     first DOCUMENTED ever -> exclusive title ARCHIVIST
+     first VERIFIED ever    -> exclusive title GENETIC GUARDIAN
+     each PRESERVED         -> +1 keeper vault slot (P0 annex, max 2)
+     first LEGACY ever      -> title LIVING LEGEND + rare genetics
+                               access (Crown Jewel AVAILABILITY — the
+                               seeds are unlocked, not owned; the grow
+                               room still has to earn them)
+   All exactly-once, migration-safe, save-persisted. The existing +2
+   breeder-rep nod (capped) is untouched.
+   ============================================================ */
+function P4_grantTitle(t){
+  try{
+    if(typeof S==='undefined'||!S||!S.project0) return false;
+    if(!Array.isArray(S.project0.titles)) S.project0.titles=[];
+    if(!Array.isArray(S.titles)) S.titles=[];
+    if(S.project0.titles.indexOf(t)>=0) return false;
+    S.project0.titles.push(t); S.titles.push(t);
+    try{ toast(icon('trophy','ge-ic-md')+' Project 0 title earned: <b>'+esc(t)+'</b>'); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+/* P0 vault annex: bonus keeper slots earned through preservation (max 2) */
+function P4_vaultBonus(){
+  try{ return Math.min(2,Math.max(0,int(S.p0VaultBonus,0))); }catch(e){ return 0; }
+}
+function P4_onTierUp(gid,tier){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(tier===1&&!S.p4PerkDoc){ S.p4PerkDoc=true; P4_grantTitle('ARCHIVIST'); }
+    else if(tier===2&&!S.p4PerkVer){ S.p4PerkVer=true; P4_grantTitle('GENETIC GUARDIAN'); }
+    else if(tier===3){
+      if(P4_vaultBonus()<2){
+        S.p0VaultBonus=int(S.p0VaultBonus,0)+1;
+        S.keeperCapacity=Math.max(1,int(S.keeperCapacity,3))+1;
+        try{ toast(icon('crown','ge-ic-md')+' <b>VAULT ANNEX</b> — Project 0 grants +1 keeper slot. The vault grows with the genetics.'); }catch(e){}
+      }
+    }
+    else if(tier===4&&!S.p4PerkLeg){
+      S.p4PerkLeg=true;
+      P4_grantTitle('LIVING LEGEND');
+      try{
+        if(typeof unlockStrain==='function'&&S.lockedStrains&&S.lockedStrains.indexOf('crown-jewel')>=0)
+          unlockStrain('crown-jewel',false); /* availability only — NOT owned */
+      }catch(e){}
+    }
+    try{ save(); }catch(e){}
+  }catch(e){}
+}
 function P0T_preserve(gid){
   try{
     const e=P0T_entry(gid,false);
@@ -3095,14 +3813,15 @@ function P0T_preserve(gid){
       'Commit \u201c'+nm+'\u201d to the Project 0 vault as PRESERVED? This is permanent \u2014 the genetic joins the preservation archive. Perk: +'+P0T_PERK_REP+' breeder rep (capped at +'+P0T_PERK_CAP+' total). No cash, no multipliers \u2014 it\u2019s never about the money.',
       ()=>{
         e.tier=3; P0T_stampTier(e,3);
+        try{ if(typeof P4_onTierUp==='function') P4_onTierUp(gid,3); }catch(e3){}
         if(!e.perkGranted){
           e.perkGranted=true;
           const room=P0T_PERK_CAP-P0T_perkTotal();
           if(room>0){ try{ gainRep(Math.min(P0T_PERK_REP,room)); }catch(e2){} }
         }
         try{ codexNote(gid,'PRESERVED \u2014 sealed in the Project 0 vault. It\u2019s never about the money \u2014 only the genetics.'); }catch(e2){}
-        try{ PR_haptic('achievement'); }catch(e2){}
-        try{ toast(icon('project0','ge-ic-md')+' <b>'+esc(nm)+'</b> PRESERVED in the Project 0 vault.'); }catch(e2){}
+        /* P4D: Project 0 preservation = LEGENDARY (permanent, rare by design) */
+        try{ P4_celebrate('legendary',{title:'GENETIC PRESERVED',sub:'<b>'+esc(nm)+'</b> — sealed in the Project 0 vault.<br><span class="muted">It&#39;s never about the money — only the genetics.</span>',icon:'project0',key:'p0pres-'+gid,kicker:'SHOCKER OWNZ // PRESERVATION VAULT'}); }catch(e2){}
         try{ save(); }catch(e2){}
         try{ if(current==='project0') RENDER.project0(); }catch(e2){}
       });
@@ -3126,7 +3845,9 @@ function P0T_backfill(){
       e.stressTestDay=Math.max(0,int(e.stressTestDay,0));
       if(typeof e.gname!=='string') e.gname=P0T_name(gid);
     });
-    P0T_knownIds().forEach(gid=>P0T_entry(gid,true));
+    try{ P4_p0Quiet=true; }catch(e){}
+    try{ P0T_knownIds().forEach(gid=>P0T_entry(gid,true)); }
+    finally{ try{ P4_p0Quiet=false; }catch(e){} }
     P0T_sweep({silent:true});
   }catch(e){}
 }
@@ -3139,7 +3860,8 @@ function P0T_reqRow(r){
 }
 function P0T_pipelineHTML(){
   const ids=P0T_knownIds();
-  let html='<div class="ge-section-title">'+icon('project0','ge-ic-sm')+'PRESERVATION PIPELINE<span class="ge-spread ge-num ge-muted">'+ids.length+' GENETICS</span></div>';
+  let html='<div class="ge-section-title">'+icon('project0','ge-ic-sm')+'PRESERVATION PIPELINE<span class="ge-spread ge-num ge-muted">'+ids.length+' GENETICS</span></div>'+
+   '<p class="ge-caption ge-muted" style="text-align:center">PRESERVE \u2022 DOCUMENT \u2022 STABILIZE \u2022 PROTECT<br>"IT\'S NEVER ABOUT THE MONEY \u2014 ONLY THE GENETICS."</p>';
   if(!ids.length)
     return html+'<div class="ge-card ge-empty"><div>'+icon('project0','ge-ic-xl')+'</div><h3>NO GENETICS IN THE PIPELINE</h3><p class="ge-muted">Flag a phenotype for Project 0, crown a keeper, or submit a custom from its ceremony \u2014 the preservation program starts there.</p></div>';
   const groups=[[],[],[],[],[]];
@@ -3263,6 +3985,15 @@ function triSpread(){ return (rnd(-1,1)+rnd(-1,1)); } /* [-2,2] bell-ish */
 function phenoOverall(g){
   return g.potencyPot*0.2+g.resinPot*0.2+g.yieldPot*0.15+g.terpenePot*0.15+g.vigor*0.1+g.bagAppeal*0.1+g.stressTol*0.05+g.stability*0.05;
 }
+/* P4_4E — headroom-aware elite bar. High-potential strains hit the 100 clamp, so a
+   fixed +7 bar made elite near-impossible on flagship lines (jsdom audit, 8000 draws
+   per strain: 0.43% elite on Queen's Revenge S1 vs 5.4% on RKS S1). Calibrated from
+   the d-distribution 97.5th percentile: d_p97.5 ~= 8.7 at baseOverall 80, falling
+   ~0.32 per point of base overall. Low/mid strains keep exactly 7.0 (unchanged);
+   only high-base strains get a fairer bar. The genPheno ROLL is untouched. */
+function P4_eliteBar(bO){
+  return clamp(8.7-(num(bO,80)-80)*0.32,5.5,7);
+}
 function genPheno(strain){
   const base=phenoBase(strain);
   const g={};
@@ -3274,9 +4005,10 @@ function genPheno(strain){
     Object.keys(lt.boost).forEach(k=>{ g[k]=clamp(g[k]+rndi(18,26),5,100); });
   }
   const d=phenoOverall(g)-phenoOverall(base);
+  const eliteBar=P4_eliteBar(phenoOverall(base)); /* P4_4E: headroom-aware standout bar */
   let rarity='common';
   if(legendaryTrait||d>=16) rarity='legendary';
-  else if(d>=7) rarity='elite';
+  else if(d>=eliteBar) rarity='elite'; /* genPheno genuine roll — threshold calibration only */
   else if(d>=3.5) rarity='promising';
   return {
     num:0, vigor:g.vigor, structure:g.structure, yieldPot:g.yieldPot,
@@ -3360,15 +4092,18 @@ function expressionTags(p){
   else if(ph.legendaryTrait&&ph.legendaryHidden&&s>=3) out.push('UNKNOWN EXPRESSION');
   return out;
 }
+function P4_trueCount(o){ var n=0; try{ if(o&&typeof o==='object'){ for(var k in o){ if(o[k]===true) n++; } } }catch(e){} return n; } /* P4.1 */
 function revealForStage(p){
   const ph=p.pheno; if(!ph) return;
   const s=stageOf(p), kn=ph.known;
+  const P4_before=P4_trueCount(kn); /* P4.1: tut-discovery baseline */
   if(s===-1) return; /* P1.1: no trait revelation while germinating */
   if(s>=1){ kn.vigor=true; kn.structure=true; kn.stressTol=true; kn.rootVigor=true; kn.stretch=true; }
   if(s>=2){ kn.flowerSpeed=true; kn.internode=true; kn.nutrientSensitivity=true; }
   if(s>=3){ kn.resinPot=true; kn.terpenePot=true; kn.diseaseRes=true; kn.envTolerance=true; }
   if(s>=4){ kn.yieldPot=true; kn.potencyPot=true; kn.bagAppeal=true; kn.stability=true; kn.hermRisk=true; kn.cloneVigor=true; }
   expressionTags(p).forEach(t=>{ if(!ph.expressed.includes(t)) ph.expressed.push(t); });
+  try{ const P4_after=P4_trueCount(ph.known); if(P4_after>P4_before) S.stats.traitsRevealed=num(S.stats.traitsRevealed,0)+(P4_after-P4_before); }catch(e){} /* P4.1: tut-discovery */
 }
 function countRarity(ph,strainId){
   if(!ph||ph.rarityCounted) return;
@@ -3378,6 +4113,8 @@ function countRarity(ph,strainId){
        idempotent; eliteCelebrated makes the moment idempotent too. */
     ph.eliteCelebrated=true; ph._eliteCinePending=true; }
   if(ph.rarity==='legendary'){ S.stats.legendaryFound++; try{ ME_eliteDetail(strainId,ph,'legendary'); }catch(e){} addP0('genetics',6); addP0('preservation',3); }
+  /* P4_4E: promising standouts get an elevated moment (tiered below the elite cinematic) — once per pheno, never a toast. */
+  if(ph.rarity==='promising'&&!ph.promisingCelebrated){ ph.promisingCelebrated=true; ph._promisingPending=true; }
   const h=phist(strainId);
   if(ph.rarity==='elite') h.elite++;
   if(ph.rarity==='legendary') h.legendary++;
@@ -3401,6 +4138,32 @@ function legendaryRevealModal(st,ph){
   if(back){ const btn=back.querySelector('#leg-ok'); if(btn) btn.onclick=()=>{ back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); }; }
 }
 
+/* ============================================================
+   P4_4E — STANDOUT MOMENT (tiered presentation, below elite).
+   Promising-rarity discoveries previously surfaced as a bare tag; they now get an
+   elevated beat — a compact banner modal, once per pheno. Never a toast.
+   Presentation only: no rewards, no state changes beyond the idempotency flags
+   set in countRarity.
+   ============================================================ */
+function P4_standoutMoment(st,ph){
+  try{
+    if(!ph||ph._standoutShown) return false;
+    ph._standoutShown=true;
+    const top=[['RESIN',ph.resinPot],['TERPENES',ph.terpenePot],['POTENCY',ph.potencyPot],['YIELD',ph.yieldPot]]
+      .sort((a,b)=>num(b[1],0)-num(a[1],0)).slice(0,3);
+    const m=modal(
+     '<div class="ge-modal-head">'+icon('star','ge-ic-md')+'<h3>STANDOUT EXPRESSION</h3></div>'+
+     '<div class="ge-modal-body"><p class="ge-body">This phenotype is <b>a cut above its line</b> — not elite, but worth your attention.</p>'+
+     '<div class="ge-datarow"><span>'+icon('dna','ge-ic-sm')+' '+esc(st?st.name:'Unknown')+'</span><b class="ge-num">PHENO #'+int(ph.num,0)+'</b></div>'+
+     top.map(t=>'<div class="ge-datarow"><span>'+t[0]+'</span><b class="ge-num">'+Math.round(num(t[1],0))+'</b></div>').join('')+
+     '<p class="ge-caption ge-muted">Keeper candidate. Preserve it before it\u2019s gone — or keep hunting.</p></div>'+
+     '<div class="ge-modal-foot"><button class="ge-btn ge-btn-gold ge-btn-block" id="p4-so-ok">'+icon('star','ge-ic-md')+'LOG IT</button></div>');
+    const ok=m.querySelector('#p4-so-ok');
+    if(ok) ok.onclick=()=>closeModal(m);
+    try{ if(typeof PR_haptic==='function') PR_haptic('tap'); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
 /* P2.1: ELITE EXPRESSION DETECTED — a major Shocker OwnZ moment. Industrial
    presentation (black/charcoal/crimson/burnt orange, scan + smoke + glitch,
    SVG icons only, no emoji, no casino chrome). Haptics: CAP bridge with
@@ -3438,10 +4201,8 @@ function eliteExpressionCeremony(st,ph){
         try{ requestAnimationFrame(tick); }catch(e){ el.textContent=Math.round(target); }
       });
     }
-    /* haptics: heavy pulse then two beats — CAP bridge first, navigator.vibrate fallback */
-    try{ PR_haptic('alert'); }catch(e){}
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },350);
-    setTimeout(()=>{ try{ PR_haptic('achievement'); }catch(e){} },700);
+    /* P4D: LEGENDARY tier feel — same designed cadence, throttled + pref-safe */
+    try{ P4_legendHaptic(); }catch(e){}
     try{ if(typeof TY_notify==='function') TY_notify(icon('trophy','ge-ic-md')+' <b>ELITE EXPRESSION DETECTED:</b> '+esc(st?st.name:'Unknown')+' #'+ph.num,'good'); }catch(e){}
     return true;
   }catch(e){ return false; }
@@ -3504,9 +4265,11 @@ function inspectPheno(pid){
   }
   /* P2.1: elite ceremony fires at the single discovery moment, once per pheno */
   if(ph._eliteCinePending){ ph._eliteCinePending=false; setTimeout(()=>{ try{ eliteExpressionCeremony(st,ph); }catch(e){} },350); }
+  /* P4_4E: promising standout moment — same single-discovery rule, lighter tier */
+  if(ph._promisingPending){ ph._promisingPending=false; setTimeout(()=>{ try{ P4_standoutMoment(st,ph); }catch(e){} },350); }
   const ug='<span class="unknown-gene">???</span>';
   const tRow=(label,key)=>'<div class="kv"><span>'+label+'</span><b>'+(ph.known[key]?Math.round(ph[key]):ug)+'</b></div>';
-  let html='<h3>'+icon('inspect','ic')+' '+esc(phenoName(p)).replace('\U0001F9EC','')+'</h3>'+
+  let html='<h3>'+icon('inspect','ic')+' '+esc(phenoName(p)).replace(/\u{1F9EC}/u,'')+'</h3>'+
    '<p>'+rarityBadge(ph)+(ph.keeperId?' <span class="badge gold">'+icon('keepers','b-ico')+' KEEPER</span>':'')+(ph.isClone?' <span class="badge green">'+icon('clone','b-ico')+' CLONE</span>':'')+'</p>'+
    '<div class="kv"><span>'+icon('grow','kv-ico')+' Stage</span><b>'+stageName(s)+'</b></div>'+
    '<div class="kv"><span>'+icon('day','kv-ico')+' Age</span><b>Day '+Math.floor(p.day)+'</b></div>'+
@@ -3531,8 +4294,10 @@ function inspectPheno(pid){
   if(unknownN) html+='<p class="muted">'+unknownN+' genetic traits still unknown (???) \u2014 keep growing & inspecting.</p>';
   if(p.problems.length) html+='<p class="prob">'+icon('warn','kv-ico')+' '+p.problems.map(esc).join(', ')+'</p>';
   html+='<h3 style="margin-top:10px">'+icon('inspect','ic')+' FIELD NOTES</h3><ul class="clues">'+inspectClues(p).map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>';
-  html+='<button class="btn" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button>';
-  modal(html);
+  html+=((S.keepers||[]).length?'<button class="btn" id="p4-cmpk">'+icon('scroll','ic')+' COMPARE VS KEEPERS</button>':'')+
+   '<button class="btn" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button>';
+  const __p4im=modal(html);
+  try{ const __cb=__p4im.querySelector('#p4-cmpk'); if(__cb) __cb.onclick=()=>{ const __pid=p.id; closeModal(__p4im); P4_pickKeeperForPlant(__pid); }; }catch(e){}
   save(); updateHUD(); refreshGrowUI();
 }
 
@@ -3551,7 +4316,7 @@ function plantIcon(p){
   const o=plantVisOpts(p);
   try{ o.lightStress=num(S.env.light,80)>95; }catch(e){}
   o.exceptional=!!(p.pheno&&(p.pheno.rarity==='elite'||p.pheno.rarity==='legendary'));
-  return plantSVG(visStageOf(p),seed,'slot-plant',o);
+  return P4_plantRef(visStageOf(p),seed,'slot-plant',o);
 }
 
 function envEval(){
@@ -3610,7 +4375,7 @@ function plantSeedModal(){
   if(!avail.length) html+='<p class="muted">No genetics unlocked. Visit the GENETICS LIBRARY.</p>';
   avail.forEach(st=>{
     html+='<div class="seed-row" data-seed="'+st.id+'" role="button" tabindex="0">'+
-     '<div class="seed-art">'+flowerSVG(strainSeed(st),'seed-flower')+'</div>'+
+     '<div class="seed-art">'+P4_flowerRef(strainSeed(st),'seed-flower')+'</div>'+
      '<div class="seed-info"><b>'+esc(st.name)+'</b><span class="muted">'+st.ft+'d \u2022 '+esc((st.tags||[]).slice(0,2).join(' / '))+'</span></div>'+
      '<span class="seed-cost">'+fmt$(st.seed)+'</span></div>';
   });
@@ -3695,6 +4460,7 @@ function harvestPlant(p){
   const healthF=p.health/100;
   const stressF=1-p.stress/250;
   const ev=envEval().score/100;
+  const P4_envScore=Math.round(ev*100); /* P4.1: env->grade note data */
   const trainB=p.trained?1.15:1;
   const lightB=1+0.06*(q.lights-1), co2B=1+0.04*(q.co2sys-1), crewB=S.crew.harvest?1.06:1;
   /* GENETICS vs ENVIRONMENT: pheno potential sets the ceiling, grow performance decides the result */
@@ -3750,12 +4516,14 @@ function harvestPlant(p){
   try{ if(ph&&ph.num) codexNote(st.id,'Harvested pheno #'+int(ph.num,0)+' \u2014 Q'+qq+', '+fmtW(oz)); }catch(e){}
   S.stats.harvests++; S.stats.lifetimeHarvestOz+=oz;
   try{ if(typeof CHA_onHarvest==='function') CHA_onHarvest(p); }catch(e){} /* P2.3: comeback-chain harvest hook */
+  try{ if(typeof P4_CHA_onHarvest==='function') P4_CHA_onHarvest(p); }catch(e){} /* P4 (4J): climate-chain perfect-run hook */
   S.stats.bestQuality=Math.max(S.stats.bestQuality,qq);
   S.stats.bestBagAppeal=Math.max(S.stats.bestBagAppeal,Math.round(bagAppeal));
   S.stats.biggestHarvest=Math.max(S.stats.biggestHarvest,oz);
   try{ ME_first('harvest',{strainId:st.id,strainName:st.name,oz:oz,quality:qq,day:int(S.day,1)}); }catch(e){} /* P2.5 player memory: first */
   try{ if(typeof MS_onHarvest==='function') MS_onHarvest(); }catch(e){} /* P3-W6 milestone: FIRST HARVEST */
   try{ ME_recordHarvest(st,oz,potency,terpenes,resin); }catch(e){} /* P2.5 player memory: records */
+  try{ if(typeof P4_recordHarvest==='function') P4_recordHarvest(st,qq,oz,Math.round(potency),Math.round(terpenes),Math.round(resin),p.day,ph,(newInv&&typeof pricePerOz==='function')?Math.round(pricePerOz(newInv)*oz):0); }catch(e){} /* P4: extended personal records - p.day/newInv in scope here (growDays is declared later) */
   if(qq>=80) S.stats.q80Harvests++;
   if(p.health>=90) S.stats.highHealthHarvests++;
   if(p.minHealth>=80) S.stats.flawlessGrows++;
@@ -3773,6 +4541,7 @@ function harvestPlant(p){
   countRarity(ph,p.strainId);
   /* P2.1: elite ceremony plays BEFORE the harvest report (one per pheno); the report waits. */
   const eliteCinePending=!!ph._eliteCinePending; ph._eliteCinePending=false;
+  const promisingPending=!!ph._promisingPending; ph._promisingPending=false; /* P4_4E */
   const yieldScore=clamp(Math.round(yieldOz/4.5*100),5,100);
   const overall=Math.round(qq*0.3+potency*0.2+resin*0.15+terpenes*0.15+bagAppeal*0.1+yieldScore*0.1);
   S.stats.bestPhenoScore=Math.max(S.stats.bestPhenoScore,overall);
@@ -3785,17 +4554,19 @@ function harvestPlant(p){
       if(mo.qualities.length>20) mo.qualities.shift();
       if(mo.yields.length>20) mo.yields.shift();
       mo.bestQ=Math.max(mo.bestQ,qq); mo.bestY=Math.max(mo.bestY,oz);
-      if(qq>=90) mo.awards.push('\uD83D\uDCAE 90+');
+      if(qq>=90) mo.awards.push('90+ QUALITY');
       S.stats.cloneHarvests++;
       if(ph.keeperId){
         S.keeperCloneRuns[ph.keeperId]=int(S.keeperCloneRuns[ph.keeperId],0)+1;
         S.stats.provenCut=Math.max(S.stats.provenCut,S.keeperCloneRuns[ph.keeperId]);
         const k=S.keepers.find(x=>x.id===ph.keeperId);
-        if(k){ k.clonesGrown++; k.cloneRuns=S.keeperCloneRuns[ph.keeperId]; }
+        if(k){ k.clonesGrown++; k.cloneRuns=S.keeperCloneRuns[ph.keeperId]; try{ P4_keeperHarvestRecord(k,qq,oz); }catch(e){} }
       }
       addP0('cultivation',1);
     }
   }
+  /* P4_4F: keeper reruns (non-clone) also feed the keeper's hall-of-fame record */
+  else if(ph.keeperId){ try{ const k2=S.keepers.find(x=>x.id===ph.keeperId); if(k2) P4_keeperHarvestRecord(k2,qq,oz); }catch(e){} }
   /* pheno hunt hook */
   if(ph.huntId){
     const hunt=S.phenoHunts.find(x=>x.id===ph.huntId);
@@ -3819,7 +4590,8 @@ function harvestPlant(p){
     genetics:(function(){ const g={}; PHENO_KEYS.forEach(k=>{ g[k]=clamp(Math.round(num(ph[k],50)),5,100); }); return g; })(),
     overall:overall,
     harvest:{quality:qq,potency:Math.round(potency),terpenes:Math.round(terpenes),
-      bagAppeal:Math.round(bagAppeal),resin:Math.round(resin),yieldOz:oz,yieldScore:yieldScore},
+      bagAppeal:Math.round(bagAppeal),resin:Math.round(resin),yieldOz:oz,yieldScore:yieldScore,
+      envScore:P4_envScore,minHealth:Math.round(num(p.minHealth,100))}, /* P4.1: nested — P13-13 pins top-level report keys */
     day:S.day, generation:ph.cloneGen||0,
     lineage:ph.isClone?('Clone of '+st.name+' #'+ph.num):'Seed',
     isClone:ph.isClone, motherId:ph.motherId||null, keeperId:ph.keeperId||null,
@@ -3848,6 +4620,10 @@ function harvestPlant(p){
     if(__eliteBack) __eliteBack.__geOnDismiss=__fire;
     setTimeout(__fire,4400);
   }
+  else if(promisingPending){ /* P4_4E: tiered standout moment before the report */
+    try{ P4_standoutMoment(st,ph); }catch(e){}
+    setTimeout(showReport,2400);
+  }
   else showReport();
 }
 
@@ -3856,11 +4632,326 @@ function PR_haptic(kind){
   try{ if(typeof CAP_haptic==='function') CAP_haptic(kind); }catch(e){}
   try{
     const native=(typeof CAP_native==='function')?CAP_native():false;
-    if(!native&&typeof navigator!=='undefined'&&navigator&&typeof navigator.vibrate==='function')
-      navigator.vibrate(kind==='alert'?[70,40,70]:[20]);
+    if(!native&&typeof navigator!=='undefined'&&navigator&&typeof navigator.vibrate==='function'){
+      /* P4Q: the web fallback honors the haptics toggle (the native path
+         already did via CAP_haptic) */
+      let __ok=true; try{ __ok=!!CAP_prefs().haptics; }catch(__e){}
+      if(__ok) navigator.vibrate(kind==='alert'?[70,40,70]:[20]);
+    }
   }catch(e){}
 }
 
+/* P4.1: first-harvest guidance — WHY the grade landed where it did.
+   harvestPlant: quality = base*0.5 + health*0.3 + envScore/100*20.
+   Data rides inside report.harvest (P13-13 pins the top-level report keys).
+   Fires once (first harvest report); read-only, never a victory grant. */
+function P4_envGradeNote(report){
+  try{
+    if(!report||num(S.stats.harvests,0)!==1) return '';
+    const hv=(report&&report.harvest&&typeof report.harvest==='object')?report.harvest:{};
+    const es=num(hv.envScore,null);
+    if(es===null||isNaN(es)) return '';
+    const envPts=Math.round(es/100*20);
+    const mh=num(hv.minHealth,null);
+    return '<div class="pr-beat-note">'+icon('flask','ge-ic-sm')+' <b>WHY THIS GRADE?</b> '+
+      '<span class="ge-muted">Your room scored <b class="ge-num">'+es+'</b>/100 &mdash; worth <b class="ge-num">+'+envPts+'</b> quality. '+
+      ((mh!==null&&!isNaN(mh))?'Health never dropped below <b class="ge-num">'+mh+'%</b>. ':'')+
+      'Genetics set the ceiling &mdash; your care fills it.</span></div>';
+  }catch(e){ return ''; }
+}
+/* ============================================================
+   P4D + P4Q — UNIFIED REWARD PRESENTATION TIERS + FEEL
+   ------------------------------------------------------------
+   4D: P4_celebrate(tier, payload) — the single routing point for
+       reward/celebration moments.
+       tier 'minor' | 'major' | 'legendary'
+       - MINOR: subtle toast pop + light haptic/sfx.
+         Small milestones, micro-rewards, routine actions
+         (mission complete, stage complete, title earned, strain
+         unlocked, routine breeding cross, plant tap).
+       - MAJOR: achievement banner + stronger reveal + haptic.
+         Mission chain complete, achievement unlocked, keeper
+         confirmed, facility purchased, rare-trait reveal.
+         Never stacked: an open overlay (or a banner < 1.5s ago)
+         degrades the banner to a plain toast.
+       - LEGENDARY: cinematic industrial reveal reusing the ELITE
+         EXPRESSION ceremony language (pr-smoke, pr-scan, pr-glitch,
+         crimson/burnt-orange, Shocker OwnZ kicker, gas-mask mark).
+         STRICTLY for genuinely rare events: elite phenotype, rare
+         trait, Project 0 preservation/verification, major breeding
+         breakthrough, new genetic created, personal record broken,
+         legendary keeper, major empire milestone.
+         payload.cine replaces the default stage when an existing
+         ceremony already owns the moment (elite expression, P0
+         verified, new-genetic ceremony); payload.quiet gives
+         feel-only (haptics/sfx, no visual) for moments whose visual
+         already played (legendary keeper confirm).
+       A legendary requested while an overlay is open never stacks:
+       it queues (P4_queueCelebrate) and flushes on the next
+       P4_celebrate with no overlay open. Personal-record moments
+       always queue — records break inside harvest finalize.
+       payload: {title, sub, icon, kicker, key (exactly-once id),
+                 haptic, sfx, cine (custom presentation fn),
+                 quiet (feel only, no visual)}
+       sub is HTML built by the caller (same contract as toast() —
+       callers esc() untrusted text).
+   4Q: P4_haptic / P4_sfx — throttled feel primitives routing through
+       the EXISTING infra (PR_haptic -> CAP bridge + vibrate fallback;
+       CAP_sfx -> WebAudio, respects the sound toggle). Global throttle:
+       max 1 haptic / 400ms, max 1 sfx / 120ms. Feedback is never
+       required and never overused.
+   All P4_ symbols are additive. No existing system is redesigned.
+   ============================================================ */
+const P4_TIER_MINOR='minor', P4_TIER_MAJOR='major', P4_TIER_LEGENDARY='legendary';
+const P4_HAPTIC_GAP=400, P4_SFX_GAP=120, P4_BANNER_GAP=1500;
+let P4_lastHaptic=0, P4_lastSfx=0, P4_lastBanner=0, P4_musicEngine=null;
+let P4_queue=[], P4_flushing=false;
+
+/* migration-safe exactly-once ledger for rare moments (S.p4seen) */
+function P4_seenInit(){
+  try{
+    if(typeof S==='undefined'||!S) return false;
+    if(!S.p4seen||typeof S.p4seen!=='object') S.p4seen={};
+    return true;
+  }catch(e){ return false; }
+}
+function P4_now(){ try{ return Date.now(); }catch(e){ return 0; } }
+
+/* throttled haptic — routes through PR_haptic (CAP bridge + vibrate fallback) */
+function P4_haptic(kind){
+  try{
+    const t=P4_now();
+    if(t-P4_lastHaptic<P4_HAPTIC_GAP) return false; /* global throttle: max 1 / 400ms */
+    P4_lastHaptic=t;
+    if(typeof PR_haptic==='function') PR_haptic(kind||'tap');
+    return true;
+  }catch(e){ return false; }
+}
+/* the designed legendary cadence: heavy pulse, then two beats.
+   Throttle-aware spacing (0/450/900ms) so the sequence survives P4_haptic. */
+function P4_legendHaptic(){
+  try{
+    P4_lastHaptic=0; /* a designed sequence, not spam: open the gate */
+    P4_haptic('alert');
+    setTimeout(()=>{ try{ P4_lastHaptic=0; P4_haptic('achievement'); }catch(e){} },450);
+    setTimeout(()=>{ try{ P4_lastHaptic=0; P4_haptic('achievement'); }catch(e){} },900);
+  }catch(e){}
+}
+/* throttled sfx — routes through CAP_sfx (respects the sound toggle) */
+function P4_sfx(kind){
+  try{
+    const t=P4_now();
+    if(t-P4_lastSfx<P4_SFX_GAP) return false; /* max 1 / 120ms: no click spam */
+    P4_lastSfx=t;
+    if(typeof CAP_sfx==='function') CAP_sfx(kind||'click');
+    return true;
+  }catch(e){ return false; }
+}
+/* true while any overlay is open — banners never stack on a modal/cine */
+function P4_overlayOpen(){
+  try{
+    const r=document.getElementById('modal-root');
+    return !!(r&&r.querySelector('.cine-back,.modal-back'));
+  }catch(e){ return false; }
+}
+/* P4D: celebration queue — a rare moment that arrives mid-flow (e.g. a record
+   broken during harvest finalize, while the reveal ceremony is about to open)
+   must never stack on an open overlay. It queues and flushes on the next
+   P4_celebrate call when no overlay is open: the next beat, never an
+   interruption. Personal-record celebrations always queue (see P4_wireFeel). */
+function P4_queueCelebrate(tier,p){
+  try{
+    if(p&&p.key&&P4_queue.some(function(q){ return q.p&&q.p.key===p.key; })) return false;
+    P4_queue.push({tier:tier,p:p||{}});
+    return true;
+  }catch(e){ return false; }
+}
+function P4_flushQueue(){
+  try{
+    if(P4_flushing||!P4_queue.length||P4_overlayOpen()) return false;
+    P4_flushing=true;
+    const q=P4_queue.shift();
+    try{ P4_celebrate(q.tier,q.p); }catch(e){}
+    P4_flushing=false;
+    return true;
+  }catch(e){ try{ P4_flushing=false; }catch(_){} return false; }
+}
+function P4_minorToast(title,sub,icn){
+  try{
+    const root=(typeof $==='function')?$('toast-root'):document.getElementById('toast-root');
+    if(!root) return false;
+    const t=document.createElement('div');
+    t.className='ge-toast p4-minor';
+    t.innerHTML=(icn?icon(icn,'ge-ic-md'):'')+'<span><b>'+title+'</b>'+(sub?'<br><span class="muted">'+sub+'</span>':'')+'</span>';
+    root.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>{ try{ t.remove(); }catch(e){} },400); },2400);
+    return true;
+  }catch(e){ return false; }
+}
+function P4_majorBanner(title,sub,icn){
+  try{
+    const root=(typeof $==='function')?$('toast-root'):document.getElementById('toast-root');
+    if(!root) return false;
+    const t=P4_now();
+    if(t-P4_lastBanner<P4_BANNER_GAP) return false; /* no stacked banners */
+    P4_lastBanner=t;
+    const b=document.createElement('div');
+    b.className='ge-toast p4-major';
+    b.innerHTML='<span class="p4-major-ic">'+icon(icn||'trophy','ge-ic-lg')+'</span>'+
+      '<span class="p4-major-tx"><b>'+title+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</span>';
+    root.appendChild(b);
+    setTimeout(()=>{ b.style.opacity='0'; b.style.transition='opacity .4s'; setTimeout(()=>{ try{ b.remove(); }catch(e){} },400); },3600);
+    return true;
+  }catch(e){ return false; }
+}
+/* LEGENDARY stage: extends the ELITE EXPRESSION ceremony language —
+   smoke, scan, glitch, crimson/burnt-orange, Shocker OwnZ kicker,
+   gas-mask mark. Composed on .elite-stage (no new modal system). */
+function P4_legendStage(title,sub,icn,kicker){
+  try{
+    const inner=
+     '<div class="elite-stage p4-leg-stage"><div class="pr-smoke" aria-hidden="true"></div><div class="pr-scan" aria-hidden="true"></div>'+
+     '<div class="p4-leg-mask">'+gasmaskSVG('p4-leg-mask-ic')+'</div>'+
+     '<div class="p4-leg-kicker">'+icon('project0','ge-ic-sm')+'<span>'+esc(kicker||'SHOCKER OWNZ // LEGENDARY MOMENT')+'</span></div>'+
+     '<div class="ge-display p4-leg-title pr-glitch" data-text="'+esc(title)+'">'+esc(title)+'</div>'+
+     (sub?'<div class="p4-leg-sub">'+sub+'</div>':'')+
+     '<button type="button" class="ge-btn ge-btn-gold ge-btn-block" id="p4leg-ok">'+icon(icn||'trophy','ge-ic-md')+'SEAL IT</button></div>';
+    const back=cineOverlay(inner,'cine-p4legend',0); /* player-dismissed, like the elite ceremony */
+    if(back){
+      const btn=back.querySelector('#p4leg-ok');
+      const done=()=>{ try{ back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),300); }catch(e){} };
+      if(btn) btn.onclick=done;
+      back.__geOnDismiss=done; /* Android back / backdrop path */
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+/* The single routing point for reward presentation. See header contract. */
+function P4_celebrate(tier,p){
+  try{
+    p=p||{};
+    /* flush any queued rare moment first — the next beat, never an interruption */
+    if(!P4_flushing){ try{ P4_flushQueue(); }catch(e){} }
+    tier=(tier===P4_TIER_LEGENDARY||tier==='legendary')?P4_TIER_LEGENDARY
+        :(tier===P4_TIER_MAJOR||tier==='major')?P4_TIER_MAJOR:P4_TIER_MINOR;
+    /* a legendary requested mid-ceremony queues BEFORE the exactly-once key
+       is marked, so the flush still presents it; seen keys still return false */
+    if(tier===P4_TIER_LEGENDARY&&!p.quiet&&P4_overlayOpen()){
+      if(p.key){
+        if(!P4_seenInit()) return false;
+        try{ if(S.p4seen[p.key]) return false; }catch(e){ return false; }
+      }
+      P4_queueCelebrate('legendary',p); return true;
+    }
+    /* exactly-once for rare moments (opt-in via key) */
+    if(p.key){
+      if(!P4_seenInit()) return false;
+      try{
+        if(S.p4seen[p.key]) return false;
+        S.p4seen[p.key]=int(S.day,1);
+        try{ save(); }catch(e){}
+      }catch(e){ return false; }
+    }
+    const title=String(p.title||'');
+    const sub=(p.sub===undefined||p.sub===null)?'':String(p.sub);
+    const icn=p.icon||'trophy';
+    if(tier===P4_TIER_MINOR){
+      P4_haptic(p.haptic||'tap');
+      P4_sfx(p.sfx||'click');
+      if(!p.quiet&&title) P4_minorToast(title,sub,icn);
+      return true;
+    }
+    if(tier===P4_TIER_MAJOR){
+      if(typeof p.cine==='function'){
+        P4_haptic(p.haptic||'achievement');
+        P4_sfx(p.sfx||'ok');
+        try{ p.cine(); }catch(e){}
+        return true;
+      }
+      /* no stacked banners: overlay open or banner too recent -> plain toast */
+      if(P4_overlayOpen()||!P4_majorBanner(title,sub,icn)){
+        if(!p.quiet&&title) toast(icon(icn,'ge-ic-md')+' <b>'+title+'</b>'+(sub?'<br><span class="muted">'+sub+'</span>':''));
+      }
+      P4_haptic(p.haptic||'achievement');
+      P4_sfx(p.sfx||'ok');
+      return true;
+    }
+    /* LEGENDARY — strictly for genuinely rare events */
+    P4_legendHaptic();
+    P4_sfx(p.sfx||'legend');
+    if(p.quiet) return true; /* feel-only: the visual already played */
+    if(typeof p.cine==='function'){ try{ p.cine(); }catch(e){} return true; }
+    P4_legendStage(title,sub,icn,p.kicker);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* P4Q: music attachment point. No music engine ships in P4 — the MUSIC
+   toggle persists the preference (default OFF); a future ambience engine
+   registers here and P4_music() gates it on the pref. */
+function P4_registerMusic(fn){
+  try{ if(typeof fn==='function'){ P4_musicEngine=fn; return true; } }catch(e){}
+  return false;
+}
+function P4_music(){
+  try{
+    if(!CAP_prefs().music) return false;
+    if(typeof P4_musicEngine==='function'){ P4_musicEngine(); return true; }
+  }catch(e){}
+  return false;
+}
+
+/* P4Q: global feel wiring (additive — called once at boot, next to CAP_wireHaptics). */
+function P4_wireFeel(){
+  try{
+    /* button press: every real button gets a light click (throttled 120ms,
+       toggle-respecting). Capture phase so it fires before handlers; the sfx
+       gate absorbs duplicates from explicit CAP_sfx('click') call sites. */
+    document.addEventListener('click',function(e){
+      try{
+        const t=e&&e.target;
+        if(t&&t.closest&&t.closest('button,[role="button"],.ge-empty-slot')) P4_sfx('click');
+      }catch(e2){}
+    },true);
+    /* personal record broken -> LEGENDARY. Always queued (never fired
+       synchronously): records break inside harvest finalize, while the
+       harvest reveal ceremony is about to open — stacking a cinematic on
+       it would be an interruption. The next P4_celebrate with no overlay
+       open flushes it as its own beat. Only when a PREVIOUS record is
+       beaten (first-ever records are set trivially); one per harvest. */
+    CAP_rewrap('ME_recordHarvest',function(orig){
+      return function(st,oz,potency,terpenes,resin){
+        let before='{}';
+        try{ before=JSON.stringify((typeof S!=='undefined'&&S&&S.memory&&S.memory.records)||{}); }catch(e){}
+        const r=orig(st,oz,potency,terpenes,resin);
+        try{
+          const b=JSON.parse(before), a=((typeof S!=='undefined'&&S&&S.memory&&S.memory.records)||{});
+          const defs=[
+            ['largestHarvest','LARGEST HARVEST',function(x){ return num(x&&x.oz,0); },function(v){ return fmtW(v)+' OZ'; }],
+            ['potency','PEAK POTENCY',function(x){ return num(x&&x.val,0); },function(v){ return 'THC '+Math.round(v)+'%'; }],
+            ['terpenes','PEAK TERPENES',function(x){ return num(x&&x.val,0); },function(v){ return 'TERPS '+Math.round(v)+'%'; }],
+            ['resin','PEAK RESIN',function(x){ return num(x&&x.val,0); },function(v){ return 'RESIN '+Math.round(v)+'%'; }]
+          ];
+          for(let i=0;i<defs.length;i++){
+            const d=defs[i], bv=d[2](b[d[0]]), av=d[2](a[d[0]]);
+            if(bv>0&&av>bv){
+              P4_queueCelebrate('legendary',{
+                title:'NEW PERSONAL RECORD',
+                sub:d[1]+' — <b class="ge-num">'+d[3](av)+'</b><br><span class="muted">Previous best: '+d[3](bv)+'</span>',
+                icon:'trophy',
+                kicker:'SHOCKER OWNZ // PERSONAL BEST',
+                key:'p4rec-'+d[0]+'-'+av
+              });
+              break; /* one legendary per harvest — never stacked */
+            }
+          }
+        }catch(e){}
+        return r;
+      };
+    });
+  }catch(e){}
+}
 function phenoReportModal(report){
   const r=report.harvest;
   /* ============ P1.3 STAGED HARVEST REVEAL (presentation-only) ============
@@ -3878,7 +4969,7 @@ function phenoReportModal(report){
    {id:'yield',n:'01',title:'DRY YIELD',hk:'harvest',
     body:'<div class="pr-beat-val ge-num" data-count="'+r.yieldOz+'" data-dec="1">0</div><div class="pr-beat-sub">OZ \u00b7 DRY WEIGHT</div><div class="pr-beat-note ge-muted">Yield score <b class="ge-num">'+r.yieldScore+'</b>/100</div>'},
    {id:'quality',n:'02',title:'QUALITY GRADE',hk:'mission',
-    body:'<div class="ge-badge '+tier[1]+'">'+icon('trophy','ge-ic-sm')+' '+tier[0]+'</div><div class="pr-beat-val ge-num" data-count="'+r.quality+'" data-dec="0">0</div><div class="pr-beat-sub">QUALITY \u00b7 OVERALL <b class="ge-num" data-count="'+report.overall+'" data-dec="0">0</b></div>'},
+    body:'<div class="ge-badge '+tier[1]+'">'+icon('trophy','ge-ic-sm')+' '+tier[0]+'</div><div class="pr-beat-val ge-num" data-count="'+r.quality+'" data-dec="0">0</div><div class="pr-beat-sub">QUALITY \u00b7 OVERALL <b class="ge-num" data-count="'+report.overall+'" data-dec="0">0</b></div>'+P4_envGradeNote(report)},
    {id:'potency',n:'03',title:'POTENCY',hk:'purchase',
     body:'<div class="pr-beat-val ge-num" data-count="'+r.potency+'" data-dec="0">0</div><div class="pr-beat-sub">'+bdesc(r.potency)+' \u00b7 THC EXPRESSION</div>'},
    {id:'terpenes',n:'04',title:'TERPENES',hk:'purchase',
@@ -3951,10 +5042,20 @@ function phenoReportModal(report){
   function renderBanners(){
     stage.innerHTML='<div class="pr-banners">'+(banners.length?banners.map((bn,i)=>'<div class="pr-banner '+bn.cls+'" style="animation-delay:'+(i*0.18).toFixed(2)+'s"><span class="pr-banner-ic">'+icon(bn.ic,'ge-ic-md')+'</span><span class="pr-banner-tx"><b>'+bn.t+'</b><i>'+bn.s+'</i></span></div>').join(''):'<p class="ge-muted">No special results this run \u2014 the hunt continues.</p>')+'</div>';
     prog.textContent='RESULTS';
-    banners.forEach((bn,i)=>setTimeout(()=>PR_haptic('achievement'),i*200)); /* one buzz per banner */
+    banners.forEach((bn,i)=>setTimeout(()=>{ try{ P4_haptic('achievement'); }catch(e){} },i*200)); /* P4Q: one buzz per banner, throttled — no stacked haptics */
   }
   function renderActions(){
     nextBtn.style.display='none';
+    try{ /* P4.1: keeper-decision guidance — WHY this choice matters (first keeper only) */
+      if(num(S.stats.keepersFound,0)===0){
+        const gd=document.createElement('div');
+        gd.className='pr-beat-note';
+        gd.innerHTML=icon('crown-gold','ge-ic-sm')+' <b>THE KEEPER\u2019S CALL.</b> '+
+          '<span class="ge-muted">KEEP preserves this exact phenotype in your vault &mdash; clone it forever, breed from it, feed it to Project 0. '+
+          'Only crown expressions worth keeping: vault space is finite.</span>';
+        m.querySelector('.modal').appendChild(gd);
+      }
+    }catch(e){}
     const row=document.createElement('div');
     row.className='ge-btn-row';
     row.innerHTML='<button type="button" class="ge-btn ge-btn-gold" id="pr-keep">'+icon('crown-gold','ge-ic-md')+'KEEP</button>'+
@@ -4058,6 +5159,7 @@ function TU_breedFromKeeper(keeperId){
   try{
     const k=(S.keepers||[]).find(x=>x.id===keeperId); if(!k) return;
     TU_breedFromStrain(k.strainId,k.strainName,k.phenoNum,k.overall,k.rarity,k.genetics);
+    try{ window.__breedKeeperHint={keeperId:keeperId,strainId:k.strainId}; }catch(e){} /* P4_4F */
   }catch(e){}
 }
 /* P3-W1: the session hint now also carries the pheno's full 18-trait genetics record,
@@ -4065,6 +5167,7 @@ function TU_breedFromKeeper(keeperId){
    The 6th arg is optional - older call sites keep working. */
 function TU_breedFromStrain(strainId,strainName,phenoNum,overall,rarity,genetics){
   if(!strainId) return;
+  try{ window.__breedKeeperHint=null; }catch(e){} /* P4_4F: keeper-cross link is one-shot per breed action */
   try{ breedA=strainId; }catch(e){}
   try{ window.__breedPhenoHint={strainId:strainId,strainName:String(strainName||strainId),phenoNum:int(phenoNum,0),overall:int(overall,0),rarity:rarity||'common',genetics:P3B_sanitizePhenoGenetics(genetics)}; }catch(e){}
   show('breeding');
@@ -4292,7 +5395,7 @@ function growPlantHtml(p){
   const probs=(p.problems||[]).slice(-2);
   const wTone=p.water<18||p.water>92?'bad':p.water<35?'warn':'ok';
   const nTone=p.nutrition<15||p.nutrition>92?'bad':p.nutrition<30?'warn':'ok';
-  return '<div class="ge-card ge-plant-card ge-card-tap'+(tone==='bad'?' ge-card-hot':'')+'" data-pid="'+p.id+'" role="button" tabindex="0" aria-label="'+esc(phenoName(p)).replace('\U0001F9EC',' (clone)')+'">'+
+  return '<div class="ge-card ge-plant-card ge-card-tap'+(tone==='bad'?' ge-card-hot':'')+'" data-pid="'+p.id+'" role="button" tabindex="0" aria-label="'+esc(phenoName(p)).replace(/\u{1F9EC}/u,' (clone)')+'">'+
    '<div class="ge-plant-art">'+plantIcon(p)+'<span class="ge-slot-ring">'+GR_ring(p.health,tone)+'</span></div>'+
    '<div class="ge-plant-meta">'+
     '<div class="ge-plant-name ge-truncate">'+GR_plantName(p)+'</div>'+
@@ -4315,8 +5418,8 @@ RENDER.grow=function(){
     {i:'co2',l:'CO2',v:S.env.co2,sub:'target 800\u20131500',bad:/CO2/.test(iss)}
   ];
   let html=screenHead('grow','GROW ROOM')+
-   '<div class="ge-card ge-card-hot ge-facility">'+
-    GR_facilityScene(tier)+
+   '<div class="ge-card ge-card-hot ge-facility p4m-stage-'+(typeof P4M_stageIdx==='function'?P4M_stageIdx():0)+'">'+
+    GR_facilityScene(tier)+(typeof P4M_stageRibbonHTML==='function'?P4M_stageRibbonHTML():'')+
     '<div class="ge-facility-meta">'+
      '<span class="ge-label">'+icon('grow','ge-ic-md')+' '+esc(FAC_TIERS[tier].name)+'</span>'+
      '<span class="ge-facility-slots ge-num ge-muted">'+S.plants.length+'/'+slots+' SLOTS</span>'+
@@ -4346,7 +5449,7 @@ RENDER.grow=function(){
   $('btn-day').onclick=advanceDay;
   const mo=$('mentor-ok'); if(mo) mo.onclick=()=>{ S.tips.mentorDone=1; save(); RENDER.grow(); };
   r.querySelectorAll('[data-empty]').forEach(s=>s.onclick=()=>plantSeedModal());
-  r.querySelectorAll('[data-pid]').forEach(s=>s.onclick=()=>plantFocus(+s.dataset.pid));
+  r.querySelectorAll('[data-pid]').forEach(s=>s.onclick=()=>{ try{ P4_haptic('tap'); P4_sfx('click'); }catch(e){} plantFocus(+s.dataset.pid); });
 };
 
 /* ---- plant focus view: tap a plant, sheet slides in ---- */
@@ -4459,7 +5562,7 @@ RENDER.grows=function(){
     const phn=p.pheno&&p.pheno.num?p.pheno.num:'0';
     const tone=GR_condTone(p);
     html+='<div class="ge-card ge-plant-card'+(tone==='bad'?' ge-card-hot':'')+'">'+
-     '<div class="ge-plant-art">'+flowerSVG(p.strainId+'#'+phn,'p-flower')+'<span class="ge-slot-ring">'+GR_ring(p.health,tone)+'</span></div>'+
+     '<div class="ge-plant-art">'+P4_flowerRef(p.strainId+'#'+phn,'p-flower')+'<span class="ge-slot-ring">'+GR_ring(p.health,tone)+'</span></div>'+
      '<div class="ge-plant-meta">'+
       '<div class="ge-plant-name ge-truncate">'+GR_plantName(p)+'</div>'+
       '<div class="ge-plant-sub"><span class="ge-pill '+(s>=5?'ge-pill-optimal':'ge-pill-neutral')+'">'+stageName(s)+'</span>'+
@@ -4516,6 +5619,7 @@ RENDER.dispensary=function(){
   try{ if(typeof WX_marketPanel==='function') html+=WX_marketPanel(); }catch(e){}
   try{ if(typeof WX_contractsHTML==='function') html+=WX_contractsHTML(); }catch(e){}
   try{ if(typeof TY_custPanel==='function') html+=TY_custPanel(); }catch(e){}
+  try{ if(typeof P4L_summaryHTML==='function') html+=P4L_summaryHTML(); }catch(e){} /* P4-W6 4L: sales briefing */
   try{ if(typeof TY_prodBanner==='function') html+=TY_prodBanner(); }catch(e){}
   try{ if(typeof CT_dispensaryHTML==='function') html+=CT_dispensaryHTML(); }catch(e){}
   /* shelf stock — premium product cards */
@@ -4526,7 +5630,7 @@ RENDER.dispensary=function(){
     const ppo=pricePerOz(it), total=ppo*it.amount;
     const unit=it.type==='edible'?'unit':'oz';
     html+='<div class="ge-card ge-card-hot ge-dp-product">'+
-     '<div class="ge-plant-art">'+flowerSVG(it.strainId+'#'+it.id,'ge-dp-flower')+'</div>'+
+     '<div class="ge-plant-art">'+P4_flowerRef(it.strainId+'#'+it.id,'ge-dp-flower')+'</div>'+
      '<div class="ge-plant-meta">'+
       '<div class="ge-plant-name">'+esc(it.strainName)+' '+DP_gradeBadge(it.quality)+'</div>'+
       '<div class="ge-dp-tags">'+DP_terpTags(it)+'</div>'+
@@ -4619,6 +5723,8 @@ function sellToBuyer(invId,buyerId){
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   try{ NT_onSale(total,ntPreSale); }catch(e){} /* P1.6: big sale -> upgrade nudge (read-only) */
   S.stats.buyerSales[by.id]=int(S.stats.buyerSales[by.id],0)+1;
+  try{ if(typeof P4L_noteSale==='function'){ var P4_ppt='flower'; try{ P4_ppt=String(TY_ptypeOf(it)); }catch(e2){} P4L_noteSale({strainId:it.strainId,strainName:it.strainName,qty:it.amount,rev:total,ptype:P4_ppt,cust:by.name,quality:it.quality}); } }catch(e){} /* P4-W6 4L */
+  try{ if(typeof P4_noteSale==='function') P4_noteSale(it.strainId,it.strainName,it.amount,Math.round(total)); }catch(e){} /* P4: best-selling genetic */
   gainXP(15); gainRep(by.id==='dscout'?4:2);
   if(S.stats.quickTurnReady){ S.stats.quickTurnarounds++; S.stats.quickTurnReady=false; }
   S.inventory=S.inventory.filter(x=>x.id!==it.id);
@@ -4635,6 +5741,7 @@ function empireHubHTML(){
   return '<div class="ge-card ge-hub"><div class="ge-card-head"><h3>'+icon('empire','ge-ic-lg')+'SHOCKER OWNZ COMPOUND</h3></div>'+
    '<p class="ge-caption ge-muted">'+openN+'/'+HUB_AREAS.length+' sectors online. Tap a sector to enter.</p>'+empireHubSVG()+
    '<div class="ge-tierladder" aria-label="Facility tier ladder">'+FAC_TIERS.map((t,i)=>'<span class="ge-tierchip'+(i===ct?' cur':i<ct?' owned':'')+'">'+esc(t.name)+'</span>').join('')+'</div>'+
+   (typeof P4M_stageLadderHTML==='function'?P4M_stageLadderHTML():'')+
    '<div class="ge-datarow"><span>Current tier</span><b>'+esc(FAC_TIERS[ct].name)+'</b></div></div>';
 }
 
@@ -4677,7 +5784,10 @@ RENDER.empire=function(){
     try{ if(typeof MS_onFacility==='function') MS_onFacility(i); }catch(e){} /* P3-W6 milestone: FIRST WAREHOUSE */
     const newT=facTierIdx();
     save(); updateHUD(); checkMissions(); RENDER.empire();
-    EM_facilityUnlockCine(prevT,newT,f.name);
+    /* P4D: facility purchased = MAJOR — the existing before/after cine IS the
+       major presentation; P4 routes feel and guarantees no stacking */
+    try{ P4_celebrate('major',{title:'FACILITY UNLOCKED',icon:'box',cine:function(){ EM_facilityUnlockCine(prevT,newT,f.name); }}); }catch(e){ EM_facilityUnlockCine(prevT,newT,f.name); }
+    try{ if(typeof P4M_onFacilityBought==='function') P4M_onFacilityBought(); }catch(e){} /* P4-W6 4M: stage-evolution cinematic */
   });
   r.querySelectorAll('[data-buye]').forEach(b=>b.onclick=()=>{
     const d=EQUIP_DEFS.find(x=>x.id===b.dataset.buye), lvl=d?S.equipment[d.id]:0, cost=d?equipCost(d,lvl):0;
@@ -4750,7 +5860,7 @@ function wireCompete(r){
     if(!pool.length){ toast(icon('x','ge-ic-md')+' '+(t.id==='breeder'?'You need a harvested CUSTOM cross to enter.':'No flower in inventory. Harvest first!')); return; }
     const m=modal('<div class="ge-cer-head"><h3>'+icon('compete','ge-ic-lg')+esc(t.name)+'</h3><p class="ge-caption ge-muted">Choose your entry:</p><div id="comp-pick"></div><button class="ge-btn ge-btn-ghost" id="comp-x">'+icon('x','ge-ic-md')+'CANCEL</button></div>');
     m.querySelector('#comp-x').onclick=()=>closeModal(m);
-    m.querySelector('#comp-pick').innerHTML=pool.map(i=>'<div class="ge-pick" data-entry="'+i.id+'">'+flowerSVG(i.strainId+'#'+i.id,'pick-flower')+'<span><b>'+esc(i.strainName)+'</b> — Q'+i.quality+' • '+i.amount+' oz</span></div>').join('');
+    m.querySelector('#comp-pick').innerHTML=pool.map(i=>'<div class="ge-pick" data-entry="'+i.id+'">'+P4_flowerRef(i.strainId+'#'+i.id,'pick-flower')+'<span><b>'+esc(i.strainName)+'</b> — Q'+i.quality+' • '+i.amount+' oz</span></div>').join('');
     m.querySelectorAll('[data-entry]').forEach(e=>e.onclick=()=>{
       const item=S.inventory.find(x=>x.id===+e.dataset.entry);
       closeModal(m); if(typeof EX_runCompetition==='function') EX_runCompetition(t,item,fee); else runCompetition(t,item,fee);
@@ -4994,7 +6104,12 @@ function confirmKeeper(report){
       harvests:1, dayFound:int(S.day,1), generation:int(report.generation,0),
       lineage:String(report.lineage||'Seed'),
       isClone:!!report.isClone, motherId:report.motherId||null,
-      awards:[], clonesGrown:0, cloneRuns:0, breedingUses:0
+      awards:[], clonesGrown:0, cloneRuns:0, breedingUses:0,
+      /* P4_4F: hall-of-fame record — terpene profile, grow count, harvest records,
+         crosses created from this keeper, legacy status. Backfilled for older
+         keepers by P4_keeperBackfill (migration-safe). */
+      terpeneProfile:P4_terpeneProfileOf(geneticsCopy,strainId),
+      growCount:1, records:[], crosses:[], legacy:false
     };
     S.keepers.push(k);
     S.stats.keepersFound=int(S.stats.keepersFound,0)+1;
@@ -5011,6 +6126,10 @@ function confirmKeeper(report){
     if(report.rarity==='legendary') addP0('genetics',6);
     gainXP(150); gainRep(10);
     toast(icon('crown-gold','ge-ic-md')+' KEEPER SELECTED<br><b>'+esc(k.strainName)+' — PHENO #'+k.phenoNum+'</b><br>ELITE GENETICS PRESERVED');
+    /* P4D: keeper confirmed = MAJOR (keeperCine already played upstream); a
+       LEGENDARY keeper earns the legendary feel cadence on top — quiet, so no
+       second overlay ever stacks on the keeper flow */
+    try{ if(k&&k.rarity==='legendary') P4_celebrate('legendary',{title:'LEGENDARY KEEPER',sub:esc(k.strainName)+' — PHENO #'+k.phenoNum,icon:'crown-gold',quiet:true,sfx:'legend'}); else P4_haptic('keeper'); }catch(e){}
     try{ if(typeof TY_keeperHook==='function') TY_keeperHook(report); }catch(e){}
     save(); updateHUD(); checkMissions(); checkAchievements();
     try{ if(typeof P0T_sweep==='function') P0T_sweep(); }catch(e){} /* P3-W3: keeper -> preservation pipeline */
@@ -5068,7 +6187,9 @@ function compareModal(a,b,actions){
     ['Root Vigor','rootVigor'],['Clone Vigor','cloneVigor'],['Internodal Spacing','internode'],
     ['Disease Resistance','diseaseRes'],
     ['Stretch','stretch'],['Nutrient Sens.','nutrientSensitivity',true],['Env Tolerance','envTolerance']];
-  let html='<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>PHENOTYPE COMPARE</h3></div><div class="ge-modal-body"><table class="ge-cmp-table"><tr><th></th><th>'+esc(a.name)+'</th><th>'+esc(b.name)+'</th></tr>';
+  let html='<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>PHENOTYPE COMPARE</h3></div>'+
+   (num(S.stats.comparesDone,0)===0?'<p class="ge-caption ge-muted" style="padding:0 14px">Every seed is a different phenotype. Compare to find the expression worth keeping &mdash; the winner becomes your keeper, your mother, your breeding parent.</p>':'')+ /* P4.1 */
+   '<div class="ge-modal-body"><table class="ge-cmp-table"><tr><th></th><th>'+esc(a.name)+'</th><th>'+esc(b.name)+'</th></tr>';
   rows.forEach(r=>{
     const label=r[0], key=r[1], lower=!!r[2];
     const av=Math.round(num(ga[key],0)), bv=Math.round(num(gb[key],0));
@@ -5264,6 +6385,121 @@ function keeperSortVal(k){
     default: return k.overall;
   }
 }
+/* ============================================================
+   P4_4F — KEEPER HALL OF FAME
+   Keepers become legends: enriched records (terpene profile, grow count, harvest
+   records, crosses created from the keeper, legacy status), a LEGACY section for
+   exceptional keepers, and a living-plants-vs-historical-keepers compare view.
+   Migration-safe: P4_keeperBackfill fills every new field with sensible defaults
+   and never overwrites existing values.
+   ============================================================ */
+function P4_terpeneProfileOf(g,strainId){
+  try{ return phenoTerpeneProfile(g,strainId)||'Balanced'; }catch(e){ return 'Balanced'; }
+}
+/* hall-of-fame epithet from the keeper's records */
+function P4_keeperEpithet(k){
+  if(!k) return 'VAULT KEEPER';
+  if(k.rarity==='legendary') return 'LIVING LEGEND';
+  if(num(k.bestQuality,0)>=95) return 'MASTERPIECE';
+  if(num(k.bestResin,0)>=93) return 'TRICHOME TITAN';
+  if(num(k.bestTerpenes,0)>=90) return 'TERPENE ROYALTY';
+  if(num(k.bestPotency,0)>=90) return 'POTENCY MONARCH';
+  if(int(k.clonesGrown,0)>=20) return 'PROVEN WORKHORSE';
+  if(k.crosses&&k.crosses.length>=3) return 'LINEAGE FOUNDER';
+  if(k.rarity==='elite') return 'ELITE KEEPER';
+  return 'VAULT KEEPER';
+}
+/* LEGACY qualification — player-designated OR auto-qualified by records */
+function P4_isLegacy(k){
+  if(!k) return false;
+  if(k.legacy===true) return true;
+  if(k.rarity==='legendary') return true;
+  if(num(k.bestQuality,0)>=95) return true;
+  if(int(k.clonesGrown,0)>=20) return true;
+  if(k.crosses&&k.crosses.length>=3) return true;
+  if(int(k.harvests,0)>=10) return true;
+  return false;
+}
+/* migration-safe backfill for keepers saved before Phase 4 */
+function P4_keeperBackfill(){
+  try{
+    if(!Array.isArray(S.keepers)) return;
+    S.keepers.forEach(k=>{
+      if(!k||typeof k!=='object') return;
+      if(typeof k.terpeneProfile!=='string'){ try{ k.terpeneProfile=P4_terpeneProfileOf(k.genetics||{},k.strainId); }catch(e){ k.terpeneProfile='Balanced'; } }
+      if(int(k.growCount,-1)<0) k.growCount=Math.max(1,int(k.harvests,0)+int(k.clonesGrown,0));
+      if(!Array.isArray(k.records)) k.records=[];
+      if(!Array.isArray(k.crosses)) k.crosses=[];
+      if(typeof k.legacy!=='boolean') k.legacy=false;
+      if(!Array.isArray(k.awards)) k.awards=[];
+      if(!Number.isFinite(num(k.bestQuality,NaN))) k.bestQuality=0;
+      if(!Number.isFinite(num(k.bestYield,NaN))) k.bestYield=0;
+    });
+  }catch(e){}
+}
+/* fold a harvest of keeper genetics into its hall-of-fame record */
+function P4_keeperHarvestRecord(k,qq,oz){
+  if(!k) return;
+  k.growCount=int(k.growCount,0)+1;
+  if(!Array.isArray(k.records)) k.records=[];
+  k.records.push({day:int(S.day,1),q:Math.round(num(qq,0)),oz:Math.round(num(oz,0)*10)/10});
+  if(k.records.length>20) k.records.shift();
+  if(num(qq,0)>num(k.bestQuality,0)) k.bestQuality=Math.round(num(qq,0));
+  if(num(oz,0)>num(k.bestYield,0)) k.bestYield=Math.round(num(oz,0)*10)/10;
+  k.harvests=int(k.harvests,0)+1;
+  if(!Array.isArray(k.awards)) k.awards=[];
+  if(num(qq,0)>=95&&k.awards.indexOf('MASTER GROW')<0) k.awards.push('MASTER GROW');
+  else if(num(qq,0)>=90&&k.awards.indexOf('TOP SHELF')<0) k.awards.push('TOP SHELF');
+}
+/* one-shot consume of the keeper-cross hint (window.__breedKeeperHint) */
+function P4_takeKeeperHint(){
+  try{
+    const h=(typeof window!=='undefined'&&window.__breedKeeperHint)||null;
+    try{ window.__breedKeeperHint=null; }catch(e2){}
+    if(h&&h.keeperId){
+      const k=(S.keepers||[]).find(x=>x.id===h.keeperId);
+      if(k&&String(k.strainId)===String((typeof breedA!=='undefined')?breedA:(h.strainId||''))) return k;
+    }
+  }catch(e){}
+  return null;
+}
+/* record a new cross on the keeper it was bred from */
+function P4_linkCrossToKeeper(cross){
+  const k=P4_takeKeeperHint(); if(!k||!cross) return;
+  if(!Array.isArray(k.crosses)) k.crosses=[];
+  k.crosses.push({id:cross.id||null,name:String(cross.name||'Untitled Cross'),day:int(S.day,1)});
+  k.breedingUses=int(k.breedingUses,0)+1;
+  try{ codexNote(k.strainId,'Bred from keeper '+k.strainName+' #'+k.phenoNum+': '+cross.name); }catch(e){}
+}
+function P4_toggleLegacy(id){
+  const k=(S.keepers||[]).find(x=>x.id===id); if(!k) return;
+  k.legacy=!k.legacy;
+  toast(k.legacy?(icon('crown-gold','ge-ic-md')+' <b>'+esc(k.strainName)+' #'+k.phenoNum+'</b> enters the <b>LEGACY</b> hall of fame.')
+    :(icon('x','ge-ic-md')+' Removed from LEGACY designation (records still qualify it if exceptional).'));
+  save(); if(current==='keepers') RENDER.keepers();
+}
+/* compare a living plant against historical keepers */
+function P4_pickKeeperForPlant(pid){
+  const p=S.plants.find(x=>x.id===pid); if(!p||!p.pheno) return;
+  if(!(S.keepers||[]).length){ toast(icon('x','ge-ic-md')+' No keepers in the vault yet.'); return; }
+  const st=getStrain(p.strainId);
+  const m=modal('<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>COMPARE '+(st?esc(st.name.toUpperCase()):'PLANT')+' #'+int(p.pheno.num,0)+' VS…</h3></div>'+
+   '<div class="ge-modal-body"><p class="ge-caption ge-muted">Living plant against your historical keepers.</p><div class="ge-stack">'+
+   S.keepers.map(k=>'<button class="ge-btn ge-btn-ghost ge-btn-block ge-btn-sm" data-p4pk="'+k.id+'"><b>'+icon('crown','ge-ic-sm')+' '+esc(k.strainName)+' #'+k.phenoNum+'</b> — '+esc(P4_keeperEpithet(k))+' · Overall '+k.overall+'</button>').join('')+
+   '</div></div><div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="p4pk-x">CANCEL</button></div>');
+  m.querySelector('#p4pk-x').onclick=()=>closeModal(m);
+  m.querySelectorAll('[data-p4pk]').forEach(el=>el.onclick=()=>{ closeModal(m); P4_comparePlantKeeper(pid,el.dataset.p4pk); });
+}
+function P4_comparePlantKeeper(pid,kid){
+  const p=S.plants.find(x=>x.id===pid); if(!p||!p.pheno) return;
+  const k=(S.keepers||[]).find(x=>x.id===kid); if(!k) return;
+  const st=getStrain(p.strainId);
+  compareModal(
+    {name:(st?st.name:'Plant')+' #'+int(p.pheno.num,0)+' (GROWING)',strainId:p.strainId,genetics:p.pheno,overall:Math.round(phenoOverall(p.pheno))},
+    keeperCmpObj(k),
+    phenoSideActions('b',{kind:'keeper',keeperId:k.id,strainId:k.strainId,strainName:k.strainName,phenoNum:k.phenoNum,rarity:k.rarity})
+     .concat([{label:'CLOSE',cls:'ge-btn-danger',fn:()=>{}}]));
+}
 function keepersVaultHtml(){
   let html='<div class="ge-card"><div class="ge-card-head">'+icon('keepers','ge-ic-md')+'<h3>VAULT CAPACITY</h3></div>'+
    '<div class="ge-datarow"><span>'+icon('keepers','ge-ic-sm')+'Slots used</span><b class="ge-num">'+S.keepers.length+' / '+S.keeperCapacity+'</b></div>';
@@ -5284,6 +6520,13 @@ function keepersVaultHtml(){
   html+='<div class="ge-card ge-card-flat"><div class="ge-filter-row">'+
    '<select id="ksort" class="ge-select" aria-label="Sort keepers">'+KEEPER_SORTS.map(s=>'<option value="'+s[0]+'"'+(keeperSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select>'+
    '<select id="kfilter" class="ge-select" aria-label="Filter keepers"><option value="all">ALL STRAINS</option>'+strains.map(id=>{const st=getStrain(id);return '<option value="'+id+'"'+(keeperFilter===id?' selected':'')+'>'+esc(st?st.name:id)+'</option>';}).join('')+'</select></div></div>';
+  /* P4_4F: LEGACY — hall of fame for exceptional keepers (player-designated or record-qualified) */
+  const __legacy=S.keepers.filter(k=>P4_isLegacy(k));
+  if(__legacy.length){
+    html+='<div class="ge-card ge-card-flat"><div class="ge-card-head">'+icon('crown-gold','ge-ic-md')+'<h3>LEGACY — HALL OF FAME</h3></div>'+
+     '<p class="ge-caption ge-muted">Immortalized keepers. Auto-qualified by records, or designated by you.</p>'+
+     __legacy.map(k=>'<div class="ge-datarow"><span>'+icon('crown-gold','ge-ic-sm')+'<b>'+esc(k.customName||(k.strainName+' #'+k.phenoNum))+'</b><br><span class="ge-caption ge-muted">'+esc(P4_keeperEpithet(k))+(k.legacy===true?' · DESIGNATED':' · RECORD-QUALIFIED')+'</span></span><b class="ge-num">Q'+Math.round(num(k.bestQuality,0))+' · '+num(k.bestYield,0)+' oz</b></div>').join('')+'</div>';
+  }
   let list=S.keepers.filter(k=>keeperFilter==='all'||k.strainId===keeperFilter);
   list=list.slice().sort((a,b)=>keeperSortVal(b)-keeperSortVal(a));
   const perPage=12, pages=Math.max(1,Math.ceil(list.length/perPage));
@@ -5291,10 +6534,10 @@ function keepersVaultHtml(){
   const page=list.slice(keeperPage*perPage,keeperPage*perPage+perPage);
   page.forEach(k=>{
     const bars=[['Resin',k.genetics.resinPot],['Terpenes',k.genetics.terpenePot],['Yield',k.genetics.yieldPot],['Potency',k.genetics.potencyPot]];
-    html+='<div class="ge-card ge-spec-card keeper-card r-'+k.rarity+'"><div class="ge-spec-art">'+flowerSVG(k.strainId+'#'+k.phenoNum,'keeper-flower')+'</div>'+
+    html+='<div class="ge-card ge-spec-card keeper-card r-'+k.rarity+'"><div class="ge-spec-art">'+P4_flowerRef(k.strainId+'#'+k.phenoNum,'keeper-flower')+'</div>'+
      '<div class="ge-spec-main">'+
      '<div class="ge-spec-top"><h3 class="ge-spec-name">'+(k.rarity==='legendary'?icon('crown-gold','ge-ic-sm'):icon('keepers','ge-ic-sm'))+esc(k.strainName)+' <span class="ge-num">#'+k.phenoNum+'</span></h3></div>'+
-     '<div class="ge-spec-badges">'+rarityBadge(k)+(k.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(k.legendaryTrait)+'</span>':'')+'</div>'+
+     '<div class="ge-spec-badges">'+rarityBadge(k)+(k.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(k.legendaryTrait)+'</span>':'')+(P4_isLegacy(k)?' <span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'LEGACY</span>':'')+'</div>'+
      '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Overall</span><b class="ge-num">'+k.overall+'</b></div>'+
      '<div class="ge-datarow"><span>'+icon('harvest','ge-ic-sm')+'Best harvest</span><b class="ge-num">Q'+k.bestQuality+' • '+k.bestYield+' oz</b></div>'+
      '<div class="ge-datarow"><span>'+icon('clone','ge-ic-sm')+'Clones grown</span><b class="ge-num">'+k.clonesGrown+'</b></div>'+
@@ -5302,6 +6545,7 @@ function keepersVaultHtml(){
      (k.traits.length?'<div class="ge-tags">'+k.traits.slice(0,6).map(t=>'<span class="ge-pill ge-pill-neutral">'+esc(t)+'</span>').join('')+'</div>':'')+
      '<div class="btn-row ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" data-mother="'+k.id+'">'+icon('mothers','ge-ic-sm')+'MOTHER</button>'+
      '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-cmp="'+k.id+'">'+icon('scroll','ge-ic-sm')+'COMPARE</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-legacy="'+k.id+'">'+icon('crown-gold','ge-ic-sm')+'LEGACY</button>'+
      '<button class="ge-btn ge-btn-sm ge-btn-danger ge-iconbtn" data-delk="'+k.id+'" aria-label="Remove keeper">'+icon('x','ge-ic-sm')+'</button></div></div></div>';
   });
   if(pages>1) html+='<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-ghost" id="kprev"'+(keeperPage===0?' disabled':'')+'>‹ PREV</button>'+
@@ -5319,7 +6563,7 @@ function mothersHtml(){
     const avgQ=mo.qualities.length?Math.round(mo.qualities.reduce((a,b)=>a+b,0)/mo.qualities.length):0;
     const avgY=mo.yields.length?Math.round(mo.yields.reduce((a,b)=>a+b,0)/mo.yields.length*10)/10:0;
     const bars=[['Resin',mo.genetics.resinPot],['Terpenes',mo.genetics.terpenePot],['Yield',mo.genetics.yieldPot]];
-    html+='<div class="ge-card ge-spec-card keeper-card mother-card r-'+mo.rarity+'"><div class="ge-spec-art">'+plantSVG(4,mo.strainId+'#'+mo.phenoNum,'mother-plant',{bushy:true,frost:1,dense:true})+'</div>'+
+    html+='<div class="ge-card ge-spec-card keeper-card mother-card r-'+mo.rarity+'"><div class="ge-spec-art">'+P4_plantRef(4,mo.strainId+'#'+mo.phenoNum,'mother-plant',{bushy:true,frost:1,dense:true})+'</div>'+
      '<div class="ge-spec-main">'+
      '<div class="ge-spec-top"><h3 class="ge-spec-name">'+icon('mothers','ge-ic-sm')+esc(mo.strainName)+' <span class="ge-num">#'+mo.phenoNum+'</span> <span class="ge-badge ge-badge-mother">MOTHER</span></h3></div>'+
      '<div class="ge-spec-badges">'+rarityBadge({rarity:mo.rarity})+(mo.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(mo.legendaryTrait)+'</span>':'')+'</div>'+
@@ -5328,7 +6572,7 @@ function mothersHtml(){
      '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Clone runs</span><b class="ge-num">'+mo.runs+'</b></div>'+
      '<div class="ge-datarow"><span>'+icon('trophy','ge-ic-sm')+'Best clone harvest</span><b class="ge-num">'+(mo.runs?'Q'+mo.bestQ+' • '+mo.bestY+' oz':'—')+'</b></div>'+
      '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Avg clone</span><b class="ge-num">'+(mo.runs?'Q'+avgQ+' • '+avgY+' oz':'—')+'</b></div>'+
-     (mo.awards.length?'<div class="ge-tags">'+mo.awards.slice(-4).map(a=>'<span class="ge-pill ge-pill-gold">'+esc(a)+'</span>').join('')+'</div>':'')+
+     (mo.awards.length?'<div class="ge-tags">'+mo.awards.slice(-4).map(a=>'<span class="ge-pill ge-pill-gold">'+icon('trophy','ge-ic-sm')+esc(String(a).replace(/^\uD83D\uDCAE\s*/u,''))+'</span>').join('')+'</div>':'')+
      '<div class="btn-row ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" data-clone="'+mo.id+'">'+icon('clone','ge-ic-sm')+'TAKE CLONE ($25)</button>'+
      '<button class="ge-btn ge-btn-sm ge-btn-danger" data-delm="'+mo.id+'">'+icon('x','ge-ic-sm')+'RETIRE</button></div></div></div>';
   });
@@ -5340,7 +6584,7 @@ function wireKeepers(r){
     const next=S.keeperCapLevel+1, cost=KEEPER_CAP_COSTS[next], gate=keeperCapGate(next);
     if(gate){ toast(icon('lock','ge-ic-md')+' '+esc(gate)); return; }
     if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
-    S.cash-=cost; S.keeperCapLevel=next; S.keeperCapacity=KEEPER_CAPS[next];
+    S.cash-=cost; S.keeperCapLevel=next; S.keeperCapacity=KEEPER_CAPS[next]+(typeof P4_vaultBonus==='function'?P4_vaultBonus():0); /* P4-4: the P0 vault annex survives paid upgrades */
     S.stats.keeperCapUpgrades++; gainXP(100);
     toast(icon('crown','ge-ic-md')+' Vault expanded to '+S.keeperCapacity+' slots!');
     save(); updateHUD(); checkMissions(); RENDER.keepers();
@@ -5351,6 +6595,7 @@ function wireKeepers(r){
   const kn=$('knext'); if(kn) kn.onclick=()=>{ keeperPage++; RENDER.keepers(); };
   r.querySelectorAll('[data-mother]').forEach(b=>b.onclick=()=>promoteMother(b.dataset.mother));
   r.querySelectorAll('[data-cmp]').forEach(b=>b.onclick=()=>pickComparePartner(b.dataset.cmp));
+  r.querySelectorAll('[data-legacy]').forEach(b=>b.onclick=()=>P4_toggleLegacy(b.dataset.legacy)); /* P4_4F */
   r.querySelectorAll('[data-delk]').forEach(b=>b.onclick=()=>removeKeeper(b.dataset.delk));
   r.querySelectorAll('[data-clone]').forEach(b=>b.onclick=()=>takeClone(b.dataset.clone));
   r.querySelectorAll('[data-delm]').forEach(b=>b.onclick=()=>removeMother(b.dataset.delm));
@@ -5712,6 +6957,8 @@ function WX_eventDayTick(ev){
   }
   /* P2-4: decision-event day ticks (temporary ventilation heat climb) */
   try{ if(typeof P2EV_dayTick==='function') P2EV_dayTick(ev); }catch(e){}
+  /* P4 (4K): phase-4 event day ticks (VPD drift stress while ridden out) */
+  try{ if(typeof P4EV_dayTick==='function') P4EV_dayTick(ev); }catch(e){}
 }
 function WX_endEvent(uid,expired){
   var w=S.wx; if(!w) return;
@@ -5982,6 +7229,192 @@ function P2EV_register(){
   });
 }
 P2EV_register();
+/* ============================================================
+   P4 — PHASE 4 EVENT EXPANSION (4K)
+   Nine new decision-based global events, one per category
+   (ENVIRONMENT, EQUIPMENT, GENETICS, MARKET, EMPLOYEE, CUSTOMER,
+   BREEDER, FACILITY, PROJECT 0), registered into the WX engine so
+   cooldowns, day-minimums, preconditions, DECIDE LATER, banners,
+   dismissal and expiry are all reused. The daily roll cadence is
+   unchanged (same 0.15 roll) — only variety grows.
+   HARD RULES (regression-tested): no event fires offline (the offline
+   sim never touches WX_tick / rollEvents); NO event can destroy or
+   damage a keeper, a mother, or a P0-verified genetic via an
+   unavoidable random roll — harmful random targeting only ever
+   touches ordinary grow-room plants, and any cull is always an
+   explicit player choice.
+   ============================================================ */
+/* plants that are never valid targets for harmful random effects:
+   keeper clones and mother-line clones stay untouchable */
+function P4_safePlants(){
+  try{ return (S.plants||[]).filter(function(p){ return p&&!p.keeperId&&!(p.isClone&&p.motherId); }); }
+  catch(e){ return []; }
+}
+const P4EV_DEFS=[
+ /* ---- VPD DRIFT (ENVIRONMENT, UNCOMMON) ---- */
+ { id:'p4ev-vpd', rarity:'UNCOMMON', weight:6, cd:16, dur:[2,3],
+   title:'VPD DRIFT',
+   text:function(){ return 'VPD has drifted out of the 0.8–1.2 kPa sweet spot — stomata are closing and the room is stressed. Recalibrate, hand-tune, or ride it out.'; },
+   canRoll:function(){ return S.day>=8&&S.plants.length>0; },
+   onStart:function(){ S.env.temp=clamp(num(S.env.temp,76)+5,50,100); S.env.humidity=clamp(num(S.env.humidity,52)-12,5,100); },
+   choices:[
+    {label:'RECALIBRATE SENSORS', sub:'Pay $50 — climate back in the band, today',
+     run:function(){ if(S.cash<50){ toast(WX_ic('x','ge-ic-md')+' Need $50.'); return; } S.cash-=50; S.env.temp=clamp(num(S.env.temp,76)-5,50,100); S.env.humidity=clamp(num(S.env.humidity,52)+12,0,100); toast(WX_ic('temp','ge-ic-md')+' Sensors recalibrated. VPD back in the band.'); return 'end'; }},
+    {label:'HAND-TUNE THE ROOM', sub:'Free — partial correction, +4 stress all plants',
+     run:function(){ S.env.temp=clamp(num(S.env.temp,76)-2,50,100); S.env.humidity=clamp(num(S.env.humidity,52)+8,0,100); S.plants.forEach(function(p){ p.stress=clamp(num(p.stress,0)+4,0,100); }); toast(WX_ic('check','ge-ic-md')+' Hand-tuned. Close enough — the plants felt it.'); return 'end'; }},
+    {label:'RIDE IT OUT', sub:'Free — plants +3 stress/day until it passes',
+     run:function(ev){ ev.data.rideOut=true; toast(WX_ic('warn','ge-ic-md')+' Riding it out… watch the leaves.'); }}
+   ]},
+ /* ---- CO2 TANK LEAK (EQUIPMENT, UNCOMMON) ---- */
+ { id:'p4ev-co2', rarity:'UNCOMMON', weight:6, cd:16, dur:[2,3],
+   title:'CO2 TANK LEAK',
+   text:function(){ return 'A CO2 tank is bleeding out — the room dropped to 400 ppm and growth is crawling. Swap it, seal it, or run lean.'; },
+   canRoll:function(){ return S.day>=7; },
+   onStart:function(ev){ ev.data.prevCo2=num(S.env.co2,900); S.env.co2=400; },
+   choices:[
+    {label:'SWAP THE TANK', sub:'Pay $70 — full CO2 restored now',
+     run:function(ev){ if(S.cash<70){ toast(WX_ic('x','ge-ic-md')+' Need $70.'); return; } S.cash-=70; S.env.co2=num(ev.data.prevCo2,900); toast(WX_ic('equipment','ge-ic-md')+' Fresh tank online. CO2 restored.'); return 'end'; }},
+    {label:'SEAL THE LEAK', sub:'Pay $25 — patched to 700 ppm',
+     run:function(ev){ if(S.cash<25){ toast(WX_ic('x','ge-ic-md')+' Need $25.'); return; } S.cash-=25; S.env.co2=700; toast(WX_ic('check','ge-ic-md')+' Leak sealed. Running at 700 ppm.'); return 'end'; }},
+    {label:'RUN LEAN', sub:'Free — slow growth until it passes',
+     run:function(){ toast(WX_ic('warn','ge-ic-md')+' Running lean… growth will crawl.'); }}
+   ]},
+ /* ---- HERM SCARE (GENETICS, RARE) ---- */
+ { id:'p4ev-herm', rarity:'RARE', weight:4, cd:22, dur:[3,3],
+   title:'HERM SCARE',
+   text:function(ev){ var p=(S.plants||[]).find(function(x){ return x&&x.id===ev.data.suspectId; }); var st=p?getStrain(p.strainId):null; return 'A '+(st?st.name:'plant')+' is showing suspicious traits — possible herm. One bad actor can seed the whole room. Keeper and mother lines are never at risk here; only ordinary room plants are ever in play.'; },
+   canRoll:function(){ return S.day>=12&&P4_safePlants().length>=3; },
+   onStart:function(ev){ var cands=P4_safePlants(); var p=cands.length?pick(cands):null; ev.data.suspectId=p?p.id:null; if(p){ p.problems=p.problems||[]; if(p.problems.indexOf('Suspected herm')<0) p.problems.push('Suspected herm'); p.health=clamp(num(p.health,100)-5,0,100); } },
+   choices:[
+    {label:'CULL IT NOW', sub:'Free — remove the suspect, zero seeding risk (your call)',
+     run:function(ev){ S.plants=S.plants.filter(function(p){ return p.id!==ev.data.suspectId; }); toast(WX_ic('leaf','ge-ic-md')+' Suspect culled. The room is safe.'); return 'end'; }},
+    {label:'CALL THE BREEDER', sub:'Pay $60 — expert sexing: false alarm cleared, real herm culled cleanly',
+     run:function(ev){
+       if(S.cash<60){ toast(WX_ic('x','ge-ic-md')+' Need $60.'); return; } S.cash-=60;
+       var p=(S.plants||[]).find(function(x){ return x&&x.id===ev.data.suspectId; });
+       if(Math.random()<0.5){
+         if(p){ p.problems=(p.problems||[]).filter(function(x){ return x!=='Suspected herm'; }); }
+         toast(WX_ic('check','ge-ic-md')+' False alarm — the breeder clears it.');
+       } else {
+         S.plants=S.plants.filter(function(x){ return x.id!==ev.data.suspectId; });
+         toast(WX_ic('dna','ge-ic-md')+' Confirmed herm — culled cleanly, no seeding.');
+       }
+       return 'end'; }},
+    {label:'WATCH AND WAIT', sub:'Free — 35% chance it seeds 2 nearby plants',
+     run:function(ev){
+       var p=(S.plants||[]).find(function(x){ return x&&x.id===ev.data.suspectId; });
+       if(p) p.problems=(p.problems||[]).filter(function(x){ return x!=='Suspected herm'; });
+       if(Math.random()<0.35){
+         var cands=P4_safePlants().filter(function(x){ return x.id!==ev.data.suspectId; }), n=Math.min(2,cands.length), i;
+         for(i=0;i<n;i++){ var q=cands.splice(rndi(0,cands.length-1),1)[0]; q.problems=q.problems||[]; if(q.problems.indexOf('Seeded')<0) q.problems.push('Seeded'); q.health=clamp(num(q.health,100)-6,0,100); }
+         toast(WX_ic('warn','ge-ic-md')+' It was real — '+n+' plant(s) got seeded.');
+       } else toast(WX_ic('check','ge-ic-md')+' False alarm — the scare passes.');
+       return 'end'; }}
+   ]},
+ /* ---- TOURIST SEASON (MARKET, UNCOMMON) ---- */
+ { id:'p4ev-tourist', rarity:'UNCOMMON', weight:6, cd:18, dur:[4,4],
+   title:'TOURIST SEASON',
+   text:function(){ return 'Foot traffic is surging — out-of-towners are hunting for souvenirs. Move volume now, run a promo for the brand, or just keep doing you.'; },
+   canRoll:function(){ return S.day>=10&&S.inventory.length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'STOCK THE SHELVES', sub:'Sell up to 6 oz at standard rates',
+     run:function(){ var sold=P2EV_fillLots(6,null); if(sold.oz<=0){ toast(WX_ic('x','ge-ic-md')+' No sellable inventory.'); return; } toast(WX_ic('cash','ge-ic-md')+' Tourist rush: '+sold.oz+' oz for '+fmt$(sold.total)+'.'); return 'end'; }},
+    {label:'RUN A PROMO', sub:'Pay $50 — brand push (+4 rep)',
+     run:function(){ if(S.cash<50){ toast(WX_ic('x','ge-ic-md')+' Need $50.'); return; } S.cash-=50; if(typeof gainRep==='function') gainRep(4); toast(WX_ic('star','ge-ic-md')+' Promo running. The brand is buzzing. +4 rep'); return 'end'; }},
+    {label:'BUSINESS AS USUAL', sub:'Let the season pass',
+     run:function(){ toast('You sit the season out.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- POACHED TALENT (EMPLOYEE, RARE) ---- */
+ { id:'p4ev-poach', rarity:'RARE', weight:4, cd:24, dur:[4,4],
+   title:'POACHED TALENT',
+   text:function(ev){ return 'A rival operation is courting '+(ev.data.empName||'your best hand')+' — more money, fancy title. They only leave if YOU let them.'; },
+   canRoll:function(){ try{ return S.day>=16&&typeof EX_ready==='function'&&EX_ready()&&(S.ex.employees||[]).length>=2; }catch(e){ return false; } },
+   onStart:function(ev){ var e=(S.ex.employees||[]).slice().sort(function(a,b){ return num(b.skill,0)-num(a.skill,0); })[0]; if(e){ ev.data.empId=e.id; ev.data.empName=e.name; } },
+   choices:[
+    {label:'COUNTER-OFFER', sub:'Pay $200 — they stay, morale maxed',
+     run:function(ev){ if(S.cash<200){ toast(WX_ic('x','ge-ic-md')+' Need $200.'); return; } S.cash-=200; var e=P2EV_emp(ev); if(e) e.morale=100; toast(WX_ic('cash','ge-ic-md')+' Counter-offer accepted. '+(e?esc(e.name):'They')+' stays.'); return 'end'; }},
+    {label:'LET THEM GO GRACEFULLY', sub:'Free — they leave; +3 rep for the class act, crew -5 morale',
+     run:function(ev){ var e=P2EV_emp(ev); S.ex.employees=(S.ex.employees||[]).filter(function(x){ return x.id!==ev.data.empId; }); (S.ex.employees||[]).forEach(function(x){ x.morale=clamp(num(x.morale,70)-5,0,100); }); if(typeof gainRep==='function') gainRep(3); toast(WX_ic('users','ge-ic-md')+' '+(e?esc(e.name):'They')+' moves on with your blessing. +3 rep'); return 'end'; }},
+    {label:'PROMOTE FROM WITHIN', sub:'Pay $80 — they leave; your most junior steps up (+1 level, +10 morale)',
+     run:function(ev){ if(S.cash<80){ toast(WX_ic('x','ge-ic-md')+' Need $80.'); return; } S.cash-=80; S.ex.employees=(S.ex.employees||[]).filter(function(x){ return x.id!==ev.data.empId; }); var jr=(S.ex.employees||[]).slice().sort(function(a,b){ return num(a.xp,0)-num(b.xp,0); })[0]; if(jr){ jr.lvl=int(jr.lvl,1)+1; jr.morale=clamp(num(jr.morale,70)+10,0,100); } toast(WX_ic('train','ge-ic-md')+' Next up steps up. The crew respects it.'); return 'end'; }}
+   ]},
+ /* ---- THE CRITIC (CUSTOMER, UNCOMMON) ---- */
+ { id:'p4ev-critic', rarity:'UNCOMMON', weight:5, cd:20, dur:[3,3],
+   title:'THE CRITIC',
+   text:function(){ return 'A well-known reviewer is in town and wants the full dispensary experience. Impress them, be yourself, or politely pass.'; },
+   canRoll:function(){ return S.day>=12&&S.inventory.length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'RED CARPET', sub:'Pay $75 — serve your best shelf (85+ quality = glowing review)',
+     run:function(){ if(S.cash<75){ toast(WX_ic('x','ge-ic-md')+' Need $75.'); return; } S.cash-=75; var top=S.inventory.some(function(it){ return num(it.quality,0)>=85; }); if(typeof gainRep==='function') gainRep(top?6:1); toast(WX_ic('star','ge-ic-md')+(top?' Glowing review! +6 rep':' The critic saw mid shelves. +1 rep')); return 'end'; }},
+    {label:'JUST BE YOURSELF', sub:'Free — 50/50 great review (+4 rep) or quiet visit (+1 rep)',
+     run:function(){ var great=Math.random()<0.5; if(typeof gainRep==='function') gainRep(great?4:1); toast(WX_ic('users','ge-ic-md')+(great?' The critic loved the authenticity. +4 rep':' Quiet visit. +1 rep')); return 'end'; }},
+    {label:'DECLINE THE VISIT', sub:'No risk, no reward',
+     run:function(){ toast('You pass on the spotlight.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- LEGACY POLLEN (BREEDER, RARE) ---- */
+ { id:'p4ev-pollen', rarity:'RARE', weight:4, cd:24, dur:[5,5],
+   title:'LEGACY POLLEN',
+   text:function(ev){ var c=(S.customStrains||[]).find(function(x){ return x&&x.id===ev.data.targetId; }); return 'A veteran breeder offers proven legacy pollen — real stability gains for "'+(c?c.name:'your line')+'". Full pollination or just tester cuts?'; },
+   canRoll:function(){ return S.day>=20&&(S.customStrains||[]).length>0; },
+   onStart:function(ev){ var c=(S.customStrains||[]).slice().sort(function(a,b){ return num(a.stabilityPct,0)-num(b.stabilityPct,0); })[0]; ev.data.targetId=c?c.id:null; },
+   choices:[
+    {label:'FULL POLLINATION', sub:'Pay $150 — +8 stability on your least-stable custom',
+     run:function(ev){ if(S.cash<150){ toast(WX_ic('x','ge-ic-md')+' Need $150.'); return; } S.cash-=150; var c=(S.customStrains||[]).find(function(x){ return x&&x.id===ev.data.targetId; }); if(c){ c.stabilityPct=clamp(num(c.stabilityPct,0)+8,0,100); try{ if(typeof codexNote==='function') codexNote(c.id,'Legacy pollen applied: stability '+Math.round(c.stabilityPct)+'%'); }catch(e){} } toast(WX_ic('dna','ge-ic-md')+' Legacy pollen worked in. Stability climbing.'); return 'end'; }},
+    {label:'TESTER CUTS', sub:'Pay $50 — +3 stability, cautious',
+     run:function(ev){ if(S.cash<50){ toast(WX_ic('x','ge-ic-md')+' Need $50.'); return; } S.cash-=50; var c=(S.customStrains||[]).find(function(x){ return x&&x.id===ev.data.targetId; }); if(c) c.stabilityPct=clamp(num(c.stabilityPct,0)+3,0,100); toast(WX_ic('dna','ge-ic-md')+' Tester cuts taken. Small gains.'); return 'end'; }},
+    {label:'PASS', sub:'Keep your lines pure',
+     run:function(){ toast('You keep the lines pure.'); return 'end'; }}
+   ], dismissEnds:true},
+ /* ---- INSPECTION DAY (FACILITY, UNCOMMON) ---- */
+ { id:'p4ev-inspect', rarity:'UNCOMMON', weight:5, cd:22, dur:[2,2],
+   title:'INSPECTION DAY',
+   text:function(){ return 'Compliance is at the door — clipboard, badge, no smile. Pass clean, show them what the vault is really for, or wing it.'; },
+   canRoll:function(){ return S.day>=10; },
+   onStart:function(){},
+   choices:[
+    {label:'DEEP CLEAN', sub:'Pay $100 — pass cleanly (+2 rep)',
+     run:function(){ if(S.cash<100){ toast(WX_ic('x','ge-ic-md')+' Need $100.'); return; } S.cash-=100; if(typeof gainRep==='function') gainRep(2); toast(WX_ic('check','ge-ic-md')+' Inspection passed. Spotless. +2 rep'); return 'end'; }},
+    {label:'SHOW THE P0 VAULT', sub:'Free — requires a VERIFIED genetic: the mission impresses (+3 rep, +4 P0)',
+     run:function(){ var ok=false; try{ ok=Object.keys(S.p0vault||{}).some(function(gid){ var e=S.p0vault[gid]; return e&&int(e.tier,0)>=2; }); }catch(e){} if(!ok){ toast(WX_ic('lock','ge-ic-md')+' No VERIFIED genetic in the vault yet.'); return; } if(typeof gainRep==='function') gainRep(3); if(typeof addP0==='function') addP0('preservation',4); toast(WX_ic('project0','ge-ic-md')+' The inspector saw the mission. +3 rep, +4 P0'); return 'end'; }},
+    {label:'WING IT', sub:'Free — 50% pass (+1 rep), 50% $150 fine',
+     run:function(){ if(Math.random()<0.5){ if(typeof gainRep==='function') gainRep(1); toast(WX_ic('check','ge-ic-md')+' Passed on charm. +1 rep'); } else { S.cash=Math.max(0,num(S.cash,0)-150); toast(WX_ic('x','ge-ic-md')+' Violation found — $150 fine.'); } return 'end'; }}
+   ]},
+ /* ---- ARCHIVIST'S REQUEST (PROJECT 0, RARE) ---- */
+ { id:'p4ev-archivist', rarity:'RARE', weight:4, cd:26, dur:[5,5],
+   title:"ARCHIVIST'S REQUEST",
+   text:function(){ return 'Archivist Quinn wants detailed phenotype data on one of your keepers — measurements, not the plant. The keeper stays in your vault; only the knowledge moves.'; },
+   canRoll:function(){ return S.day>=25&&(S.keepers||[]).length>0; },
+   onStart:function(){},
+   choices:[
+    {label:'SUBMIT THE DATA', sub:'Share keeper pheno data (+6 P0 genetics) — the keeper stays',
+     run:function(){ if(!(S.keepers||[]).length){ toast('No keepers yet.'); return; } var k=(S.keepers||[]).slice().sort(function(a,b){ return num(b.overall,0)-num(a.overall,0); })[0]; try{ if(typeof codexNote==='function') codexNote(k.strainId,'P0 dossier submitted: '+(k.strainName||'')+' #'+int(k.phenoNum,0)); }catch(e){} if(typeof addP0==='function') addP0('genetics',6); toast(WX_ic('project0','ge-ic-md')+' Dossier submitted. The vault grows. +6 P0'); return 'end'; }},
+    {label:'PLEDGE A FULL DOSSIER', sub:'+2 P0 preservation — the vault remembers promises',
+     run:function(){ if(typeof addP0==='function') addP0('preservation',2); toast(WX_ic('project0','ge-ic-md')+' Pledge recorded. +2 P0'); return 'end'; }},
+    {label:'DECLINE', sub:'Keep your data close',
+     run:function(){ toast('Quinn understands. The offer stands.'); return 'end'; }}
+   ], dismissEnds:true}
+];
+var P4EV_registered=false;
+function P4EV_register(){
+  if(P4EV_registered) return; P4EV_registered=true;
+  if(typeof WX_EVENT_DEFS==='undefined'||!Array.isArray(WX_EVENT_DEFS)) return;
+  P4EV_DEFS.forEach(function(d){
+    if(!WX_EVENT_DEFS.some(function(x){ return x&&x.id===d.id; })) WX_EVENT_DEFS.push(d);
+  });
+}
+P4EV_register();
+/* per-day ticks for P4 events (wired into WX_eventDayTick) */
+function P4EV_dayTick(ev){
+  if(!ev||!ev.def||!S) return;
+  try{
+    if(ev.def==='p4ev-vpd'&&ev.data.rideOut){
+      (S.plants||[]).forEach(function(p){ p.stress=clamp(num(p.stress,0)+3,0,100); });
+    }
+  }catch(e){}
+}
+
 
 /* ---------------- P2-4 helpers ---------------- */
 function P2EV_emp(ev){
@@ -6000,6 +7433,7 @@ function P2EV_sellLot(it,take,buyerId){
   S.cash=num(S.cash,0)+out.total;
   S.stats.lifetimeRevenue=num(S.stats.lifetimeRevenue,0)+out.total;
   S.stats.sales=num(S.stats.sales,0)+1;
+  try{ if(typeof P4_noteSale==='function') P4_noteSale(it.strainId,it.strainName,out.oz,out.total); }catch(e){} /* P4: best-selling genetic */
   try{ if(typeof gainXP==='function') gainXP(15); }catch(e){}
   try{ if(typeof checkMissions==='function') checkMissions(); }catch(e){}
   try{ if(typeof checkAchievements==='function') checkAchievements(); }catch(e){}
@@ -6241,6 +7675,373 @@ function WX_marketPanel(){
   html+='<p class="ge-caption ge-muted">Sell high, hold low — demand shifts every few days.</p></div>';
   try{ if(typeof P3W5_condsHTML==='function') html+=P3W5_condsHTML(); }catch(e){} /* P3-W5: market conditions panel */
   return html;
+}
+
+/* ============================================================================
+   P4 WAVE 6 (worker 4L/4M/4N/4V) — POLISH, PACING & PLAYER ENGAGEMENT
+   Informational / visual / UX only. No economy changes: no price, yield, or
+   multiplier is touched and no new sale paths are created. Every new symbol
+   is prefixed P4_. Function declarations are hoisted; consts are defined
+   here before any runtime call can reach them.
+   ============================================================================ */
+
+/* ==================== 4L — DISPENSARY & MARKET FEEDBACK ====================
+   A sales journal plus a SALES BRIEFING. The journal is written from the
+   EXISTING sale paths only (TY_custTick walk-in sim, CT_checkout retail
+   carts, sellToBuyer wholesale lots, TY_sellProduct finished products) —
+   one guarded hook call each, zero changes to pricing or flow.
+
+   CUSTOMER DIFFERENTIAL AUDIT (verified against the live sale path):
+   - quality:      P3W5_custScore base includes s.quality; custTick filters
+                   quality>=qualExp-15; buyers pay +0.20/+0.25/+0.30 at Q90+;
+                   TY_priceFactor pays 1.10x-1.80x by quality band
+   - potency:      'potency' taste archetype scores pot*0.5 (Premium/Potency
+                   hunters); Marcus/Dana/Vivienne buyer mults scale on potency
+   - terpenes:     'terpene' archetype scores terp*0.6+q*0.2-pot*0.1; Lena /
+                   Vivienne buyer mults scale on terpenes
+   - genetic pop:  TY_strainPop feeds TY_priceFactor (0.85-1.30); favStrain
+                   gives +30 selection score; Q85+ sales raise strainPop +2
+   - product type: customer prefPtype gives +20 selection score; TY_typeDem
+                   demand multiplier feeds price
+   - price:        selection penalizes price*priceSens*0.05; budget cap
+                   filters unaffordable stock
+   - market demand: 7 P3W5 conditions, each 0.90-1.25 (combined 0.85-1.60),
+                   applied inside WX_sellMult, plus season, competitor
+                   pressure, and rep multipliers
+   The briefing below only READS these systems — it invents no pricing.
+   ============================================================================ */
+function P4L_migrate(){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.p4l||typeof S.p4l!=='object') S.p4l={};
+    if(!Array.isArray(S.p4l.ev)) S.p4l.ev=[];
+    /* sanitize: drop malformed rows, keep the journal small and serializable */
+    S.p4l.ev=S.p4l.ev.filter(function(e){ return e&&typeof e==='object'&&num(e.r,0)>0&&num(e.q,0)>0; }).slice(-400);
+  }catch(e){}
+}
+function P4L_noteSale(ev){
+  /* One journal row per completed sale. Never touches cash, pricing, or state. */
+  try{
+    if(typeof S==='undefined'||!S||!S.p4l||!Array.isArray(S.p4l.ev)) return;
+    var e=ev||{};
+    var qty=num(e.qty,0), rev=num(e.rev,0);
+    if(!(qty>0)||!(rev>0)||!Number.isFinite(rev)) return;
+    S.p4l.ev.push({d:int(S.day,1),s:String(e.strainId||'unknown'),n:String(e.strainName||'Unknown').slice(0,48),
+      p:String(e.ptype||'flower').slice(0,24),c:String(e.cust||'walk-in').slice(0,40),
+      q:Math.round(qty*100)/100,r:Math.round(rev*100)/100,uq:clamp(Math.round(num(e.quality,70)),0,100)});
+    if(S.p4l.ev.length>400) S.p4l.ev.splice(0,S.p4l.ev.length-400);
+  }catch(e){}
+}
+function P4L_window(){
+  try{
+    if(!S||!S.p4l||!Array.isArray(S.p4l.ev)) return [];
+    var cutoff=int(S.day,1)-14;
+    return S.p4l.ev.filter(function(e){ return e&&num(e.d,0)>cutoff; });
+  }catch(e){ return []; }
+}
+function P4L_summary(){
+  /* The 6 briefing insights, computed from real journal rows + live stock.
+     Returns null when the sales period is too thin to brief on. */
+  try{
+    var ev=P4L_window();
+    if(ev.length<8) return null;
+    var byStrain={}, byCust={}, byPtype={};
+    ev.forEach(function(e){
+      var a=byStrain[e.s]||(byStrain[e.s]={name:e.n,qty:0,rev:0,days:{}});
+      a.qty+=e.q; a.rev+=e.r; a.days[e.d]=1;
+      var c=byCust[e.c]||(byCust[e.c]={n:0,qty:0,rev:0}); c.n++; c.qty+=e.q; c.rev+=e.r;
+      var t=byPtype[e.p]||(byPtype[e.p]={qty:0,rev:0}); t.qty+=e.q; t.rev+=e.r;
+    });
+    var top=function(o,f){ var bk=null,bv=-1e18; Object.keys(o).forEach(function(k){ var v=f(o[k]); if(v>bv){ bv=v; bk=k; } }); return bk?{k:bk,v:o[bk],score:bv}:null; };
+    /* live stock by product type (shelf inventory + packaged production) */
+    var stock={};
+    try{
+      (S.inventory||[]).forEach(function(it){ if(num(it.amount,0)>0){ var p='flower'; try{ p=String(TY_ptypeOf(it)); }catch(e2){} stock[p]=num(stock[p],0)+num(it.amount,0); } });
+      ((S.ty&&S.ty.prod)||[]).forEach(function(p){ if(num(p.amount,0)>0){ var k=String(p.ptype||'flower'); stock[k]=num(stock[k],0)+num(p.amount,0); } });
+    }catch(e2){}
+    var under=null,us=0;
+    Object.keys(byPtype).forEach(function(k){
+      var ss=byPtype[k].qty, st=num(stock[k],0);
+      if(ss<=0) return;
+      var frac=ss/(ss+st); /* share of all movement that was sales, not shelves */
+      if(frac>0.7&&frac>us){ us=frac; under={k:k,v:byPtype[k],stock:st,frac:frac}; }
+    });
+    var over=null;
+    Object.keys(stock).forEach(function(k){
+      var st=stock[k], ss=byPtype[k]?byPtype[k].qty:0;
+      if(st>=20&&ss<=0&&(!over||st>over.stock)) over={k:k,stock:st};
+    });
+    return {
+      n:ev.length,
+      topSeller:top(byStrain,function(a){ return a.qty; }),
+      bestMargin:top(byStrain,function(a){ return a.qty>0?a.rev/a.qty:-1; }),
+      fav:top(byCust,function(a){ return a.n; }),
+      fastest:top(byStrain,function(a){ return a.qty/Math.max(1,Object.keys(a.days).length); }),
+      under:under, over:over
+    };
+  }catch(e){ return null; }
+}
+function P4L_summaryHTML(){
+  /* SALES BRIEFING card for the dispensary. Read-only: no buttons that sell. */
+  try{
+    if(!S) return '';
+    if(!(num(S.stats&&S.stats.harvests,0)>0)) return '';
+    var head='<div class="ge-card p4l-card"><div class="ge-card-head"><h3>'+icon('chart','ge-ic-md')+'SALES BRIEFING</h3><span class="ge-caption ge-muted">last 14 days</span></div>';
+    var sum=P4L_summary();
+    if(!sum){
+      var n=P4L_window().length;
+      return head+'<p class="ge-body ge-muted">The briefing unlocks after <b>8</b> recorded sales in 14 days ('+n+' so far). Sell through the counter, wholesale buyers, or the walk-in rush — then come back for the readout.</p></div>';
+    }
+    var row=function(ico,label,val,hint){
+      return '<div class="ge-datarow p4l-row"><span>'+icon(ico,'ge-ic-sm')+' <span class="ge-almost-lbl">'+label+'</span><br><b>'+val+'</b><br><span class="ge-caption ge-muted">'+hint+'</span></span></div>';
+    };
+    var h=head;
+    if(sum.topSeller) h+=row('trophy','TOP SELLER',esc(sum.topSeller.v.name)+' — '+sum.topSeller.v.qty.toFixed(1)+' units','Grow more of this. It moves.');
+    if(sum.bestMargin) h+=row('cash','BEST MARGIN',esc(sum.bestMargin.v.name)+' — '+fmt$(sum.bestMargin.score)+'/unit','Highest revenue per unit sold. Give it shelf priority.');
+    if(sum.fav) h+=row('users','CUSTOMER FAVORITE',esc(sum.fav.k)+' — '+sum.fav.v.n+' purchases','These buyers keep coming back. Keep their favorites stocked.');
+    if(sum.fastest) h+=row('timer','FASTEST SELLER',esc(sum.fastest.v.name)+' — '+sum.fastest.score.toFixed(1)+'/day','Velocity king. Never let it stock out.');
+    if(sum.under) h+=row('warn','UNDERSUPPLIED',esc(sum.under.k.toUpperCase())+' — '+Math.round(sum.under.frac*100)+'% of movement was sales','Selling faster than you stock it. Restock or process into it.');
+    if(sum.over) h+=row('box','OVERSTOCKED',esc(sum.over.k.toUpperCase())+' — '+sum.over.stock.toFixed(0)+' units idle','On shelves with no sales. Process it, promote it, or hold.');
+    h+='<p class="ge-caption ge-muted">Informational only — prices and sales are untouched. '+sum.n+' sales analyzed.</p></div>';
+    return h;
+  }catch(e){ return ''; }
+}
+
+/* ==================== 4M — EMPIRE EVOLUTION (visual) ====================
+   Growth must LOOK different. 7 named operation stages map over the 9
+   facility tiers (monotonic, append-only — FACILITIES/FAC_TIERS untouched):
+     fac 0 -> BEGINNER, 1 -> GROWER, 2-3 -> CRAFT CULTIVATOR, 4 -> BREEDER,
+     5-6 -> COMMERCIAL OPERATOR, 7 -> GENETIC PRESERVATIONIST, 8 -> EMPIRE
+   Visuals are CSS staging (border/glow/backdrop treatments) + a stage ribbon
+   on the grow-room banner + a stage ladder on the empire hub + a
+   stage-evolution cinematic when the stage changes on facility purchase.
+   The existing facilitySceneSVG/GR_facilityScene keep doing the parameterized
+   art; P4M only dresses the stage. GPU-cheap, mobile-safe, no layout rebuild.
+   ============================================================================ */
+const P4M_STAGES=[
+ {name:'BEGINNER',tag:'A tent, a dream, and your own two hands.'},
+ {name:'GROWER',tag:'Rooms with intent. The craft is getting real.'},
+ {name:'CRAFT CULTIVATOR',tag:'Purpose-built rooms. Quality is the brand.'},
+ {name:'BREEDER',tag:'The lab mindset. New genetics are born here.'},
+ {name:'COMMERCIAL OPERATOR',tag:'Scale. Systems. Serious weight.'},
+ {name:'GENETIC PRESERVATIONIST',tag:'The vault mentality. Nothing precious is ever lost.'},
+ {name:'EMPIRE',tag:'Shocker OwnZ. The name is on the building.'}
+];
+const P4M_FAC2STAGE=[0,1,2,2,3,4,4,5,6];
+function P4M_stageIdx(){ try{ return P4M_FAC2STAGE[clamp(int(S.facility,0),0,8)]||0; }catch(e){ return 0; } }
+function P4M_stageName(){ try{ return P4M_STAGES[P4M_stageIdx()].name; }catch(e){ return 'BEGINNER'; } }
+function P4M_migrate(){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.p4m||typeof S.p4m!=='object') S.p4m={};
+    if(typeof S.p4m.stage!=='number') S.p4m.stage=P4M_stageIdx();
+  }catch(e){}
+}
+function P4M_stageRibbonHTML(){
+  /* Stage ribbon under the grow-room scene: stage name, tagline, what is next. */
+  try{
+    var i=P4M_stageIdx(), st=P4M_STAGES[i], nx=i<6?P4M_STAGES[i+1].name:null;
+    var crown=i>=5?' '+icon('crown','ge-ic-sm'):'';
+    return '<div class="p4m-stage-ribbon"><span class="ge-almost-lbl">STAGE '+(i+1)+'/7</span>'+
+     '<b>'+esc(st.name)+'</b>'+crown+'<span class="ge-muted ge-caption">'+esc(st.tag)+'</span>'+
+     (nx?'<span class="ge-caption ge-muted">Next: '+esc(nx)+'</span>':'<span class="ge-caption ge-gold-text">Peak reached.</span>')+'</div>';
+  }catch(e){ return ''; }
+}
+function P4M_stageLadderHTML(){
+  /* 7-stage ladder for the empire hub: past stages dim, current gold. */
+  try{
+    var cur=P4M_stageIdx();
+    return '<div class="p4m-stageladder" aria-label="Operation stage ladder">'+P4M_STAGES.map(function(s,i){
+      return '<span class="p4m-stagechip'+(i===cur?' cur':i<cur?' done':'')+'">'+esc(s.name)+'</span>';
+    }).join('')+'</div>';
+  }catch(e){ return ''; }
+}
+function P4M_onFacilityBought(){
+  /* After a facility purchase: if the operation STAGE changed, play the
+     evolution cinematic exactly once for the new stage. */
+  try{
+    if(typeof P4M_migrate==='function') P4M_migrate();
+    var ns=P4M_stageIdx(), prev=num(S.p4m&&S.p4m.stage,0);
+    S.p4m.stage=ns;
+    if(ns>prev) P4M_stageCine(ns);
+  }catch(e){}
+}
+function P4M_stageCine(ns){
+  try{
+    var st=P4M_STAGES[clamp(int(ns,0),0,6)];
+    var fac=''; try{ fac=FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].name; }catch(e){}
+    cineOverlay(
+     '<div class="ge-cine-fac"><div class="ge-display ge-cine-title">OPERATION EVOLVED</div>'+
+     '<div class="ge-display" style="color:var(--gold)">'+esc(st.name)+'</div>'+
+     '<p class="ge-body">'+esc(st.tag)+'</p>'+
+     '<p class="ge-caption ge-muted">'+esc(fac)+' — the room now looks the part.</p>'+
+     '<p class="ge-caption ge-muted">Tap anywhere to continue</p></div>',
+     'ge-cine-facility',3000);
+  }catch(e){}
+}
+
+/* ==================== 4N — AUTOMATION FEEL ====================
+   The automation journey: early game the PLAYER does the work; midgame unlocks
+   ASSISTANCE; late game the player MANAGES SYSTEMS. Three UX fills:
+     1. Per-system HANDLES / STILL NEEDS YOU / COSTS YOU copy on every card.
+     2. An earned install ceremony (replaces the bare toast) at AM_buy time.
+     3. A FLEET MANAGEMENT panel (late-game) on the Control Center: daily
+        burn, monthly projection, plants under management — every system
+        stays toggleable, so the economics stay the player's call.
+   CERTIFICATION (verified against the AM_dayTick implementations): no system
+   removes a strategic decision —
+     timers:     weak +6 micro-watering, capacity 48 — feeding, harvest, and
+                 strain choice stay manual
+     water:      hydration only, capacity 24 — nutrition still manual
+     feed:        nutrition only, capacity 32 — watering still manual
+     envctrl:     FIXED 76F/55%RH hold — custom targets require the Climate
+                 Hub; VPD strategy stays yours
+     irrctrl:     hydration only, capacity 48 — nutrition still manual
+     light:       target is derived from YOUR planted strains — strain mix
+                 is the decision
+     climate:     YOU set temp/RH targets and pay the power; reliability
+                 rolls keep you watching the gauges
+     processing: YOU choose batches; capacity 12/day; finished jobs convert
+                 through the game's own tick (never doubled)
+     restock:     packages to shelves ONLY — never sells; you price and sell;
+                 packaging costs real cash
+     manager:     boosts efficiency through YOUR hired employee — hiring,
+                 training, and wages stay yours
+     growai:      read-only diagnostics + 5% fleet aura — advises, never
+                 decides; no auto-sell, no keeper picks, no breeding calls
+   ============================================================================ */
+const P4N_SYS_COPY={
+ timers:{auto:'Scheduled micro-watering on a timer — the first machine. Weaker than a real rig, but it never sleeps.',needs:'You still feed by hand, still harvest, still choose every strain.'},
+ water:{auto:'Drip lines hold hydration around the clock (up to 24 plants).',needs:'Nutrition is still on you — pair it with the Nutrient Doser, or keep hand-feeding.'},
+ feed:{auto:'Precision fertigation keeps every plant fed, never burned (up to 32 plants).',needs:'Watering is still on you — pair it with Auto-Irrigation, or keep the hose.'},
+ envctrl:{auto:'Holds the room at a fixed 76°F / 55% RH against the weather.',needs:'The target is fixed — custom targets are what the Climate Hub is for. VPD strategy stays your call.'},
+ irrctrl:{auto:'High-capacity precision irrigation for bigger rooms (up to 48 plants).',needs:'Still no nutrition. Placement, strain mix, and every other decision stay yours.'},
+ light:{auto:'Rides the dimmer toward each strain\u2019s sweet spot automatically.',needs:'The target comes from YOUR planted strains — what you grow decides what it does.'},
+ climate:{auto:'Holds YOUR temperature and humidity targets against the weather.',needs:'You set the targets and pay the power bill. Reliability rolls mean you still watch the gauges.'},
+ processing:{auto:'A second shift: processing jobs finish faster (up to 12 jobs/day).',needs:'You still choose what to process and when to start a batch. It never creates product from nothing.'},
+ restock:{auto:'Packages finished product and moves it to dispensary shelves.',needs:'It never sells. Pricing, stocking strategy, and every sale are still yours — packaging costs real cash.'},
+ manager:{auto:'A hired employee supervises your systems, boosting fleet efficiency.',needs:'You still hire, train, and pay that employee. A bad supervisor is worse than none.'},
+ growai:{auto:'Coordinates every installed system (+5% fleet efficiency) and runs daily diagnostics.',needs:'It advises — it never decides. No auto-selling, no keeper picks, no breeding calls. Ever.'}
+};
+function P4N_copyHTML(id){
+  try{
+    var c=P4N_SYS_COPY[id], sys=AM_SYSTEMS[id];
+    if(!c||!sys) return '';
+    return '<div class="ge-am-p4n">'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">HANDLES</span></div><p class="ge-caption">'+esc(c.auto)+'</p>'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">STILL NEEDS YOU</span></div><p class="ge-caption ge-muted">'+esc(c.needs)+'</p>'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">COSTS YOU</span><b class="ge-num">'+AM_fmt(sys.dailyCost)+'/day while ON</b></div></div>';
+  }catch(e){ return ''; }
+}
+function P4N_installCine(id){
+  /* Earned unlock moment: replaces the bare install toast with a ceremony. */
+  try{
+    var sys=AM_SYSTEMS[id]; if(!sys) return;
+    var c=P4N_SYS_COPY[id]||{auto:sys.desc,needs:'Every strategic call stays with you.'};
+    var m=modal('<div class="ge-display ge-gold-text">SYSTEM ONLINE</div>'+
+     '<h3>'+AM_icon(sys.ico,'ge-ic-lg')+' '+AM_esc(sys.name)+'</h3>'+
+     '<p class="ge-body">Earned — not given. Every gate met, '+AM_fmt(sys.cost)+' paid.</p>'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">NOW HANDLES</span></div><p class="ge-body">'+esc(c.auto)+'</p>'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">STILL NEEDS YOU</span></div><p class="ge-body ge-muted">'+esc(c.needs)+'</p>'+
+     '<div class="ge-datarow"><span class="ge-almost-lbl">OPERATING COST</span><b class="ge-num">'+AM_fmt(sys.dailyCost)+'/day while ON</b></div>'+
+     '<p class="ge-caption ge-muted">Toggle it any time in the Control Center. If cash runs short it pauses — still armed, still yours.</p>'+
+     '<button class="ge-btn ge-btn-gold ge-btn-block" id="p4n-ok">GOT IT</button>');
+    m.querySelector('#p4n-ok').onclick=function(){ try{ closeModal(m); }catch(e){ m.remove(); } };
+  }catch(e){}
+}
+function P4N_fleetHTML(){
+  /* Late-game management view: fleet burn, projections, plants under management. */
+  try{
+    if(typeof AM_migrate!=='function'||!AM_migrate()) return '';
+    var owned=AM_ORDER.filter(function(k){ var s=S.am[k]; return s&&s.owned; });
+    if(owned.length<2) return '';
+    var online=0, daily=0, plants=0;
+    try{ plants=(S.plants||[]).length; }catch(e){}
+    owned.forEach(function(k){ var s=S.am[k]; if(s&&s.on){ online++; daily+=AM_num(AM_SYSTEMS[k].dailyCost,0); } });
+    var h='<div class="ge-card"><div class="ge-card-head"><h3>'+AM_icon('crew','ge-ic-lg')+'FLEET MANAGEMENT</h3></div>';
+    h+=PF_kv('Fleet online','<b class="ge-num">'+online+' / '+owned.length+'</b>');
+    h+=PF_kv('Daily burn','<b class="ge-num">'+AM_fmt(daily)+'/day</b>');
+    h+=PF_kv('Monthly projection','<b class="ge-num">'+AM_fmt(daily*30)+'</b>');
+    h+=PF_kv('Plants under management','<b class="ge-num">'+plants+'</b>');
+    h+='<p class="ge-caption ge-muted">Turn systems OFF to stop the burn without losing them. The fleet executes — you decide.</p></div>';
+    return h;
+  }catch(e){ return ''; }
+}
+
+/* ==================== 4V — PLAYER CHOICE (strategy viability) ====================
+   Nine legitimate strategies, all kept viable. This is a read-only STRATEGY
+   COMPASS on the Empire Dashboard (day > 5; only strategies whose entry gate
+   is already unlocked — progressive disclosure preserved). No economy touched;
+   the compass surfaces status + how strategies feed each other, e.g.
+   breeding -> Project 0 -> dispensary prestige.
+   VIABILITY AUDIT (verified against live code, not assumed):
+   - PHENO HUNTING: keeper ceremony -> keepers/clones/mothers; elite phenos feed breeding
+   - BREEDING: F1-F5/S1/BX/IBL with real inheritance variance; customs valued
+     +60-90% by collector buyers (specialization reward, not a global buff)
+   - PROJECT 0: tiered preservation (CANDIDATE->LEGACY), P0 points, vault tiers
+   - DISPENSARY: 8 taste archetypes + carts + contracts + regulars; demand-driven pricing
+   - PRODUCTION: 4 product lines, valMult 1.15-4.0x; packaging costs real cash
+   - EMPIRE EXPANSION: 9 append-only facility tiers; territories; buildings
+   - GENETIC COLLECTION: 32-strain Living Codex + Genetic Vault lineage trees
+   - EFFICIENCY: 11-system automation tree with operating costs; assists, never decides
+   - QUALITY: VPD-correct environment model; Q-banded pricing 0.75x-1.80x; competitions
+   No dominant strategy found that trivializes the others: contract premiums are
+   capped at 1.15x base, buyer premiums reward specialization (no single buyer is
+   best for everything), automation assists but never sells/breeds/keeps, and the
+   known money-printer loops were closed in prior waves. Every strategy below is
+   gated only by reachable progression — no hard blocks (regression-tested).
+   ============================================================================ */
+const P4V_STRATEGIES=[
+ {id:'pheno',name:'PHENO HUNTING',ico:'inspect',why:'Elite expressions become keepers, mothers, and legends.',feeds:'BREEDING · PROJECT 0 · DISPENSARY',
+  avail:function(){ return true; },
+  status:function(){ var k=(S.keepers||[]).length; return k>0?2:(num(S.stats&&S.stats.phenoHuntsDone,0)>0?1:0); }},
+ {id:'breed',name:'BREEDING',ico:'breeding',why:'Name your own genetics. Stability is the grind.',feeds:'PROJECT 0 · GENETIC COLLECTION · DISPENSARY',
+  avail:function(){ return num(S.stats&&S.stats.crosses,0)>0||int(S.facility,0)>=2; },
+  status:function(){ var c=(S.customStrains||[]).length; return c>0?2:(num(S.stats&&S.stats.crosses,0)>0?1:0); }},
+ {id:'p0',name:'PROJECT 0',ico:'project0',why:'Preserve the culture. The vault remembers.',feeds:'DISPENSARY PRESTIGE · GENETIC COLLECTION',
+  avail:function(){ try{ return num(S.project0&&S.project0.points,0)>=25; }catch(e){ return false; } },
+  status:function(){ var p=0; try{ p=num(S.project0.points,0); }catch(e){} return p>=150?2:(p>0?1:0); }},
+ {id:'disp',name:'DISPENSARY',ico:'dispensary',why:'Eight customer palates. Stock what they crave.',feeds:'EMPIRE EXPANSION · PRODUCTION SIGNALS',
+  avail:function(){ return num(S.stats&&S.stats.harvests,0)>0; },
+  status:function(){ var s=num(S.stats&&S.stats.sales,0)+num(S.ct&&S.ct.stats&&S.ct.stats.completed,0); return s>=50?2:(s>0?1:0); }},
+ {id:'prod',name:'PRODUCTION',ico:'flask',why:'Flower in, premium product out. Margins live here.',feeds:'DISPENSARY SHELVES',
+  avail:function(){ return num(S.stats&&S.stats.harvests,0)>0; },
+  status:function(){ var o=num(S.stats&&S.stats.processedOz,0); return o>=100?2:(o>0?1:0); }},
+ {id:'exp',name:'EMPIRE EXPANSION',ico:'empire',why:'Nine facility tiers. Rooms become a compound.',feeds:'EFFICIENCY · QUALITY',
+  avail:function(){ return true; },
+  status:function(){ var f=int(S.facility,0); return f>=5?2:(f>=1?1:0); }},
+ {id:'coll',name:'GENETIC COLLECTION',ico:'genetics',why:'The Living Codex. 32 strains, every one earned.',feeds:'BREEDING · PROJECT 0',
+  avail:function(){ return int(S.level,1)>=3; },
+  status:function(){ var g=0; try{ g=Object.keys((S.stats&&S.stats.strainGrown)||{}).length; }catch(e){} return g>=16?2:(g>=5?1:0); }},
+ {id:'eff',name:'EFFICIENCY',ico:'equipment',why:'Automation assists. You still decide.',feeds:'QUALITY · EMPIRE EXPANSION',
+  avail:function(){ return int(S.level,1)>=3; },
+  status:function(){ var n=0; try{ n=AM_ORDER.filter(function(k){ return S.am&&S.am[k]&&S.am[k].owned; }).length; }catch(e){} return n>=6?2:(n>=1?1:0); }},
+ {id:'qual',name:'QUALITY',ico:'star',why:'VPD-correct grows. Q80+ harvests pay and win.',feeds:'DISPENSARY PRICING · PROJECT 0',
+  avail:function(){ return true; },
+  status:function(){ var q=num(S.stats&&S.stats.q80Harvests,0); return q>=10?2:(num(S.stats&&S.stats.bestQuality,0)>=80?1:0); }}
+];
+function P4V_compassHTML(){
+  try{
+    if(int(S.day,1)<=5) return '';
+    var rows=[];
+    P4V_STRATEGIES.forEach(function(st){
+      var a=false,s=0;
+      try{ a=!!st.avail(); }catch(e){}
+      if(!a) return;
+      try{ s=st.status(); }catch(e){}
+      var pill=s===2?'ge-pill ge-pill-gold':(s===1?'ge-pill ge-pill-optimal':'ge-pill ge-pill-neutral');
+      var lbl=s===2?'THRIVING':(s===1?'BUILDING':'NOT STARTED');
+      rows.push('<div class="ge-datarow"><span>'+icon(st.ico,'ge-ic-sm')+' <b>'+st.name+'</b><br>'+
+       '<span class="ge-caption ge-muted">'+esc(st.why)+'</span><br>'+
+       '<span class="ge-caption ge-muted">Feeds into: '+esc(st.feeds)+'</span></span>'+
+       '<span class="'+pill+'">'+lbl+'</span></div>');
+    });
+    if(!rows.length) return '';
+    return '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('star','ge-ic-lg')+'STRATEGY COMPASS</h3></div>'+
+     '<p class="ge-caption ge-muted">Nine ways to win. No path locks out the others — the strongest empires mix them.</p>'+
+     rows.join('')+
+     '<p class="ge-caption ge-muted">It\u2019s never about the money — only the genetics.</p></div>';
+  }catch(e){ return ''; }
 }
 
 /* ---- combined sell multiplier: buyer × market × location ---- */
@@ -6816,6 +8617,8 @@ function GX_mutationCine(mut,cb){
    '<p class="ge-kid-desc">'+esc((mut&&mut.desc)||'')+'</p>'+
    ((mut&&mut.legendary)?'<div class="ge-badge ge-badge-legendary ge-mut-legend">'+icon('star','ge-ic-sm')+' LEGENDARY EXPRESSION</div>':'')+
    '<p class="ge-kid-hint">TAP TO CONTINUE</p></div>';
+  /* P4D: mutation reveal feel — MAJOR for anomalies, LEGENDARY cadence for legendary expressions */
+  try{ if(mut&&mut.legendary){ P4_legendHaptic(); P4_sfx('legend'); } else { P4_haptic('achievement'); P4_sfx('discover'); } }catch(e){}
   var back=cineOverlay(inner,'gx-cineback',3600);
   back.addEventListener('click',fin);
   setTimeout(fin,3850);
@@ -6825,13 +8628,11 @@ function GX_mutationCine(mut,cb){
 function GX_crossCine(cb){
   var done=false;
   function fin(){ if(done) return; done=true; if(typeof cb==='function') cb(); }
-  var inner='<div class="ge-kid-stage"><div class="ge-kid-glow"></div><div class="ge-mut-dna">'+dnaSVG('gx-dna-svg')+'</div>'+
-   '<div class="ge-kid-kicker">BREEDING LAB</div>'+
-   '<h2 class="ge-display ge-kid-title">FUSING PARENT DNA</h2>'+
-   '<p class="ge-kid-desc">Pollen meets pistil — a new lineage begins.</p></div>';
-  var back=cineOverlay(inner,'gx-cineback',1500);
-  back.addEventListener('click',fin);
-  setTimeout(fin,1700);
+  /* P4D: DOWNGRADED — a routine cross is a MINOR moment, not a full cinematic.
+     Same contract (cb fires after a short beat). Breakthrough moments keep
+     their own presentations: mutation cine, NEW GENETIC ceremony. */
+  try{ P4_celebrate('minor',{title:'FUSING PARENT DNA',sub:'Pollen meets pistil — a new lineage begins.',icon:'dna'}); }catch(e){}
+  setTimeout(fin,450);
 }
 
 
@@ -7668,7 +9469,7 @@ function EX_checkAch(){
       if(r.p0) addP0(r.p0track||'genetics',r.p0);
       if(r.title&&!S.titles.includes(r.title)) S.titles.push(r.title);
       save(); updateHUD();
-      setTimeout(()=>toast(icon('trophy','ge-ic-md')+' <b>'+esc((typeof MS_stripEmoji==='function'?MS_stripEmoji(a.name):a.name))+'</b><br><span class="ge-muted">'+esc(a.desc)+'</span><br><span class="ge-cer-wintext">'+esc(EX_achRewardText(a))+'</span>'),60);
+      setTimeout(()=>{ try{ P4_celebrate('major',{title:'ACHIEVEMENT UNLOCKED',sub:'<b>'+esc((typeof MS_stripEmoji==='function'?MS_stripEmoji(a.name):a.name))+'</b><br><span class="ge-muted">'+esc(a.desc)+'</span><br><span class="ge-cer-wintext">'+esc(EX_achRewardText(a))+'</span>',icon:'trophy'}); }catch(e){} },60);
     }
   });
 }
@@ -8186,6 +9987,13 @@ function P14_nearestGenetic(){
       const l=st.lock; let rel=1, needText='', closeText='';
       if(l.t==='rep'){ const v=int(l.v,0), gap=Math.max(0,v-rep); rel=v>0?gap/v:1; needText=v+' rep'; closeText=gap>0?(gap+' rep to go'):'requirement met'; }
       else if(l.t==='cash'){ const c=num(st.seed,0)*3, gap=Math.max(0,c-cash); rel=c>0?gap/c:1; needText=gap>0?('save '+fmt$(c)):('buy it in the Genetics Lab'); closeText=gap>0?(fmt$(gap)+' to go'):'requirement met'; }
+      else if(l.t==='mission'){ /* P4.1: GENETIC UNLOCK objectives remaining — real mission progress */
+        const mm=(typeof MISSIONS!=='undefined')?MISSIONS.find(x=>x.id===l.v):null;
+        if(mm){ let cur=0,target=1; try{ const pp=mm.prog(S); cur=pp[0]; target=pp[1]; }catch(e){}
+          const gap=Math.max(0,target-cur); rel=target>0?gap/target:1;
+          needText=mm.name+': '+Math.min(cur,target)+'/'+target; closeText=gap>0?(gap+' to go'):'requirement met';
+        } else { rel=1; needText='unlock via Project 0'; closeText='earn it through Project 0'; }
+      }
       else { rel=1; needText='unlock via Project 0'; closeText='earn it through Project 0'; }
       if(!best||rel<best.rel) best={st:st,rel:rel,needText:needText,closeText:closeText,pct:Math.round((1-Math.min(1,rel))*100)};
     });
@@ -8204,7 +10012,7 @@ function P14_candidates(){
       if(ni<TY_RANKS.length&&!TY_rankReqMet(ni)){
         const R=TY_RANKS[ni], reqs=[];
         const addR=(have,need,txt,goTxt)=>{ need=num(need,0); if(need>0){ const gap=Math.max(0,need-have); reqs.push({rel:gap/need,txt:txt(need),go:goTxt(gap),gap:gap}); } };
-        addR(rep,int(R.req.rep,0),v=>v+' rep',g=>g+' rep to go');
+        addR(rep,int(R.req.rep,0),v=>Math.min(rep,v)+'/'+v+' rep',g=>g+' rep to go'); /* P4.1: explicit REP x/y */
         addR(rev,num(R.req.rev,0),v=>fmt$(v)+' earned',g=>fmt$(g)+' to go');
         addR(int(S.stats.crosses,0),int(R.req.crosses,0),v=>v+' crosses',g=>g+' crosses to go');
         addR(((S.ex||{}).locations||{unlocked:[]}).unlocked.length,int(R.req.locs,0),v=>v+' territories',g=>g+' territories to go');
@@ -8238,7 +10046,7 @@ function P14_candidates(){
         const lv=EX_buildingLevel(b.id); if(lv>=5) return;
         const cost=num(b.levels[lv].cost,0); if(cost<=0) return;
         const gap=Math.max(0,cost-cash), rel=gap/cost;
-        out.push({rel:rel,want:b.name+' → LV '+(lv+1),need:fmt$(cost),
+        out.push({rel:rel,want:b.name+' → LV '+(lv+1),need:fmt$(Math.min(cash,cost))+' / '+fmt$(cost), /* P4.1: FACILITY UPGRADE $x/$y */
           close:gap>0?(fmt$(gap)+' to go'):'affordable now',pct:Math.round((1-Math.min(1,rel))*100),go:'empire',tab:'buildings'});
       });
     }catch(e){}
@@ -8260,6 +10068,25 @@ function P14_candidates(){
           pct:bind?Math.round((1-Math.min(1,bind.rel))*100):100,go:'locations',tab:null});
       });
     }catch(e){}
+  }catch(e){}
+  /* P4.1: PHENO HUNT x/y evaluated — active hunts, real harvest counts */
+  try{
+    (S.phenoHunts||[]).filter(h=>h.active).forEach(h=>{
+      const total=Math.max(1,int(h.total,0)), done=clamp(int(h.harvested,0),0,total);
+      const gap=total-done, rel=gap/total;
+      out.push({rel:rel,want:'PHENO HUNT: '+h.strainName,need:done+'/'+total+' evaluated',
+        close:gap>0?(gap+' to go'):'hunt complete — review the results',
+        pct:Math.round((1-Math.min(1,rel))*100),go:'genetics',tab:null});
+    });
+  }catch(e){}
+  /* P4.1: MISSION requirements remaining — next mission, in progress only (never 0%) */
+  try{
+    const nm=(typeof nextMission==='function')?nextMission():null;
+    if(nm){ let cur=0,target=1; try{ const pp=nm.prog(S); cur=pp[0]; target=pp[1]; }catch(e){}
+      if(cur>0&&cur<target){ const gap=target-cur, rel=gap/target;
+        out.push({rel:rel,want:'MISSION: '+nm.name,need:Math.min(cur,target)+'/'+target+' — '+nm.desc,
+          close:gap+' to go',pct:Math.round((1-Math.min(1,rel))*100),go:'missions',tab:null}); }
+    }
   }catch(e){}
   /* 6. P3-W6 big-purchase goals: Wave 4/5 additions with real affordability math.
      Prices are surfaced, never changed. */
@@ -8313,6 +10140,78 @@ function EX_homeActions(){
   return acts.slice(0,6);
 }
 
+/* ================= P4.2: SESSION BRIEFING =================
+   At-a-glance card on Home, shown once per session (page load).
+   Top 5 items by urgency/value from REAL state only. Reuses the
+   WELCOME BACK / ON THE HORIZON detectors — never duplicates their logic.
+   P4_SESSION_BRIEFED is session-scoped (not saved): resets every page load. */
+var P4_SESSION_BRIEFED=false;
+function P4_briefingItems(){
+  const out=[];
+  try{
+    const push=(w,sev,ico,t,s,go,tab)=>out.push({w:w,sev:sev,ico:ico,t:t,s:s,go:go,tab:tab||null});
+    try{ let ready=0; (S.plants||[]).forEach(p=>{ try{ if(stageOf(p)>=5) ready++; }catch(e){} });
+      if(ready>0) push(100,'good','harvest',ready+' plant'+(ready===1?'':'s')+' ready to harvest','Chop when ready — quality holds.','grows'); }catch(e){}
+    try{ const needy=(S.plants||[]).filter(p=>p.health<50||p.water<20||p.nutrition<15).length;
+      if(needy>0) push(90,'warn','warn',needy+' plant'+(needy===1?' needs':'s need')+' attention','Health, water or food critical.','grow'); }catch(e){}
+    try{
+      const hunt=(S.phenoHunts||[]).find(h=>h.active&&h.harvested>0);
+      if(hunt) push(80,'info','dna','Hunt results: '+hunt.harvested+'/'+hunt.total+' '+hunt.strainName+' evaluated','Review and compare the expressions.','genetics');
+      else{ const untested=(S.customStrains||[]).find(cs=>!((S.stats.strainGrown||{})[cs.id]||{}).count);
+        if(untested) push(80,'info','dna','Your cross '+untested.name+' is untested','Plant it to see what you made.','breeding'); }
+    }catch(e){}
+    try{ const mr=(typeof WB_missionsReady==='function')?WB_missionsReady():[];
+      if(mr.length) push(70,'info','missions',mr.length+' mission goal'+(mr.length===1?'':'s')+' met','Rewards are waiting — claim them.','missions'); }catch(e){}
+    try{ if(typeof WX_marketMult==='function'){ const mm=num(WX_marketMult('all'),1);
+      if(mm>1.05) push(60,'good','chart','Market boom \u00d7'+mm.toFixed(2),'Sell while prices are hot.','dispensary'); } }catch(e){}
+    try{ const g=(typeof P14_nearestGenetic==='function')?P14_nearestGenetic():null;
+      /* hub-lock: never link a locked screen — genetics opens at level 3 */
+      if(g&&num(g.rel,1)===0&&int(S.level,1)>=3) push(55,'info','genetics',g.st.name+' unlocked','Requirement met — claim it in the Genetics Lab.','genetics'); }catch(e){}
+    try{ const emps=(S.ex&&S.ex.employees)||[];
+      const low=emps.find(e=>num(e.morale,70)<40);
+      const pay=(typeof EX_payrollTotal==='function')?EX_payrollTotal():0;
+      if(low) push(50,'warn','users','Crew issue: '+low.name+' morale low','Bonus or retrain before they walk.','empire','staff');
+      else if(pay>0&&num(S.cash,0)<pay*3) push(50,'warn','users','Payroll tight: '+fmt$(pay)+'/day','Keep cash flowing.','empire','staff');
+    }catch(e){}
+    try{ const ths=(typeof P0_LEVEL_PTS!=='undefined')?P0_LEVEL_PTS:[];
+      let b=null;
+      ((typeof P0_TRACKS!=='undefined')?P0_TRACKS:[]).forEach(t=>{
+        const lvl=(typeof p0Level==='function')?p0Level(t.id):0;
+        if(lvl>=ths.length-1) return;
+        const th=num(ths[lvl+1],0), pts=num(S.project0.tracks[t.id],0), gap=Math.max(0,th-pts), rel=th>0?gap/th:1;
+        if(!b||rel<b.rel) b={t:t,lvl:lvl,th:th,pts:pts,rel:rel};
+      });
+      if(b&&b.rel<0.25) push(40,'info','project0','Project 0: '+b.t.name+' \u2192 LV '+(b.lvl+1),Math.floor(b.pts)+'/'+b.th+' pts','project0');
+    }catch(e){}
+    try{ const cash=num(S.cash,0);
+      const bl=(typeof EX_buildingLevel==='function')?EX_buildingLevel:null;
+      const b=(typeof EX_BUILDINGS!=='undefined'?EX_BUILDINGS:[]).find(x=>{ const lv=bl?bl(x.id):0; return lv<5&&num(x.levels[lv].cost,0)>0&&num(x.levels[lv].cost,0)<=cash; });
+      if(b) push(30,'info','cash',b.name+' \u2192 LV '+((bl?bl(b.id):0)+1)+' affordable','Your fastest power spike.','empire','buildings');
+    }catch(e){}
+    try{ const weird=(S.plants||[]).filter(p=>{ try{ return p&&p.pheno&&p.pheno.legendaryTrait&&p.pheno.legendaryHidden; }catch(e){ return false; } });
+      if(weird.length){ let nm='Unknown'; try{ nm=ME_strainName(weird[0].strainId); }catch(e){}
+        push(20,'info','star','Unusual expression forming on '+nm,'Inspect it in the grow room.','grow'); }
+    }catch(e){}
+  }catch(e){}
+  out.sort((a,b)=>b.w-a.w);
+  return out.slice(0,5);
+}
+function P4_briefingHTML(){
+  try{
+    if(P4_SESSION_BRIEFED) return '';
+    const items=P4_briefingItems();
+    if(!items.length) return '';
+    let html='<div class="ge-section-title">SESSION BRIEFING</div><div class="ge-card">';
+    items.forEach(it=>{
+      html+='<button class="ge-card ge-card-tap ge-home-action" data-ex-go="'+esc(it.go)+'"'+(it.tab?' data-ex-tab="'+esc(it.tab)+'"':'')+'>'+
+       '<span class="ge-home-action-ico ge-home-sev-'+it.sev+'">'+icon(it.ico||'star','ge-ic-md')+'</span>'+
+       '<span class="ge-home-action-tx"><b>'+esc(it.t)+'</b><span class="ge-muted ge-caption">'+esc(it.s)+'</span></span>'+
+       icon('arrow-right','ge-ic-sm')+'</button>';
+    });
+    html+='<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-p4-brief-x>DISMISS</button></div></div>';
+    return html;
+  }catch(e){ return ''; }
+}
 RENDER.home=function(){
   if(!EX_init()) return;
   const r=$('home-root');
@@ -8323,6 +10222,7 @@ RENDER.home=function(){
   html+='<div class="ge-card ge-home-xp"><div class="ge-progress-meta"><span>'+icon('xp','ge-ic-md')+'LEVEL '+lvl+' &mdash; '+Math.max(0,xpN-xp)+' XP TO NEXT</span><b class="ge-num">'+int(xp,0)+'/'+xpN+'</b></div>'+
    '<div class="ge-progress"><i style="width:'+clamp(xp/xpN*100,0,100)+'%"></i></div></div>';
   try{ html+=TY_dashCommand(); }catch(e){}
+  try{ html+=P4_briefingHTML(); P4_SESSION_BRIEFED=true; }catch(e){} /* P4.2: session briefing, once per session */
   html+='<div class="ge-section-title">WHAT SHOULD I DO NEXT?</div><div class="ge-home-actions">';
   EX_homeActions().forEach(a=>{
     html+='<button class="ge-card ge-card-tap ge-home-action ge-anim-rise" data-ex-go="'+a.go+'"'+(a.tab?' data-ex-tab="'+a.tab+'"':'')+'>'+
@@ -8358,6 +10258,7 @@ RENDER.home=function(){
     show(b.dataset.exGo);
   });
   r.querySelectorAll('[data-nt-dismiss]').forEach(b=>b.onclick=()=>NT_dismiss(b.dataset.ntDismiss)); /* P1.6 */
+  r.querySelectorAll('[data-p4-brief-x]').forEach(b=>b.onclick=()=>{ P4_SESSION_BRIEFED=true; try{ RENDER.home(); }catch(e){} }); /* P4.2 */
   r.querySelectorAll('[data-nt-act]').forEach(b=>b.onclick=()=>NT_doAct(b.dataset.ntAct)); /* P1.6 */
 };
 
@@ -9052,7 +10953,9 @@ function TY_sellProduct(pid,buyerId){
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   try{ NT_onSale(total,ntPreSale); }catch(e){} /* P1.6: big sale -> upgrade nudge (read-only) */
   if(p.ptype==='seedpack'||p.ptype==='clonepack') S.ty.stats.wholesale=int(S.ty.stats.wholesale,0)+1;
+  try{ if(typeof P4_noteSale==='function') P4_noteSale(p.strainId,p.strainName,p.amount,Math.round(total)); }catch(e){} /* P4: best-selling genetic */
   TY_gainRep('business',3); TY_gainRep('service',1);
+  try{ if(typeof P4L_noteSale==='function') P4L_noteSale({strainId:p.strainId,strainName:p.pname+' — '+p.strainName,qty:p.amount,rev:total,ptype:p.ptype,cust:by.name,quality:p.quality}); }catch(e){} /* P4-W6 4L */
   S.ty.topStrainRev=Math.max(num(S.ty.topStrainRev,0),0);
   if(total>S.ty.topStrainRev){ S.ty.topStrainRev=total; S.ty.topStrain=p.strainName; }
   S.ty.prod=S.ty.prod.filter(x=>x.id!==pid);
@@ -9199,6 +11102,8 @@ function TY_custTick(){
     if(pick1.kind==='prod'){ pick1.ref.amount=Math.round((pick1.ref.amount-qty)*10)/10; if(pick1.ref.amount<=0) t.prod=t.prod.filter(x=>x.id!==pick1.ref.id); }
     else { pick1.ref.amount=Math.round((pick1.ref.amount-qty)*10)/10; if(pick1.ref.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==pick1.ref.id); }
     rev+=total; sales++;
+    try{ if(typeof P4L_noteSale==='function') P4L_noteSale({strainId:pick1.strainId,strainName:pick1.name,qty:qty,rev:total,ptype:pick1.ptype,cust:c.typeName,quality:pick1.quality}); }catch(e){} /* P4-W6 4L */
+    try{ if(typeof P4_noteSale==='function'&&typeof ME_strainName==='function') P4_noteSale(pick1.strainId,ME_strainName(pick1.strainId),qty,Math.round(total)); }catch(e){} /* P4: best-selling genetic */
     const sScore=clamp(Math.round((pick1.quality-c.qualExp)*1.5+70),0,100);
     sat+=sScore; satN++;
     if(c.regular||Math.random()<c.loyal*0.4){ repeat++; const rk=pick1.strainId; t.cust.regulars[rk]=int(t.cust.regulars[rk],0)+1; }
@@ -10131,7 +12036,8 @@ function GT_vaultStats(){
     {l:'PHENOTYPES DISCOVERED',v:phenos},
     {l:'KEEPERS',v:keepers},
     {l:'CROSSES CREATED',v:crosses},
-    {l:'LEGENDARY GENETICS',v:legendary}
+    {l:'LEGENDARY GENETICS',v:legendary},
+    {l:'ARCHIVE DISCOVERY',v:(typeof P4_codexPct==='function'?P4_codexPct():0)+'%'} /* P4: honest discovery %, not unlocked count */
   ];
 }
 function GT_filterBar(){
@@ -10148,7 +12054,7 @@ function GT_filterBar(){
   const sorts=[['name','Name'],['potency','Potency'],['yield','Yield'],['stability','Stability'],['rarity','Rarity'],['popularity','Popularity'],['demand','Market Demand'],['best','Best Score']];
   return '<div class="ge-card ge-card-flat ge-filterbar"><div class="ge-tabs" role="tablist">'+
     filters.map(f=>'<button class="ge-tab'+(genFilter===f[0]?' is-active':'')+'" data-gfilter="'+f[0]+'" role="tab" aria-selected="'+(genFilter===f[0])+'">'+icon(f[2],'ge-ic-sm')+f[1]+'<span class="ge-tab-count">'+counts[f[0]]+'</span></button>').join('')+
-    '</div><div class="ge-filter-row"><div class="ge-search-wrap">'+icon('search','ge-ic-md')+'<input type="text" id="gt-search" inputmode="search" enterkeyhint="search" class="ge-search" placeholder="SEARCH THE ARCHIVE" value="'+esc(genSearch)+'" maxlength="40" aria-label="Search genetics"></div>'+
+    '</div><div class="ge-filter-row"><div class="ge-search-wrap">'+icon('search','ge-ic-md')+'<input type="text" id="gt-search" inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" class="ge-search" placeholder="SEARCH THE ARCHIVE" value="'+esc(genSearch)+'" maxlength="40" aria-label="Search genetics"></div>'+
     '<select id="gt-sort" class="ge-select" aria-label="Sort genetics">'+sorts.map(s=>'<option value="'+s[0]+'"'+(genSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select></div></div>';
 }
 
@@ -10200,16 +12106,16 @@ function GT_strainCard(st){
     const l=st.lock||{t:'rep',v:999};
     lockHtml='<div class="ge-spec-lock"><p class="ge-caption">'+icon('lock','ge-ic-md')+' '+esc(lockReasonText(l,st.seed*3))+'</p>';
     const clue=codexClue(st); /* P2-W2: mystery hint per unlock route - a hint, never a spoiler */
-    if(clue) lockHtml+='<p class="codex-clue">'+icon('inspect','ge-ic-sm')+' <i>'+esc(clue)+'</i></p>';
+    if(clue){ let ecl=clue; try{ ecl=P4_enhancedClue(st)||clue; }catch(e){} lockHtml+='<p class="codex-clue">'+icon('inspect','ge-ic-sm')+' <i>'+esc(ecl)+'</i></p>'; } /* P4: clue + route progress */
     if(l.t==='cash') lockHtml+='<button class="ge-btn ge-btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(st.seed*3)+'</button>';
     lockHtml+='</div>';
   }
   const lineage=st.lineage?esc(st.lineage):'Foundation genetics';
   return '<div class="ge-card ge-card-tap ge-spec-card gt-card strain-card'+((cx&&cx.completed)?' codex-complete':'')+'" data-strain="'+st.id+'">'+
-    '<div class="ge-spec-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+    '<div class="ge-spec-art">'+P4_flowerRef(strainSeed(st),'strain-flower')+'</div>'+
     '<div class="ge-spec-main">'+
     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(strainDisplayName(st))+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
-    '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+((cx&&cx.completed)?'<span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span>':'')+
+    '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+(typeof P4_stateBadge==='function'?P4_stateBadge(st.id):'')+((cx&&cx.completed)?'<span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span>':'')+
       (keepers>0?'<span class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'KEEPER ×'+keepers+'</span>':'')+
       (mothers>0?'<span class="ge-badge ge-badge-mother">'+icon('mothers','ge-ic-sm')+'MOTHER</span>':'')+
       '<span class="ge-badge ge-badge-common">PHENO '+phenoNo+'</span></div>'+
@@ -10331,10 +12237,13 @@ function GT_codexHistoryHTML(st){
         row('Phenos evaluated',int(cx.phenosEvaluated,0))+
         row('Keeper pheno',(cx.keeperPheno?esc(cx.keeperPheno):dash))+
         row('Crosses created',int(cx.crossesCreated,0))+
+        row('Mastered',(cx.mastered?('Day '+int(cx.masteredDay,0)):dash))+
         (cx.genNotes.length?'<div class="codex-notes">'+cx.genNotes.slice(-4).map(n=>'<p class="codex-note">'+icon('scroll','ge-ic-sm')+' '+esc(n)+'</p>').join('')+'</div>':'');
     }
-    return '<div class="ge-card'+(done?' codex-complete':'')+'"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>LIVING CODEX</h3>'+
-      (done?'<span class="ge-spread"><span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span></span>':'')+'</div>'+inner+'</div>';
+    const p4badge=(typeof P4_stateBadge==='function')?P4_stateBadge(st.id):'';
+    const p4m=cx&&cx.mastered?' p4-mastered':'';
+    return '<div class="ge-card'+(done?' codex-complete':'')+p4m+'"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>LIVING CODEX</h3>'+
+      '<span class="ge-spread">'+p4badge+(done?'<span class="ge-badge ge-badge-gold">'+icon('crown-gold','ge-ic-sm')+'CODEX COMPLETE</span></span>':'')+'</span></div>'+inner+'</div>';
   }catch(e){ return ''; }
 }
 
@@ -10353,7 +12262,7 @@ RENDER.strain=function(){
   const sg=(S.stats.strainGrown||{})[st.id];
   let html='<div class="ge-screen">'+screenHead('genetics',st.name.toUpperCase());
   /* hero */
-  html+='<div class="ge-card ge-strain-hero"><div class="ge-strain-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+  html+='<div class="ge-card ge-strain-hero"><div class="ge-strain-art">'+P4_flowerRef(strainSeed(st),'strain-flower')+'</div>'+
     '<h2 class="ge-h1">'+esc(st.name)+'</h2>'+
     '<div class="ge-spec-badges"><span class="ge-pill ge-pill-neutral">'+GT_typeLabel(st).toUpperCase()+'</span>'+GT_rarityBadge(GT_rarity(st))+(st.custom?'<span class="ge-badge">CUSTOM</span>':'')+'</div>'+
     '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span>'+lin+'</span></div>'+
@@ -10491,6 +12400,26 @@ function AM_esc(s){ try{ if(typeof esc==='function') return esc(s); }catch(e){}
   return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function AM_icon(n,cls){ try{ if(typeof icon==='function') return icon(n,cls); }catch(e){}
   return '<span class="ic-missing"></span>'; }
+/* P4 (Wave 7, 4R): pre-patch saves store emoji-prefixed automation notes.
+   Map the known prefixes to the SVG icon system at render; new notes are
+   pushed with AM_icon() directly. Anything unrecognized passes through. */
+function P4_AM_legacyNote(n){
+  try{
+    const s=String(n==null?'':n);
+    const swaps=[
+      ['⏸️','alert-triangle'],
+      ['💼','crew'],
+      ['⚠️','alert-triangle'],
+      ['⚙️','equipment'],
+      ['📦','box']
+    ];
+    for(let i=0;i<swaps.length;i++){
+      if(s.indexOf(swaps[i][0])===0)
+        return AM_icon(swaps[i][1],'ge-ic-sm')+' '+s.slice(swaps[i][0].length).replace(/^\s+/,'');
+    }
+    return s;
+  }catch(e){ return String(n==null?'':n); }
+}
 function AM_toast(m){ try{ if(typeof toast==='function'){ toast(m); return; } }catch(e){}
   try{ if(typeof console!=='undefined') console.log('[AM]',m); }catch(e2){} }
 function AM_save(){ try{ if(typeof save==='function') save(); }catch(e){}
@@ -10723,7 +12652,7 @@ function AM_buy(id){
   }
   S.cash-=sys.cost;
   st.owned=true; st.on=true;
-  AM_toast(AM_icon('check','ge-ic-md')+' '+AM_esc(sys.name)+' installed and ONLINE.');
+  try{ if(typeof P4N_installCine==='function') P4N_installCine(id); else AM_toast(AM_icon('check','ge-ic-md')+' '+AM_esc(sys.name)+' installed and ONLINE.'); }catch(e){ AM_toast(AM_icon('check','ge-ic-md')+' '+AM_esc(sys.name)+' installed and ONLINE.'); } /* P4-W6 4N: earned install ceremony */
   AM_save();
   return true;
 }
@@ -10780,8 +12709,8 @@ function AM_dayTick(){
   try{ if(typeof P3W4_autoCostMult==='function') costMult=P3W4_autoCostMult(); }catch(e){}
   total=Math.round(total*costMult);
   if(AM_num(S.cash,0)<total){
-    S.am.notes.push('\u23F8\uFE0F Automation PAUSED — need '+AM_fmt(total)+' operating cash, systems stay armed.');
-    try{ AM_toast('\u23F8\uFE0F Automation paused: insufficient operating cash.'); }catch(e){}
+    S.am.notes.push(AM_icon('alert-triangle','ge-ic-sm')+' Automation PAUSED — need '+AM_fmt(total)+' operating cash, systems stay armed.');
+    try{ AM_toast(AM_icon('alert-triangle','ge-ic-sm')+' Automation paused: insufficient operating cash.'); }catch(e){}
     return;
   }
   S.cash-=total;
@@ -10789,8 +12718,8 @@ function AM_dayTick(){
 
   var mgr=AM_managerBoost();
   if(S.am.manager.owned&&S.am.manager.on){
-    if(mgr.empName&&mgr.ok) S.am.notes.push('\uD83D\uDCBC '+AM_esc(mgr.empName)+' supervising: +'+Math.round(mgr.pct*100)+'% efficiency.');
-    else if(S.am.manager.empId) S.am.notes.push('\u26A0\uFE0F Facility manager dropped the ball today — no supervision bonus.');
+    if(mgr.empName&&mgr.ok) S.am.notes.push(AM_icon('crew','ge-ic-sm')+' '+AM_esc(mgr.empName)+' supervising: +'+Math.round(mgr.pct*100)+'% efficiency.');
+    else if(S.am.manager.empId) S.am.notes.push(AM_icon('alert-triangle','ge-ic-sm')+' Facility manager dropped the ball today — no supervision bonus.');
   }
 
   var live=[];
@@ -10808,7 +12737,7 @@ function AM_dayTick(){
     return {e:ok?e:e*0.35, ok:ok};
   }
   function noteFail(k){
-    S.am.notes.push('\u26A0\uFE0F '+AM_esc(AM_SYSTEMS[k].name)+' sputtered today — running weak. Schedule maintenance.');
+    S.am.notes.push(AM_icon('alert-triangle','ge-ic-sm')+' '+AM_esc(AM_SYSTEMS[k].name)+' sputtered today — running weak. Schedule maintenance.');
   }
 
   /* --- timers (P3-W4): scheduled micro-watering — weaker than a real rig,
@@ -10920,7 +12849,7 @@ function AM_dayTick(){
         var j=S.ty.proc[i];
         if(j&&AM_num(j.daysLeft,1)>0){ j.daysLeft=AM_int(j.daysLeft,1)-1; n++; }
       }
-      if(n>0) S.am.notes.push('\u2699\uFE0F Processing line ran an extra shift: '+n+' job'+(n===1?'':'s')+' advanced.');
+      if(n>0) S.am.notes.push(AM_icon('equipment','ge-ic-sm')+' Processing line ran an extra shift: '+n+' job'+(n===1?'':'s')+' advanced.');
     }catch(e){}
   })();
 
@@ -10940,7 +12869,7 @@ function AM_dayTick(){
         S.cash-=cost; spent+=cost; p.packaged=true; done++;
       }
       if(done>0){
-        S.am.notes.push('\uD83D\uDCE6 Auto-restock packaged '+done+' product'+(done===1?'':'s')+' to dispensary shelves ('+AM_fmt(spent)+' packaging).');
+        S.am.notes.push(AM_icon('box','ge-ic-sm')+' Auto-restock packaged '+done+' product'+(done===1?'':'s')+' to dispensary shelves ('+AM_fmt(spent)+' packaging).');
       }
     }catch(e){}
   })();
@@ -11005,6 +12934,7 @@ function AM_cardHTML(id){
   h+='<div><div class="ge-am-name">'+AM_esc(sys.name)+'</div>';
   h+='<div class="ge-am-status">'+(owned?(on?PF_pill('optimal','check','ONLINE'):PF_pill('neutral','x','OFFLINE')):PF_pill('neutral','lock','LOCKED'))+'</div></div></div>';
   h+='<p class="ge-caption ge-muted ge-am-desc">'+AM_esc(sys.desc)+'</p>';
+  h+=(typeof P4N_copyHTML==='function'?P4N_copyHTML(id):''); /* P4-W6 4N: handles / still-needs-you copy */
   h+='<div class="ge-am-stats">';
   h+=PF_kv('Rank required','<b>'+AM_esc(AM_rankName(sys.rankGate))+'</b>');
   h+=PF_kv('Purchase','<b class="ge-num">'+AM_fmt(sys.cost)+'</b>');
@@ -11127,10 +13057,11 @@ try{
       h+=PF_kv(AM_icon('cash','ge-ic-sm')+' Operating cost (active)','<b class="ge-num">'+AM_fmt(total)+'/day</b>');
       h+=PF_kv(AM_icon('day','ge-ic-sm')+' Last day charged','<b class="ge-num">'+AM_fmt(S.am.lastCost)+'</b>');
       h+=PF_kv(AM_icon('star','ge-ic-sm')+' Your rank','<b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>')+'</div>';
+      h+=(typeof P4N_fleetHTML==='function'?P4N_fleetHTML():''); /* P4-W6 4N: fleet management view */
       h+=AM_nextTreeHTML(); /* P3-W4: nearest locked tier, Almost-There style */
       if(S.am.notes&&S.am.notes.length){
         h+='<div class="ge-card"><div class="ge-card-head"><h3>'+AM_icon('scroll','ge-ic-lg')+'LAST DAY REPORT</h3></div><ul class="ge-notes">';
-        S.am.notes.forEach(function(n){ h+='<li>'+n+'</li>'; });
+        S.am.notes.forEach(function(n){ h+='<li>'+P4_AM_legacyNote(n)+'</li>'; });
         h+='</ul></div>';
       }
       h+='<div class="ge-am-grid">';
@@ -11965,6 +13896,7 @@ function CT_checkout(custId){
   S.stats.lifetimeRevenue=CT_num(S.stats.lifetimeRevenue,0)+total;
   const st=S.ct.stats;
   st.completed++; st.transactions++; st.revenue+=total; st.itemsSold+=cart.items.length;
+  try{ if(typeof P4L_noteSale==='function'){ cart.items.forEach(function(ci){ var ii=S.inventory.find(function(x){ return x.id===ci.invId; }); P4L_noteSale({strainId:ci.strainId||(ii&&ii.strainId),strainName:ci.strainName,qty:ci.qty,rev:CT_num(ci.qty,0)*CT_num(ci.price,0),ptype:String(ci.type||'flower'),cust:(cust&&cust.type)||'walk-in',quality:ii?ii.quality:70}); }); } }catch(e){} /* P4-W6 4L */
   /* customer updates */
   cust.visits++; cust.spent+=total; cust.satisfaction=CT_clamp(cust.satisfaction+8,0,100);
   cust.loyalty=CT_clamp(cust.loyalty+12,0,100);
@@ -12172,14 +14104,14 @@ function NX_renderLogin(){
      '</div><label class="ge-check"><input type="checkbox" id="nx-remember" checked> <span>Remember Me</span></label>'+
      '<button class="ge-btn ge-btn-ghost ge-btn-block" id="nx-b-forgot">FORGOT PASSWORD?</button>';
   } else if(NX_loginMode==='login'){
-    inner='<h3 class="ge-h2">LOGIN</h3><input class="ge-input" id="nx-f-user" placeholder="Username" autocomplete="username" enterkeyhint="next">'+
+    inner='<h3 class="ge-h2">LOGIN</h3><input class="ge-input" id="nx-f-user" placeholder="Username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">'+
      '<input class="ge-input" id="nx-f-pass" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="done">'+
      '<label class="ge-check"><input type="checkbox" id="nx-remember2" checked> <span>Remember Me</span></label>'+
      '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-primary" id="nx-do-login">ENTER</button></div>';
   } else if(NX_loginMode==='create'){
     inner='<h3 class="ge-h2">CREATE GROW EMPIRE ID</h3>'+
-     '<input class="ge-input" id="nx-c-user" placeholder="Username" autocomplete="username" enterkeyhint="next">'+
-     '<input class="ge-input" id="nx-c-grower" placeholder="Grower Name (callsign)" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-user" placeholder="Username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">'+
+     '<input class="ge-input" id="nx-c-grower" placeholder="Grower Name (callsign)" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next">'+
      '<input class="ge-input" id="nx-c-email" type="email" inputmode="email" placeholder="Email" autocomplete="email" enterkeyhint="next">'+
      '<input class="ge-input" id="nx-c-pass" type="password" placeholder="Password" autocomplete="new-password" enterkeyhint="next">'+
      '<input class="ge-input" id="nx-c-pass2" type="password" placeholder="Confirm Password" autocomplete="new-password" enterkeyhint="done">'+
@@ -12255,8 +14187,10 @@ function NX_logout(){
 function NX_offlineCheck(){
   if(!S||!S.started) return;
   const last=num(S.lastSeen,0), now=Date.now();
-  if(!last){ return; }
-  const elapsed=now-last;
+  /* P4U: explicit skew guard — missing, negative or garbage elapsed (clock
+     moved backward, lastSeen tampered into the future) never reaches the sim. */
+  const elapsed=(typeof P4_safeElapsed==='function')?P4_safeElapsed(last,now):(now-last);
+  if(!(elapsed>0)){ return; }
   if(elapsed<45*60*1000) return;
   const days=clamp(Math.round(elapsed/(8*3600*1000)),1,3);
   const sum=NX_offlineSim(days);
@@ -12268,6 +14202,9 @@ let NX_welcome=null;
 function NX_offlineSim(days){
   /* P2.5: enrichment counters only - sim behavior (incl. the NEVER-die guarantee) is untouched. */
   const sum={grown:0,irr:0,feed:0,orders:0,rev:0,attn:0,attnNames:[],repPlus:0,missionsMet:0,p0Levels:[],unlockedNow:[]};
+  /* P4U: pre-sim snapshot for the return-to-game summary. Read-only; the sim
+     behavior below (incl. the NEVER-die guarantee) is untouched. */
+  const P4snap=(typeof P4_snapOffline==='function')?P4_snapOffline():null;
   const cash0=num(S.cash,0);
   let served0=0; try{ served0=num(S.ct&&S.ct.servedToday,0); }catch(e){}
   const rep0=int((typeof TY_repOverall==='function')?TY_repOverall():S.reputation,0);
@@ -12312,11 +14249,193 @@ function NX_offlineSim(days){
       if(sum.attnNames.length<3){ const st=getStrain(p.strainId); sum.attnNames.push((st?st.name:'Plant')+' #'+p.id); }
     }
   });
+  /* P4U: read-only enrichment of the already-applied sim — the summary itself
+     grants nothing. Sets sum.P4v=1; legacy hand-built sums keep P4v unset. */
+  try{ if(typeof P4_enrichOfflineSum==='function') P4_enrichOfflineSum(sum,P4snap); }catch(e){}
   return sum;
 }
 function NX_fmtElapsed(ms){
   const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000);
   return h>0?(h+'h '+m+'m'):(m+'m');
+}
+/* ================= P4U: RETURN-TO-GAME SUMMARY =================
+   Read-only enrichment of the already-applied offline sim. The summary NEVER
+   grants anything: every number is derived from state the sim already wrote.
+   Sections render only when sum.P4v===1 (set by P4_enrichOfflineSum), so
+   hand-crafted legacy NX_welcome.sum objects render byte-identical to before.
+   One screen of summary first; each section taps open for detail (no popup
+   avalanche). Fixed toggle IDs (p4w-d1..d6), no random IDs — render is
+   idempotent. Every helper is throw-safe with clean defaults. */
+function P4_safeElapsed(last,now){
+  last=num(last,0); now=num(now,0);
+  if(!(last>0)||!(now>0)) return 0;
+  const e=now-last;
+  return (e>0)?e:0; /* clock skew / tampered future lastSeen -> no offline time */
+}
+function P4_stageOfSafe(p){
+  try{ if(!p) return -1; if(p.stage===-1) return -1; return stageOf(p); }catch(e){ return -1; }
+}
+function P4_snapOffline(){
+  const snap={stages:{},proc:[],prodN:0,demKeys:[],short:null,activeMN:[],tx0:0,cash:0};
+  try{
+    (S.plants||[]).forEach(p=>{ try{ snap.stages[p.id]=P4_stageOfSafe(p); }catch(e){} });
+    try{
+      const TY=(typeof TY_PRODUCTS!=='undefined')?TY_PRODUCTS:[];
+      snap.proc=((S.ty||{}).proc||[]).map(j=>{
+        let nm='batch';
+        try{ const pt=Ty.find(x=>x.id===(j&&j.ptype)); if(pt&&pt.name) nm=pt.name; }catch(e){}
+        return {id:j&&j.id,label:nm};
+      });
+    }catch(e){}
+    snap.prodN=((S.ty||{}).prod||[]).filter(p=>p&&!p.packaged).length;
+    const t=S.ty||{};
+    snap.demKeys=Object.keys(t.typeDem||{});
+    snap.short=t.shortagePtype||null;
+    snap.activeMN=Object.keys((S.mn&&S.mn.active)||{});
+    snap.tx0=num(S.ct&&S.ct.servedToday,0);
+    snap.cash=num(S.cash,0);
+  }catch(e){}
+  return snap;
+}
+function P4_enrichOfflineSum(sum,snap){
+  if(!sum||!snap) return;
+  sum.P4v=1;
+  /* 1. PLANTS ADVANCED: growth stages gained + now harvest-ready */
+  let adv=0, ready=0; const advNames=[];
+  try{
+    (S.plants||[]).forEach(p=>{
+      const was=num(snap.stages[p.id],-99), nowS=P4_stageOfSafe(p);
+      if(was>-99&&nowS>was){ adv++; if(advNames.length<3){ const st=getStrain(p.strainId); advNames.push((st?st.name:'Plant')+' #'+p.id); } }
+      if(nowS>=5) ready++;
+    });
+  }catch(e){}
+  sum.stagesAdvanced=adv; sum.advNames=advNames; sum.harvestReady=ready;
+  /* 2. MISSION TIMER RESULTS: timed missions completed vs expired during the sim */
+  const done=[], expired=[];
+  try{
+    (snap.activeMN||[]).forEach(id=>{
+      if(S.mn&&S.mn.active&&S.mn.active[id]) return; /* still running */
+      let nm=id;
+      try{ const d=(typeof MN_def==='function')?MN_def(id):null; if(d&&d.name) nm=d.name; }catch(e){}
+      if((S.missionsDone||[]).indexOf(id)>=0) done.push(nm);
+      else if(S.mn&&S.mn.failed&&S.mn.failed[id]) expired.push(nm);
+    });
+  }catch(e){}
+  sum.timedDone=done; sum.timedExpired=expired;
+  /* 3. PRODUCTION COMPLETED: processing batches that finished + new packaged output */
+  let prodDone=[];
+  try{
+    const nowIds=((S.ty||{}).proc||[]).map(j=>j&&j.id);
+    prodDone=(snap.proc||[]).filter(b=>nowIds.indexOf(b.id)<0).map(b=>b.label);
+  }catch(e){}
+  sum.prodDone=prodDone;
+  try{ sum.prodNew=Math.max(0,((S.ty||{}).prod||[]).filter(p=>p&&!p.packaged).length-num(snap.prodN,0)); }catch(e){ sum.prodNew=0; }
+  /* 4. SALES SUMMARY: customers + revenue, already measured by the sim */
+  sum.dispTx=Math.max(0,num(S.ct&&S.ct.servedToday,0)-num(snap.tx0,0));
+  sum.dispRev=num(sum.rev,0);
+  /* 5. MARKET CHANGES: demand shifts + shortage changes */
+  const chg=[];
+  try{
+    const t=S.ty||{}, dk=Object.keys(t.typeDem||{});
+    const Ty=(typeof TY_PTYPES!=='undefined')?TY_PTYPES:[];
+    dk.forEach(k=>{ if((snap.demKeys||[]).indexOf(k)<0){
+      const pt=Ty.find(x=>x.id===k);
+      chg.push((pt?pt.name:k)+' demand '+(((t.typeDem||{})[k]||{}).dem||'shifted'));
+    }});
+    (snap.demKeys||[]).forEach(k=>{ if(dk.indexOf(k)<0){
+      const pt=Ty.find(x=>x.id===k);
+      chg.push((pt?pt.name:k)+' demand normalized');
+    }});
+    if((t.shortagePtype||null)!==(snap.short||null)){
+      if(t.shortagePtype){ const pt=Ty.find(x=>x.id===t.shortagePtype); chg.push('SHORTAGE: '+(pt?pt.name:t.shortagePtype)); }
+      else chg.push('Shortage resolved');
+    }
+  }catch(e){}
+  sum.marketChanges=chg;
+  /* 6. NEWLY AFFORDABLE: upgrade costs that crossed below cash during the sim */
+  const aff=[];
+  try{
+    const cash=num(S.cash,0), cashWas=num(snap.cash,0);
+    const consider=(label,cost,go,tab)=>{
+      cost=num(cost,0); if(!(cost>0)) return;
+      if(cash>=cost&&cashWas<cost) aff.push({label:label,cost:cost,go:go,tab:tab});
+    };
+    const fi=int(S.facility,0)+1, f=(typeof FACILITIES!=='undefined')?FACILITIES[fi]:null;
+    if(f) consider('Facility: '+f.name,num(f.cost,0),'empire','facilities');
+    if(typeof EQUIP_DEFS!=='undefined'&&typeof equipCost==='function'){
+      EQUIP_DEFS.forEach(d=>{
+        const lvl=num(S.equipment[d.id],1);
+        if(lvl<num(d.max,99)) consider(d.name+' Lv '+(lvl+1),equipCost(d,lvl),'empire','equipment');
+      });
+    }
+    if(typeof AM_SYSTEMS!=='undefined'){
+      Object.keys(AM_SYSTEMS).forEach(id=>{
+        const sys=AM_SYSTEMS[id], st=(S.am&&S.am[id])||{};
+        if(!st.owned) consider('Automation: '+sys.name,num(sys.cost,0),'automation',null);
+      });
+    }
+    if(typeof EX_BUILDINGS!=='undefined'&&typeof EX_buildingLevel==='function'){
+      EX_BUILDINGS.forEach(b=>{
+        const lv=EX_buildingLevel(b.id);
+        if(lv<5) consider(b.name+' Lv '+(lv+1),num(b.levels[lv].cost,0),'empire','buildings');
+      });
+    }
+    aff.sort((a,b)=>a.cost-b.cost);
+  }catch(e){}
+  sum.newlyAffordable=aff.slice(0,6);
+}
+function P4_toggleDetail(id){
+  try{ const el=document.getElementById(id); if(el) el.classList.toggle('ge-hidden'); }catch(e){}
+}
+function P4_welcomeSectionsHTML(s){
+  /* Six summary sections, one screen. Returns '' unless the P4U enrichment ran. */
+  if(!s||s.P4v!==1) return '';
+  const secs=[];
+  const sec=(n,ico,title,summary,detail)=>{
+    const has=!!detail;
+    secs.push(
+      '<div class="ge-card ge-card-flat"><div class="ge-p4sec" data-p4sec="p4w-d'+n+'" role="button" tabindex="0">'+
+      '<span>'+icon(ico,'ge-ic-sm')+'<b>'+title+'</b></span>'+
+      '<span class="ge-num ge-muted">'+summary+'</span></div>'+
+      (has?'<div id="p4w-d'+n+'" class="ge-hidden"><p class="ge-body ge-muted">'+detail+'</p></div>':'')+
+      '</div>');
+  };
+  /* 1. PLANTS ADVANCED */
+  const adv=int(s.stagesAdvanced,0);
+  sec(1,'grow','PLANTS ADVANCED',
+    adv>0?adv+' grew':('—'),
+    adv>0?(int(s.stagesAdvanced,0)+' plant'+(adv===1?'':'s')+' moved up a growth stage'+
+      ((s.advNames||[]).length?': '+(s.advNames||[]).map(esc).join(', ')+(adv>3?'…':''):'')+'.'+
+      (int(s.harvestReady,0)>0?' <b>'+int(s.harvestReady,0)+' ready to harvest.</b>':'')):null);
+  /* 2. MISSION TIMER RESULTS */
+  const td=(s.timedDone||[]).length, te=(s.timedExpired||[]).length;
+  sec(2,'timer','MISSION TIMERS',
+    (td||te)?(td+' done'+(te?', '+te+' expired':'')):('—'),
+    (td||te)?((td?('Completed: '+(s.timedDone||[]).map(esc).join(', ')+'. '):'')+
+      (te?('Expired: '+(s.timedExpired||[]).map(esc).join(', ')+'. Timed missions can be retried from the board.'):'')):null);
+  /* 3. PRODUCTION COMPLETED */
+  const pd=(s.prodDone||[]).length, pn=int(s.prodNew,0);
+  sec(3,'flask','PRODUCTION',
+    (pd||pn)?(pd+' batch'+(pd===1?'':'es')+' finished'):('—'),
+    (pd||pn)?((pd?('Finished: '+(s.prodDone||[]).map(esc).join(', ')+'. '):'')+
+      (pn?pn+' new finished product'+(pn===1?'':'s')+' waiting to be packaged.':'')):null);
+  /* 4. SALES SUMMARY */
+  const tx=int(s.dispTx,0), rv=num(s.dispRev,0);
+  sec(4,'cart','DISPENSARY',
+    (tx>0||rv!==0)?(tx+' orders · '+fmt$(rv)):('—'),
+    (tx>0||rv!==0)?(tx+' customer'+(tx===1?'':'s')+' served'+(rv>0?' for '+fmt$(rv)+' revenue':'')+
+      (tx>0&&rv>0?' ('+fmt$(Math.round(rv/tx))+' avg ticket)':'')+'.'):null);
+  /* 5. MARKET CHANGES */
+  const mc=(s.marketChanges||[]).length;
+  sec(5,'chart','MARKET',
+    mc?mc+' shift'+(mc===1?'':'s'):('—'),
+    mc?(s.marketChanges||[]).map(esc).join('<br>'):null);
+  /* 6. NEWLY AFFORDABLE */
+  const af=(s.newlyAffordable||[]);
+  sec(6,'star','NEWLY AFFORDABLE',
+    af.length?af.length+' upgrade'+(af.length===1?'':'s'):('—'),
+    af.length?af.map(a=>esc(a.label)+' — <b class="ge-num">'+fmt$(num(a.cost,0))+'</b>').join('<br>'):null);
+  return '<p class="ge-label ge-gold-text">WHAT CHANGED</p>'+secs.join('');
 }
 RENDER.welcome=function(){
   const r=$('welcome-root'); if(!r) return;
@@ -12346,8 +14465,12 @@ RENDER.welcome=function(){
    (num(s.attn,0)?PF_kv(icon('warn','ge-ic-sm')+' Plants need attention','<b class=\"ge-num ge-red\">'+int(s.attn,0)+'</b>')+'<p class=\"ge-caption ge-muted\">'+(s.attnNames||[]).map(esc).join(', ')+(s.attn>3?'\u2026':'')+'</p>'
     :PF_kv(icon('check','ge-ic-sm')+' Everything stable','<b>—</b>'))+
   '</div>'+flags+
-  '<p class=\"ge-caption ge-muted ge-center\">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
-  '<button class=\"ge-btn ge-btn-primary ge-btn-block\" id=\"nx-enter\">ENTER EMPIRE</button></div>';
+  /* P4U: WHAT CHANGED — one screen of summary first, detail on tap. Renders
+     only when the P4U enrichment ran (sum.P4v); legacy sums are untouched. */
+  (function(){ try{ return (typeof P4_welcomeSectionsHTML==='function')?P4_welcomeSectionsHTML(s):''; }catch(e){ return ''; } })()+
+  '<p class="ge-caption ge-muted ge-center">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
+  '<button class="ge-btn ge-btn-primary ge-btn-block" id="nx-enter">ENTER EMPIRE</button></div>';
+  try{ r.querySelectorAll('[data-p4sec]').forEach(h=>{ h.onclick=()=>P4_toggleDetail(h.dataset.p4sec); }); }catch(e){}
   $('nx-enter').onclick=()=>{ NX_welcome=null;
     /* P2.5: settle offline mission progress through the normal idempotent path
        (checkMissions only completes un-completed missions - no double-grant). */
@@ -12543,6 +14666,7 @@ function ME_migrate(){
     if(!m.firsts.elite&&(num(st.eliteFound,0)>0||num(st.legendaryFound,0)>0)) m.firsts.elite=unk();
     if(!m.firsts.custom&&(S.customStrains||[]).length>0) m.firsts.custom=unk();
     if(!m.records.largestHarvest&&num(st.biggestHarvest,0)>0) m.records.largestHarvest={oz:num(st.biggestHarvest,0),strainName:'',day:1,unknown:true};
+    try{ if(typeof P4_migrateRecords==='function') P4_migrateRecords(); }catch(e){} /* P4: honest backfill for the extended record set */
   }catch(e){}
 }
 function ME_strainName(id){ try{ const st=getStrain(id); return st?st.name:String(id); }catch(e){ return String(id); } }
@@ -12570,6 +14694,152 @@ function ME_recordHarvest(st,oz,potency,terpenes,resin){
     });
     try{ save(); }catch(e){}
   }catch(e){}
+}
+/* ================= P4: PERSONAL RECORDS — compete against your own empire =================
+   12 records. Reuses existing stats/derived helpers where they exist (largestHarvest,
+   potency, terpenes, resin via ME_recordHarvest; fastestGrow via S.stats.fastestGrow;
+   oldest keeper via ME_longestKept, derived live and never stored). New keys are
+   stamped at their natural lifecycle points only, update ONLY when beaten (ties keep
+   the earlier entry), and are backfilled HONESTLY in P4_migrateRecords — anything
+   unknowable starts empty rather than invented. A single restrained toast marks a
+   new personal best; records never punish, never expire, never nag. */
+function P4_ensureSales(){
+  try{ if(!S.p4sales||typeof S.p4sales!=='object') S.p4sales={}; }catch(e){}
+}
+function P4_recordLine(key,e){
+  try{
+    switch(key){
+      case 'largestHarvest': return num(e.oz,0)+' oz \u2014 '+e.strainName;
+      case 'quality': return 'Q'+Math.round(num(e.val,0))+' \u2014 '+e.strainName;
+      case 'potency': return Math.round(num(e.val,0))+'% \u2014 '+e.strainName;
+      case 'terpenes': return Math.round(num(e.val,0))+' \u2014 '+e.strainName;
+      case 'resin': return Math.round(num(e.val,0))+' \u2014 '+e.strainName;
+      case 'fastestGrow': return int(e.days,0)+' days \u2014 '+e.strainName;
+      case 'mostValuable': return fmt$(int(e.cash,0))+' \u2014 '+e.strainName;
+      case 'bestSelling': return fmt$(int(e.revenue,0))+' lifetime \u2014 '+e.strainName;
+      case 'bestCross': return 'Q'+Math.round(num(e.score,0))+' \u2014 '+e.strainName;
+      case 'rarestTrait': return e.trait+' ('+e.rarity+') \u2014 '+e.strainName;
+      case 'totalPreserved': return int(e.count,0)+' genetics preserved';
+      default: return e.strainName||'';
+    }
+  }catch(e){ return ''; }
+}
+function P4_recordBeat(key,entry,val,label,lower){
+  /* records only ever move UP (or DOWN for fastestGrow) — ties keep the earlier entry */
+  try{
+    ME_ensure();
+    const rec=S.memory.records, cur=rec[key];
+    const cv=cur&&cur._v!=null?num(cur._v,NaN):NaN, nv=num(val,0);
+    const beaten=isNaN(cv)?nv>0:(lower?nv<cv:nv>cv);
+    if(!beaten) return false;
+    entry._v=nv; rec[key]=entry;
+    toast(icon('trophy','ge-ic-md')+' <b>NEW PERSONAL BEST</b> \u2014 '+esc(label)+'<br><span class="ge-muted">'+esc(P4_recordLine(key,entry))+'</span>');
+    try{ save(); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+function P4_traitRank(ph){
+  /* rank 4 = legendary expression; 3 = elite; 2 = rare; 1 = everything else */
+  try{
+    if(!ph) return null;
+    if(ph.legendaryTrait) return {rank:4,rarity:'legendary',trait:String(ph.legendaryTrait)};
+    const r=String(ph.rarity||'common');
+    const rank=r==='legendary'?4:r==='elite'?3:r==='rare'?2:1;
+    const ex=Array.isArray(ph.expressed)?ph.expressed.filter(t=>t&&String(t).indexOf('?')<0):[];
+    return {rank:rank,rarity:r,trait:String(ex[0]||(r+' phenotype'))};
+  }catch(e){ return null; }
+}
+function P4_recordHarvest(st,qq,oz,potency,terpenes,resin,growDays,ph,estValue){
+  try{
+    if(!st) return;
+    ME_ensure();
+    const day=int(S.day,1), nm=st.name||'', sid=st.id||'';
+    P4_recordBeat('quality',{val:qq,strainName:nm,strainId:sid,day:day},qq,'HIGHEST QUALITY');
+    if(num(growDays,0)>0) P4_recordBeat('fastestGrow',{days:int(growDays,0),strainName:nm,strainId:sid,day:day},num(growDays,0),'FASTEST SUCCESSFUL GROW',true);
+    if(num(estValue,0)>0) P4_recordBeat('mostValuable',{cash:int(estValue,0),oz:num(oz,0),strainName:nm,strainId:sid,day:day},num(estValue,0),'MOST VALUABLE HARVEST');
+    const tr=P4_traitRank(ph);
+    if(tr) P4_recordBeat('rarestTrait',{trait:tr.trait,rarity:tr.rarity,strainName:nm,strainId:sid,day:day},tr.rank,'RAREST TRAIT FOUND');
+    if(st.custom){
+      const sg=(S.stats&&S.stats.strainGrown||{})[sid];
+      const score=Math.max(num(qq,0),num(sg&&sg.best,0));
+      if(score>0) P4_recordBeat('bestCross',{score:Math.round(score),strainId:sid,strainName:nm,day:day},score,'MOST SUCCESSFUL CROSS');
+    }
+  }catch(e){}
+}
+function P4_noteSale(strainId,strainName,oz,revenue){
+  /* per-strain sales ledger; BEST-SELLING GENETIC = highest lifetime revenue */
+  try{
+    if(!strainId||!(num(oz,0)>0)) return;
+    P4_ensureSales();
+    const e=S.p4sales[strainId]||{strainName:String(strainName||strainId),oz:0,revenue:0};
+    e.strainName=String(strainName||e.strainName||strainId);
+    e.oz=Math.round((num(e.oz,0)+num(oz,0))*10)/10;
+    e.revenue=int(e.revenue,0)+Math.max(0,int(revenue,0));
+    S.p4sales[strainId]=e;
+    P4_recordBeat('bestSelling',{revenue:e.revenue,oz:e.oz,strainId:strainId,strainName:e.strainName,day:int(S.day,1)},e.revenue,'BEST-SELLING GENETIC');
+  }catch(e){}
+}
+function P4_checkPreserved(){
+  /* TOTAL GENETICS PRESERVED is cumulative — it only ever climbs */
+  try{
+    const c=P4_p0EntryCount();
+    if(c>0) P4_recordBeat('totalPreserved',{count:c,day:int(S.day,1)},c,'TOTAL GENETICS PRESERVED');
+  }catch(e){}
+}
+function P4_migrateRecords(){
+  /* honest backfill: reuse authoritative stats; anything unknowable stays empty */
+  try{
+    ME_ensure();
+    const rec=S.memory.records, st=(S.stats&&typeof S.stats==='object')?S.stats:{};
+    if(!rec.quality&&num(st.bestQuality,0)>0)
+      rec.quality={val:num(st.bestQuality,0),strainName:'',day:1,unknown:true,_v:num(st.bestQuality,0)};
+    if(!rec.fastestGrow&&num(st.fastestGrow,0)>0)
+      rec.fastestGrow={days:int(st.fastestGrow,0),strainName:'',day:1,unknown:true,_v:num(st.fastestGrow,0)};
+    try{ /* most successful cross: derive live from the strain aggregates — never invented */
+      let b=null;
+      (S.customStrains||[]).forEach(c=>{
+        const sg=(st.strainGrown||{})[c.id]; const sc=num(sg&&sg.best,0);
+        if(sc>0&&(!b||sc>b.score)) b={score:Math.round(sc),strainId:c.id,strainName:c.name,day:1,unknown:true,_v:sc};
+      });
+      if(b&&!rec.bestCross) rec.bestCross=b;
+    }catch(e){}
+    /* totalPreserved is deliberately NOT backfilled: migration auto-creates vault
+       entries for keeper strains, so a legacy count would invent history. It is
+       earned from this point forward via P4_checkPreserved (called at every
+       genuine Project 0 entry). */
+    /* mostValuable / bestSelling / rarestTrait have no honest legacy source — they
+       start empty and are earned from this point forward. */
+  }catch(e){}
+}
+var P4_RECORD_DEFS=[
+ {key:'largestHarvest',label:'BEST YIELD'},
+ {key:'quality',label:'HIGHEST QUALITY'},
+ {key:'potency',label:'HIGHEST POTENCY'},
+ {key:'terpenes',label:'STRONGEST TERPENE EXPRESSION'},
+ {key:'resin',label:'BEST RESIN'},
+ {key:'fastestGrow',label:'FASTEST SUCCESSFUL GROW'},
+ {key:'mostValuable',label:'MOST VALUABLE HARVEST'},
+ {key:'bestSelling',label:'BEST-SELLING GENETIC'},
+ {key:'bestCross',label:'MOST SUCCESSFUL CROSS'},
+ {key:'oldestKeeper',label:'OLDEST ACTIVE KEEPER',live:true},
+ {key:'rarestTrait',label:'RAREST TRAIT FOUND'},
+ {key:'totalPreserved',label:'TOTAL GENETICS PRESERVED'}
+];
+function P4_recordsHTML(){
+  try{
+    ME_ensure();
+    const rec=S.memory.records;
+    let h='<div class="p4-rec-grid">';
+    P4_RECORD_DEFS.forEach(d=>{
+      let e=rec[d.key]||null, live=false;
+      if(d.key==='oldestKeeper'){ const lk=ME_longestKept(); if(lk){ e={daysKept:lk.daysKept,strainName:lk.strainName,dayFound:lk.dayFound}; live=true; } }
+      const val=e?(d.key==='oldestKeeper'?int(e.daysKept,0)+' DAYS \u2014 '+esc(e.strainName):P4_recordLine(d.key,e)):'\u2014';
+      const meta=e?(e.unknown?'ARCHIVE':('DAY '+int(e.day||e.dayFound,1))):'NOT SET YET';
+      h+='<div class="p4-rec'+(live?' p4-rec-live':'')+'"><div class="p4-rec-lbl">'+d.label+(live?' \u00b7 LIVE':'')+'</div>'+
+        '<div class="p4-rec-val">'+val+'</div><div class="p4-rec-meta">'+esc(meta)+'</div></div>';
+    });
+    return h+'</div>';
+  }catch(e){ return ''; }
 }
 function ME_longestKept(){
   /* derived live from the vault - the oldest keeper still preserved */
@@ -12748,6 +15018,8 @@ RENDER.profile=function(){
    PF_tile(icon('trophy','ge-ic-md'),'ACHIEVEMENTS',S.achievements.length+'/'+ACHIEVEMENTS.length)+
    PF_tile(icon('project0','ge-ic-md'),'PROJECT 0 SCORE',num(S.project0.points,0))+
   '</div>'+
+  '<div class="ge-section-title">PERSONAL RECORDS<span class="ge-spread ge-caption">YOUR EMPIRE VS ITSELF</span></div>'+
+  (typeof P4_recordsHTML==='function'?P4_recordsHTML():'')+ /* P4: 12-record personal bests */
   '<div class="ge-section-title">TITLES<span class="ge-spread ge-num">'+earned.length+'/'+NX_TITLES.length+'</span></div>'+
   (typeof P0T_legacyHTML==='function'?P0T_legacyHTML():'')+ /* P3-W3: LEGACY place of honor */
   '<p class="ge-caption ge-muted">Tap an earned title to display it.</p><div class="ge-title-grid">';
@@ -12906,27 +15178,31 @@ function NX_getKeeper(id){ return (S.keepers||[]).find(k=>k.id===id); }
 function NX_renameKeeper(id){
   const k=NX_getKeeper(id); if(!k) return;
   const m=modal('<h3>'+icon('star','ic')+' RENAME KEEPER</h3><p class="muted">'+esc(k.strainName)+' #'+k.phenoNum+'</p>'+
-   '<input class="nx-in" id="nx-kn" enterkeyhint="done" maxlength="40" value="'+esc(k.customName||'')+'" placeholder="Custom keeper name (optional)">'+
+   '<input class="nx-in" id="nx-kn" enterkeyhint="done" autocapitalize="words" autocorrect="off" spellcheck="false" maxlength="40" value="'+esc(k.customName||'')+'" placeholder="Custom keeper name (optional)">'+
    '<div class="btn-row"><button class="btn" id="nx-kn-c">CANCEL</button><button class="btn btn-gold" id="nx-kn-ok">SAVE</button></div>');
   m.querySelector('#nx-kn-c').onclick=()=>m.remove();
-  m.querySelector('#nx-kn-ok').onclick=()=>{ k.customName=m.querySelector('#nx-kn').value.trim().slice(0,40); save(); NX_saved(); m.remove(); RENDER.keepers(); toast('👑 Keeper renamed.'); };
+  m.querySelector('#nx-kn-ok').onclick=()=>{ k.customName=m.querySelector('#nx-kn').value.trim().slice(0,40); save(); NX_saved(); m.remove(); RENDER.keepers(); toast(icon('crown-gold','ge-ic-sm')+' Keeper renamed.'); };
 }
 function NX_keeperHistory(id){
   const k=NX_getKeeper(id); if(!k) return;
-  const g=k.genetics||{};
-  const recs=(k.records||[]).slice(-5).reverse();
-  modal('<h3>'+icon('scroll','ic')+' '+(k.customName?esc(k.customName)+' — ':'')+esc(k.strainName)+' #'+k.phenoNum+'</h3>'+
-   '<div class="kv"><span>Discovered</span><b>Day '+k.dayFound+'</b></div>'+
-   '<div class="kv"><span>Generation</span><b>'+esc(k.generation||'—')+'</b></div>'+
-   '<div class="kv"><span>Lineage</span><b>'+esc(k.lineage||'—')+'</b></div>'+
-   '<div class="kv"><span>Rarity</span><b>'+esc(k.rarity||'').toUpperCase()+'</b></div>'+
-   '<div class="kv"><span>Harvests</span><b>'+int(k.harvests,0)+'</b></div>'+
-   '<div class="kv"><span>Best / Avg quality</span><b>'+Math.round(num(k.bestQuality,0))+' / '+Math.round(num(k.avgQuality,k.bestQuality))+'</b></div>'+
-   '<div class="kv"><span>Best / Avg yield</span><b>'+num(k.bestYield,0)+' / '+num(k.avgYield,k.bestYield)+' oz</b></div>'+
+  const recs=(k.records||[]).slice(-6).reverse();
+  const crosses=Array.isArray(k.crosses)?k.crosses.slice(-6):[];
+  const legacy=P4_isLegacy(k);
+  modal('<h3>'+icon('crown-gold','ic')+' '+(k.customName?esc(k.customName)+' — ':'')+esc(k.strainName)+' #'+k.phenoNum+'</h3>'+
+   '<p class="ge-body"><b class="ge-gold-text">'+esc(P4_keeperEpithet(k))+'</b>'+(legacy?' · '+icon('crown-gold','ge-ic-sm')+' LEGACY':'')+'</p>'+
+   '<div class="kv"><span>Discovered</span><b>Day '+int(k.dayFound,1)+'</b></div>'+
+   '<div class="kv"><span>Generation</span><b>'+esc(String(k.generation||0))+'</b></div>'+
+   '<div class="kv"><span>Lineage</span><b>'+esc(k.lineage||'Seed')+'</b></div>'+
+   '<div class="kv"><span>Rarity</span><b>'+esc(String(k.rarity||'common')).toUpperCase()+'</b></div>'+
+   '<div class="kv"><span>Terpene profile</span><b>'+esc(k.terpeneProfile||'Balanced')+'</b></div>'+
+   '<div class="kv"><span>Grow count</span><b>'+int(k.growCount,1)+'</b></div>'+
+   '<div class="kv"><span>Best harvest</span><b>Q'+Math.round(num(k.bestQuality,0))+' · '+num(k.bestYield,0)+' oz</b></div>'+
+   '<div class="kv"><span>Best potency / resin / terps</span><b>'+Math.round(num(k.bestPotency,0))+' / '+Math.round(num(k.bestResin,0))+' / '+Math.round(num(k.bestTerpenes,0))+'</b></div>'+
    '<div class="kv"><span>Clone runs</span><b>'+int(k.cloneRuns,0)+'</b></div>'+
    '<div class="kv"><span>Breeding uses</span><b>'+int(k.breedingUses,0)+'</b></div>'+
+   (crosses.length?'<h3 style="margin-top:8px">Crosses created from this keeper</h3>'+crosses.map(c=>'<div class="kv"><span>Day '+int(c.day,1)+'</span><b>'+esc(c.name||'?')+'</b></div>').join(''):'')+
    (k.awards&&k.awards.length?'<div class="kv"><span>Awards</span><b>'+k.awards.map(esc).join(', ')+'</b></div>':'')+
-   (recs.length?'<h3 style="margin-top:8px">Recent harvests</h3>'+recs.map(h=>'<div class="kv"><span>Day '+h.day+'</span><b>Q'+Math.round(h.q)+' • '+h.oz+' oz</b></div>').join(''):'')+
+   (recs.length?'<h3 style="margin-top:8px">Recent harvests</h3>'+recs.map(h=>'<div class="kv"><span>Day '+int(h.day,1)+'</span><b>Q'+Math.round(num(h.q,0))+' · '+num(h.oz,0)+' oz</b></div>').join(''):'')+
    '<button class="btn" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button>');
 }
 function NX_rerunKeeper(id){
@@ -13162,7 +15438,7 @@ const NX_NEW_EVENTS=[
     {label:'CULL IT NOW', sub:'Lose the plant — save the room',
      run:function(){ const c=S.plants.filter(p=>stageOf(p)>=3); if(c.length){ const v=c[rndi(0,c.length-1)]; S.plants=S.plants.filter(p=>p.id!==v.id); toast(icon('train','ge-ic-md')+' Culled to protect the room.'); } return 'end'; }},
     {label:'ISOLATE & WATCH', sub:'Risky — 50% it seeds neighbors',
-     run:function(){ if(Math.random()<0.5){ S.plants.forEach(p=>{ if(stageOf(p)>=3) p.stress=clamp(num(p.stress,0)+25,0,100); }); toast(icon('grow','ge-ic-md')+' It seeded! Flowering plants stressed.'); } else toast('👀 Isolated in time. Crisis dodged.'); return 'end'; }} ]},
+     run:function(){ if(Math.random()<0.5){ S.plants.forEach(p=>{ if(stageOf(p)>=3) p.stress=clamp(num(p.stress,0)+25,0,100); }); toast(icon('grow','ge-ic-md')+' It seeded! Flowering plants stressed.'); } else toast(icon('inspect','ge-ic-sm')+' Isolated in time. Crisis dodged.'); return 'end'; }} ]},
  { id:'wx-empcalloff', rarity:'COMMON', weight:12, cd:12, dur:[2,2],
    title:'EMPLOYEE CALLS OFF',
    text:function(){ return 'No-show on the schedule — the room runs short-handed today.'; },
@@ -13401,7 +15677,10 @@ function CAP_native(){
 }
 
 /* ---------- preferences (persisted in save) ---------- */
-const CAP_PREF_DEFAULTS={haptics:true,sound:true,gfx:'high',anim:'full',textSize:'m'};
+/* P4Q: MUSIC toggle added. Haptics stays ON; sound keeps its existing pref
+   (default ON); music is new -> default OFF. Migration-safe: CAP_prefs()
+   backfills missing keys on legacy saves. */
+const CAP_PREF_DEFAULTS={haptics:true,sound:true,music:false,gfx:'high',anim:'full',textSize:'m'};
 function CAP_prefs(){
   try{
     if(!S||typeof S!=='object') return Object.assign({},CAP_PREF_DEFAULTS);
@@ -13411,6 +15690,8 @@ function CAP_prefs(){
     if(!['high','low'].includes(p.gfx)) p.gfx='high';
     if(!['full','reduced','off'].includes(p.anim)) p.anim='full';
     if(!['s','m','l'].includes(p.textSize)) p.textSize='m';
+    /* P4Q: coerce toggles to real booleans (legacy saves may carry junk) */
+    p.haptics=!!p.haptics; p.sound=!!p.sound; p.music=!!p.music;
     return p;
   }catch(e){ return Object.assign({},CAP_PREF_DEFAULTS); }
 }
@@ -13448,10 +15729,13 @@ function CAP_sfx(kind){
     if(!CAP_prefs().sound) return;
     const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
     const ac=new AC(), t=ac.currentTime;
-    const seq=kind==='alert'?[[196,0,0.22],[147,0.12,0.3]]:kind==='ok'?[[523.25,0,0.12],[783.99,0.09,0.18]]:[[440,0,0.07]];
+    /* P4Q: extended SFX vocabulary. Existing kinds (alert/ok/click) unchanged. */
+    const P4_SFX_SEQ={alert:[[196,0,0.22],[147,0.12,0.3]],ok:[[523.25,0,0.12],[783.99,0.09,0.18]],click:[[440,0,0.07]],
+      legend:[[130.81,0,0.35],[196,0.18,0.4],[261.63,0.36,0.5]],discover:[[880,0,0.1],[1174.66,0.08,0.14]]};
+    const seq=P4_SFX_SEQ[kind]||P4_SFX_SEQ.click;
     seq.forEach(n=>{
       const o=ac.createOscillator(), g=ac.createGain();
-      o.type=kind==='alert'?'sawtooth':'sine'; o.frequency.value=n[0];
+      o.type=kind==='alert'?'sawtooth':kind==='legend'?'triangle':'sine'; o.frequency.value=n[0];
       g.gain.setValueAtTime(0.0001,t+n[1]); g.gain.exponentialRampToValueAtTime(0.12,t+n[1]+0.02);
       g.gain.exponentialRampToValueAtTime(0.0001,t+n[1]+n[2]);
       o.connect(g); g.connect(ac.destination); o.start(t+n[1]); o.stop(t+n[1]+n[2]+0.05);
@@ -13475,41 +15759,41 @@ function CAP_wireHaptics(){
     let ready=false;
     try{ ready=!!(p&&typeof stageOf==='function'&&stageOf(p)>=5); }catch(e){}
     const r=orig(p);
-    if(ready){ CAP_haptic('harvest'); CAP_sfx('ok'); }
+    if(ready){ P4_haptic('harvest'); P4_sfx('ok'); }
     return r;
   });
   CAP_rewrap('checkAchievements',orig=>function(){
     const before=(typeof S!=='undefined'&&S&&Array.isArray(S.achievements))?S.achievements.length:0;
     const r=orig();
-    try{ if(S&&Array.isArray(S.achievements)&&S.achievements.length>before){ CAP_haptic('achievement'); CAP_sfx('ok'); } }catch(e){}
+    try{ if(S&&Array.isArray(S.achievements)&&S.achievements.length>before){ P4_haptic('achievement'); P4_sfx('ok'); } }catch(e){}
     return r;
   });
   CAP_rewrap('checkMissions',orig=>function(){
     const before=(typeof S!=='undefined'&&S&&Array.isArray(S.missionsDone))?S.missionsDone.length:0;
     const r=orig();
-    try{ if(S&&Array.isArray(S.missionsDone)&&S.missionsDone.length>before){ CAP_haptic('mission'); CAP_sfx('ok'); } }catch(e){}
+    try{ if(S&&Array.isArray(S.missionsDone)&&S.missionsDone.length>before){ P4_haptic('mission'); P4_sfx('ok'); } }catch(e){}
     return r;
   });
   CAP_rewrap('levelUpOverlay',orig=>function(lvl){
-    const r=orig(lvl); CAP_haptic('rankup'); CAP_sfx('ok'); return r;
+    const r=orig(lvl); P4_haptic('rankup'); P4_sfx('ok'); return r;
   });
   CAP_rewrap('confirmKeeper',orig=>function(rep){
     const r=orig(rep);
-    if(r!==false){ CAP_haptic('keeper'); CAP_sfx('ok'); }
+    if(r!==false){ P4_haptic('keeper'); P4_sfx('ok'); }
     return r;
   });
   CAP_rewrap('CT_checkout',orig=>function(custId){
     const r=orig(custId);
-    if(r!==false){ CAP_haptic('purchase'); CAP_sfx('ok'); }
+    if(r!==false){ P4_haptic('purchase'); P4_sfx('ok'); }
     return r;
   });
   CAP_rewrap('AM_buy',orig=>function(id){
     const r=orig(id);
-    if(r){ CAP_haptic('purchase'); CAP_sfx('click'); }
+    if(r){ P4_haptic('purchase'); P4_sfx('click'); }
     return r;
   });
   CAP_rewrap('showEventQueue',orig=>function(queue){
-    if(queue&&queue.length){ CAP_haptic('alert'); }
+    if(queue&&queue.length){ P4_haptic('alert'); }
     return orig(queue);
   });
   /* respect the sound toggle for the keeper reveal chime too */
@@ -13811,6 +16095,7 @@ function CAP_showBootLoading(done){
       try{ CAP_installLinkTrap(); }catch(e){}
       try{ CAP_installTapGuard(); }catch(e){}
       try{ CAP_wireHaptics(); }catch(e){}
+      try{ P4_wireFeel(); }catch(e){} /* P4Q: unified feel wiring */
       try{ CAP_applyPrefs(); }catch(e){}
       try{ boot(); }catch(err){ try{ CAP_errorOverlay(String((err&&err.message)||err)); }catch(_){} }
       /* boot finished -> make sure the native splash is gone */
@@ -13878,6 +16163,7 @@ function CAP_settingsExtra(){
     '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('settings','ge-ic-lg')+'APP \u2014 ANDROID</h3></div>'+
      PF_kv('Haptic feedback','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-t="haptics">'+onOff(p.haptics)+'</button>')+
      PF_kv('Sound FX','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-t="sound">'+onOff(p.sound)+'</button>')+
+     PF_kv('Music','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-t="music">'+onOff(p.music)+'</button>')+
      PF_kv('Graphics quality','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="gfx">'+gfxName+'</button>')+
      PF_kv('Animation level','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="anim">'+animName+'</button>')+
      PF_kv('Text size','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="textSize">'+txtName+'</button>')+
@@ -14357,6 +16643,7 @@ function WX_wireEnvControls(root){
       if(out) out.textContent=t.value+t.dataset.unit;
     };
     s.onchange=function(){
+      try{ S.stats.envAdjustments=num(S.stats.envAdjustments,0)+1; checkMissions(); }catch(e){} /* P4.1: tut-envtouch — a committed climate adjustment */
       try{ save(); }catch(e){}
       try{ if(typeof refreshGrowUI==='function') refreshGrowUI(); }catch(e){}
     };
@@ -15292,8 +17579,8 @@ function MS_verifiedCount(){
     return Object.keys(S.p0vault||{}).filter(gid=>{ const e=S.p0vault[gid]; return e&&num(e.tier,0)>=2; }).length;
   }catch(e){ return 0; }
 }
-/* The 12 major milestones, in progression order. prog() reads live state;
-   trig is the honest in-game path (used by the "you're close" return hook). */
+/* The major milestones, in progression order (12 core + P4 codex/legacy additions).
+   prog() reads live state; trig is the honest in-game path (used by the "you're close" return hook). */
 const MS_DEFS=[
  {id:'first-harvest',name:'FIRST HARVEST',ico:'harvest',sub:'Bring a plant home.',trig:'Harvest any plant',
   prog:function(){ return MS_p2(S.stats&&S.stats.harvests,1); }},
@@ -15316,7 +17603,22 @@ const MS_DEFS=[
  {id:'first-warehouse',name:'FIRST WAREHOUSE',ico:'empire',sub:'Expand to the Warehouse facility.',trig:'Buy facility tier 3 — Warehouse',
   prog:function(){ return MS_p2(S.facility,3); }},
  {id:'first-1m',name:'FIRST $1,000,000',ico:'cash',sub:'$1,000,000 lifetime revenue.',trig:'Sell product at the dispensary',
-  prog:function(){ return MS_p2(S.stats&&S.stats.lifetimeRevenue,1000000); }}
+  prog:function(){ return MS_p2(S.stats&&S.stats.lifetimeRevenue,1000000); }},
+ /* ---- P4 additions: Project 0 entry, facility expansion, first mastered, codex discovery ---- */
+ {id:'first-p0entry',name:'FIRST PROJECT 0 ENTRY',ico:'project0',sub:'Enter a genetic into the Project 0 preservation program.',trig:'Preserve a genetic under Project 0',
+  prog:function(){ return MS_p2(P4_p0EntryCount()>0?1:0,1); }},
+ {id:'first-expansion',name:'FIRST FACILITY EXPANSION',ico:'empire',sub:'Expand beyond your first grow space.',trig:'Buy the next facility tier',
+  prog:function(){ return MS_p2(int(S.facility,0)>=1?1:0,1); }},
+ {id:'first-mastered',name:'FIRST MASTERED GENETIC',ico:'crown-gold',sub:'Own, grow, harvest and breed one genetic.',trig:'Complete the full genetic journey',
+  prog:function(){ return MS_p2(P4_masteredCount()>0?1:0,1); }},
+ {id:'codex-25',name:'ARCHIVE 25% DISCOVERED',ico:'dna',sub:'Document a quarter of the genetic archive.',trig:'Acquire, grow and harvest genetics',
+  prog:function(){ return MS_p2(P4_codexDiscoveredCount(),Math.max(1,Math.ceil(P4_codexTotal()*0.25))); }},
+ {id:'codex-50',name:'ARCHIVE 50% DISCOVERED',ico:'dna',sub:'Document half of the genetic archive.',trig:'Acquire, grow and harvest genetics',
+  prog:function(){ return MS_p2(P4_codexDiscoveredCount(),Math.max(1,Math.ceil(P4_codexTotal()*0.5))); }},
+ {id:'codex-75',name:'ARCHIVE 75% DISCOVERED',ico:'dna',sub:'Document three quarters of the genetic archive.',trig:'Acquire, grow and harvest genetics',
+  prog:function(){ return MS_p2(P4_codexDiscoveredCount(),Math.max(1,Math.ceil(P4_codexTotal()*0.75))); }},
+ {id:'codex-100',name:'ARCHIVE 100% DISCOVERED',ico:'crown-gold',sub:'Every genetic in the archive documented. Legend.',trig:'Acquire, grow and harvest genetics',
+  prog:function(){ return MS_p2(P4_codexDiscoveredCount(),Math.max(1,P4_codexTotal())); }}
 ];
 function MS_def(id){ return MS_DEFS.find(d=>d.id===id)||null; }
 function MS_done(id){ try{ MS_ensure(); return !!(S.msDone&&S.msDone[id]); }catch(e){ return false; } }
@@ -15388,8 +17690,9 @@ function MS_onCross(cross){
   try{ MS_check('first-f2'); }catch(e){}
   try{ MS_check('first-stabilized'); }catch(e){}
 }
-function MS_onFacility(i){ try{ if(int(i,0)>=3) MS_check('first-warehouse'); }catch(e){} }
+function MS_onFacility(i){ try{ if(int(i,0)>=3) MS_check('first-warehouse'); }catch(e){} try{ if(int(i,0)>=1) MS_check('first-expansion'); }catch(e){} /* P4: FIRST FACILITY EXPANSION */ }
 function MS_onP0Verified(){ try{ MS_check('first-p0verified'); }catch(e){} }
+function MS_onP0Entry(){ try{ MS_check('first-p0entry'); }catch(e){} try{ if(typeof P4_checkPreserved==='function') P4_checkPreserved(); }catch(e){} } /* P4: FIRST PROJECT 0 ENTRY */
 
 /* ---------------- PART B: big purchase goals for the Almost There panel ----------------
    Real affordability math on the Wave 4/5 additions. Prices are surfaced,
@@ -15610,6 +17913,57 @@ function DASH_snapHTML(){
   }catch(e){}
   return h;
 }
+/* ================= P4: MILESTONE / LEGACY — the chronological history of the empire =================
+   Merges the MS_DEFS milestone ledger (honest day stamps; legacy backfills render as
+   ARCHIVE), the player-memory firsts that have no milestone equivalent, and the
+   per-strain CODEX COMPLETE / MASTERED moments. Sorted oldest-first. Rendered in a
+   focus sheet via GE_openSheet, so the Android back button closes it through the
+   existing sheet stack (CAP_backHandler -> GE_closeTopSheet). Premium timeline
+   styling lives in the .p4-legacy CSS block. */
+function P4_legacyEntries(){
+  const out=[];
+  try{
+    (typeof MS_DEFS!=='undefined'?MS_DEFS:[]).forEach(d=>{
+      const r=(S.msDone||{})[d.id];
+      if(r) out.push({day:num(r.day,1),backfilled:!!r.backfilled,name:d.name,sub:d.sub||'',ico:d.ico||'trophy'});
+    });
+    const f=(S.memory&&S.memory.firsts)||{};
+    if(f.plant) out.push({day:num(f.plant.day,1),backfilled:!!f.plant.unknown,name:'FIRST PLANT',sub:[f.plant.strainName,f.plant.name].filter(Boolean).join(' \u2014 ')||'A single seed',ico:'grow'});
+    if(f.custom) out.push({day:num(f.custom.day,1),backfilled:!!f.custom.unknown,name:'FIRST CUSTOM GENETIC',sub:f.custom.name||'',ico:'dna'});
+    Object.keys(S.codexHist||{}).forEach(id=>{
+      const h=S.codexHist[id]; if(!h) return;
+      if(h.completed) out.push({day:num(h.completedDay,1),name:'CODEX COMPLETE \u2014 '+ME_strainName(id).toUpperCase(),sub:'Fully documented in the Living Codex',ico:'dna'});
+      if(h.mastered) out.push({day:num(h.masteredDay,1),name:'MASTERED \u2014 '+ME_strainName(id).toUpperCase(),sub:'Owned, grown, harvested, bred',ico:'crown-gold'});
+    });
+    out.sort((a,b)=>a.day-b.day);
+  }catch(e){}
+  return out;
+}
+function P4_legacyHTML(){
+  try{
+    const entries=P4_legacyEntries();
+    let h='<div class="p4-legacy"><p class="ge-caption ge-muted p4-legacy-sub">Every first your empire ever earned \u2014 in the order it happened. Not a leaderboard. Your story.</p>';
+    if(!entries.length){
+      h+='<div class="ge-empty"><div>'+icon('scroll','ge-ic-xl')+'</div><h3>THE STORY BEGINS</h3><p>No milestones yet. Plant your first seed and the archive starts writing itself.</p></div>';
+    }else{
+      h+='<div class="p4-timeline">';
+      entries.forEach(e=>{
+        h+='<div class="p4-tl-row"><div class="p4-tl-dot">'+icon(e.ico||'trophy','ge-ic-sm')+'</div>'+
+          '<div class="p4-tl-body"><div class="p4-tl-day">DAY '+int(e.day,1)+(e.backfilled?' <span class="ge-muted">\u00b7 ARCHIVE</span>':'')+'</div>'+
+          '<div class="p4-tl-name">'+esc(e.name)+'</div>'+
+          (e.sub?'<div class="p4-tl-sub ge-muted">'+esc(e.sub)+'</div>':'')+'</div></div>';
+      });
+      h+='</div>';
+    }
+    return h+'</div>';
+  }catch(e){ return ''; }
+}
+function P4_openLegacy(){
+  try{
+    GE_openSheet('p4-legacy',icon('scroll','ge-ic-md')+' MILESTONES &amp; LEGACY',P4_legacyHTML());
+    return true;
+  }catch(e){ return false; }
+}
 function DASH_msHTML(){
   const nx=MS_next(3);
   let done=0;
@@ -15630,6 +17984,7 @@ function DASH_msHTML(){
       '<div class="ge-progress"><i style="width:'+pct+'%"></i></div></div>';
   });
   if(lastDef) h+='<div class="ge-datarow"><span class="ge-almost-lbl">LAST EARNED</span><b>'+esc(lastDef.name)+' <span class="ge-muted">· Day '+lastDay+'</span></b></div>';
+  h+='<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-block" onclick="P4_openLegacy()">'+icon('scroll','ge-ic-sm')+'VIEW FULL LEGACY</button></div>'; /* P4: milestone/legacy sheet */
   return h+'</div>';
 }
 function DASH_roomsHTML(){
@@ -15742,6 +18097,7 @@ RENDER.dashboard=function(){
    '<h2 class="ge-screenhead-title">'+icon('empire','ge-ic-lg')+'EMPIRE DASHBOARD</h2></div>';
   html+=DASH_snapHTML();
   html+=DASH_msHTML();
+  try{ if(typeof P4V_compassHTML==='function') html+=P4V_compassHTML(); }catch(e){} /* P4-W6 4V: strategy compass */
   html+=DASH_roomsHTML();
   html+=DASH_crewHTML();
   html+=DASH_invHTML();
