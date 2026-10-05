@@ -3308,3 +3308,1043 @@ body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) +
 .ge-lvlup-crown{width:88px;height:auto;filter:drop-shadow(0 0 24px rgba(212,160,23,.7))}
 .ge-lvlup-title{color:var(--ge-gold);letter-spacing:.05em;text-shadow:0 0 26px rgba(212,160,23,.5)}
 .ge-lvlup-sub{color:var(--ge-muted);letter-spacing:.24em}
+/* ---------- P1.3 staged harvest reveal: industrial smoke / VHS / glitch ---------- */
+.pr-report{--pr-red:var(--ge-red);--pr-gold:var(--ge-gold)}
+.pr-smoke{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.5;
+  background:
+   radial-gradient(120px 60px at 20% 100%,rgba(224,32,32,.10),transparent 70%),
+   radial-gradient(160px 80px at 70% 100%,rgba(140,140,150,.12),transparent 70%),
+   radial-gradient(100px 50px at 45% 100%,rgba(224,32,32,.07),transparent 70%);
+  animation:pr-smoke-drift 7s ease-in-out infinite alternate}
+@keyframes pr-smoke-drift{from{transform:translateY(8px) scaleY(1)}to{transform:translateY(-10px) scaleY(1.06)}}
+.pr-scan{position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.55) 3px 4px)}
+.pr-kicker{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:var(--ge-sp-2);
+  font-family:var(--ge-font-display);font-size:11px;letter-spacing:.28em;color:var(--ge-faint)}
+.pr-kicker-bar{display:inline-block;width:34px;height:2px;background:var(--pr-red)}
+.pr-glitch{position:relative;text-shadow:2px 0 0 rgba(224,32,32,.55),-2px 0 0 rgba(120,180,255,.25)}
+.pr-prog{margin:var(--ge-sp-2) 0;letter-spacing:.22em}
+.pr-stage{min-height:210px;display:flex;flex-direction:column;justify-content:center}
+.pr-beat{border:1px solid var(--ge-line);border-left:3px solid var(--pr-red);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0));
+  padding:var(--ge-sp-3);margin:0 0 var(--ge-sp-3)}
+.pr-beat-in{animation:pr-beat-in .28s ease-out}
+@keyframes pr-beat-in{from{opacity:0;transform:translateY(10px);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+.pr-beat-top{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:var(--ge-sp-2)}
+.pr-beat-kicker{font-size:10px;letter-spacing:.24em;color:var(--pr-red)}
+.pr-beat-title{font-family:var(--ge-font-display);font-size:13px;letter-spacing:.2em;color:var(--ge-ink)}
+.pr-beat-val{font-family:var(--ge-font-display);font-size:44px;line-height:1;color:var(--ge-ink)}
+.pr-beat-sub{font-size:11px;letter-spacing:.24em;color:var(--ge-faint);margin-top:6px}
+.pr-beat-note{margin-top:10px;font-size:13px;line-height:1.5}
+.pr-next{margin-top:var(--ge-sp-2);letter-spacing:.26em;animation:pr-next-pulse 1.6s ease-in-out infinite}
+@keyframes pr-next-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.pr-banners{display:flex;flex-direction:column;gap:10px;margin-bottom:var(--ge-sp-3)}
+.pr-banner{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--ge-line);
+  border-left:4px solid var(--pr-red);padding:12px 14px;background:rgba(10,8,9,.72);
+  position:relative;overflow:hidden;opacity:0;animation:pr-beat-in .3s ease-out forwards}
+.pr-banner::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.6) 2px 3px)}
+.pr-banner-ic{color:var(--pr-red);flex:none}
+.pr-banner-tx b{display:block;font-family:var(--ge-font-display);font-size:14px;letter-spacing:.18em;color:var(--ge-ink)}
+.pr-banner-tx i{display:block;font-style:normal;font-size:12px;color:var(--ge-faint);margin-top:3px;line-height:1.45}
+.pr-banner-gold{border-left-color:var(--pr-gold)}
+.pr-banner-gold .pr-banner-ic{color:var(--pr-gold)}
+.pr-banner-legend{border-left-color:var(--pr-gold);box-shadow:inset 0 0 24px rgba(212,160,23,.08)}
+.pr-banner-legend .pr-banner-ic{color:var(--pr-gold)}
+.pr-banner-p0{border-left-color:#8a4a8e}
+.pr-banner-p0 .pr-banner-ic{color:#c07ac4}
+
+/* ---------- tablet: plant visual left, telemetry right ---------- */
+@media (min-width:768px){
+  .ge-growfloor{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #scr-grows .ge-plant-card{grid-template-columns:120px minmax(0,1fr)}
+  .ge-focus{max-width:760px}
+  .ge-focus .ge-focus-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}
+  .ge-focus-art{position:sticky;top:0}
+  .ge-btn-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1024px){
+  .ge-growfloor{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .ge-facscene-glow,
+  .ge-petal-fall{display:none}
+}
+
+/* ===== UI OVERHAUL [ENVIRONMENT] ===== */
+/* ============================================================
+   GROW EMPIRE — UI OVERHAUL · ENVIRONMENT WORKER CSS
+   Extra area CSS only. All classes ge- prefixed, token-driven
+   (tokens.css is merged by the coordinator — no tokens copied
+   here). Transform/opacity animations only. 44px touch targets.
+   ============================================================ */
+
+/* ---------- world-event banner (injected by show() into grow/home) ---------- */
+.ge-wx-banner{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  margin:var(--ge-sp-3) var(--ge-sp-4); padding:var(--ge-sp-3) var(--ge-sp-4);
+}
+.ge-wx-banner-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ge-wx-banner-t b{ font-size:var(--ge-size-body); letter-spacing:.04em; }
+.ge-wx-banner .ge-btn-row{ flex:0 0 auto; }
+
+/* ---------- world-event modal ---------- */
+.ge-wx-ev{ display:flex; flex-direction:column; gap:var(--ge-sp-3); }
+.ge-wx-ev h3{ margin:0; }
+.ge-wx-choice{ justify-content:flex-start; text-align:left; }
+.ge-wx-choice b{ display:block; width:100%; }
+.ge-wx-sub{ display:block; font-size:var(--ge-size-caption); color:var(--ge-muted); font-weight:400; margin-top:2px; }
+
+/* ---------- challenge cards ---------- */
+.ge-wx-reward{ margin:var(--ge-sp-2) 0 0; color:var(--ge-muted); }
+.ge-wx-chal-foot{ margin-top:var(--ge-sp-3); display:flex; justify-content:flex-end; }
+
+/* ---------- contract offers ---------- */
+.ge-wx-offer{ margin-top:var(--ge-sp-3); }
+
+/* ---------- ENVIRONMENT CONTROL CENTER ---------- */
+.ge-env-panel{ overflow:hidden; }
+.ge-env-panel .ge-card-head{ align-items:flex-start; }
+.ge-env-gauges{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:var(--ge-sp-3); margin-top:var(--ge-sp-3);
+}
+@media (min-width:480px){ .ge-env-gauges{ grid-template-columns:repeat(3,1fr); } }
+@media (min-width:768px){ .ge-env-gauges{ grid-template-columns:repeat(4,1fr); } }
+.ge-env-gauge{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:var(--ge-sp-2); padding:var(--ge-sp-3) var(--ge-sp-2);
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);
+}
+.ge-env-gauge .ge-ring{ width:76px; height:76px; }
+.ge-env-gauge-name{
+  display:flex; align-items:center; gap:6px;
+  font-size:var(--ge-size-label); letter-spacing:.08em; color:var(--ge-muted);
+}
+.ge-env-score{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+.ge-env-score .ge-ring{ width:64px; height:64px; }
+
+/* ---------- hardware sliders (real inputs, premium styled) ---------- */
+.ge-env-sliders{ display:flex; flex-direction:column; gap:var(--ge-sp-4); margin-top:var(--ge-sp-2); }
+.ge-env-ctl{ display:flex; flex-direction:column; gap:4px; }
+.ge-env-ctl .ge-datarow{ min-height:0; padding:0; }
+.ge-env-scale{ display:flex; justify-content:space-between; }
+input[type=range].ge-env-slider{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:44px; background:transparent; margin:0; cursor:pointer;
+}
+input[type=range].ge-env-slider::-webkit-slider-runnable-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:28px; height:28px; margin-top:-11px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+  transition:transform var(--ge-dur-fast) var(--ge-ease);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb:active{ transform:scale(1.12); }
+input[type=range].ge-env-slider::-moz-range-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-moz-range-thumb{
+  width:24px; height:24px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+}
+input[type=range].ge-env-slider:focus-visible{ outline:2px solid var(--ge-red-glow); outline-offset:2px; }
+
+/* ---------- all-clear row ---------- */
+.ge-env-ok{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-3); padding:var(--ge-sp-3);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md);
+  background:var(--ge-surface-2); color:var(--ge-green);
+  font-size:var(--ge-size-body);
+}
+
+/* ---------- environment history ---------- */
+.ge-env-panel .ge-seg{ margin:var(--ge-sp-3) 0; }
+.ge-env-panel .ge-seg button{ min-height:44px; }
+.ge-env-hist-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:var(--ge-sp-3);
+}
+@media (min-width:768px){ .ge-env-hist-grid{ grid-template-columns:repeat(3,1fr); } }
+.ge-env-hist{
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); padding:var(--ge-sp-3);
+  display:flex; flex-direction:column; gap:var(--ge-sp-2);
+}
+.ge-env-hist .ge-spark{ width:100%; height:44px; }
+.ge-env-hist .ge-spark polyline{
+  fill:none; stroke:var(--ge-red-glow); stroke-width:1.5;
+  vector-effect:non-scaling-stroke;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  input[type=range].ge-env-slider::-webkit-slider-thumb{ transition:none; }
+}
+
+/* ===== UI OVERHAUL [GENETICS] ===== */
+/* ============================================================================
+   GE GENETICS — Secret Genetic Archive area styles (ge- prefixed, token-driven)
+   Loads after tokens.css. Transform/opacity animations only.
+   ========================================================================== */
+
+/* ---- filter bar ---- */
+.ge-filterbar{padding:var(--ge-sp-3)}
+.ge-tab-count{margin-left:6px;min-width:22px;height:18px;padding:0 6px;border-radius:var(--ge-r-pill);
+  background:rgba(255,255,255,.07);color:var(--ge-muted);font-size:10px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;font-family:var(--ge-data)}
+.ge-tab.is-active .ge-tab-count{background:rgba(224,32,32,.25);color:var(--ge-white)}
+.ge-filter-row{display:flex;gap:var(--ge-sp-2)}
+.ge-search-wrap{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);
+  background:var(--ge-surface-1);border:1px solid var(--ge-line);border-radius:var(--ge-r-md);
+  padding:0 var(--ge-sp-3);min-height:44px;color:var(--ge-faint)}
+.ge-search-wrap svg{width:var(--ge-ic-md);height:var(--ge-ic-md);flex:none}
+.ge-search{flex:1;min-height:44px;background:none;border:0;color:var(--ge-ink);
+  font-family:var(--ge-label);font-size:12px;letter-spacing:.08em;outline:none;min-width:0}
+.ge-search::placeholder{color:var(--ge-faint)}
+.ge-select{min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-2);
+  font-family:var(--ge-label);font-size:11px;letter-spacing:.06em;max-width:46%}
+.ge-input{width:100%;min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-3);
+  font-size:14px;margin-bottom:var(--ge-sp-2)}
+
+/* ---- specimen cards ---- */
+.ge-spec-card{display:grid;grid-template-columns:84px 1fr;gap:var(--ge-sp-3);align-items:start;
+  animation:ge-rise var(--ge-dur) var(--ge-ease-out)}
+.ge-spec-art{width:84px;min-height:84px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.09),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);display:flex;align-items:center;justify-content:center;
+  padding:var(--ge-sp-2);position:sticky;top:0}
+.ge-spec-art svg{width:100%;height:auto;max-height:110px}
+.ge-spec-main{min-width:0}
+.ge-spec-name{margin:0 0 var(--ge-sp-2);font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:17px;letter-spacing:.03em;text-transform:uppercase;color:var(--ge-white);
+  display:flex;align-items:center;gap:var(--ge-sp-2);flex-wrap:wrap}
+.ge-spec-name svg{width:var(--ge-ic-md);height:var(--ge-ic-md);color:var(--ge-red)}
+.ge-spec-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-pot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--ge-sp-2)}
+.ge-spec-potv{font-size:22px;font-weight:800;color:var(--ge-white)}
+.ge-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-meters{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-meter{display:flex;flex-direction:column;gap:5px}
+/* star meter — red fill keeps gold reserved for keeper/legendary */
+.ge-smeter{display:inline-flex;gap:3px;font-size:16px;line-height:1;color:var(--ge-faint)}
+.ge-smeter .on{color:var(--ge-red-glow);text-shadow:0 0 8px rgba(255,59,59,.35)}
+.ge-smeter .half{color:var(--ge-red-glow);opacity:.55}
+.ge-spec-lin{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2);
+  font-size:12px;color:var(--ge-muted)}
+.ge-spec-lin svg{width:var(--ge-ic-sm);height:var(--ge-ic-sm);flex:none;color:var(--ge-faint)}
+.ge-spec-lock{margin-top:var(--ge-sp-2);padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line)}
+.ge-spec-lock .ge-caption{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-card .ge-datarow{padding:8px 0;min-height:40px;font-size:13px}
+.ge-spec-card .ge-btn-row{margin:var(--ge-sp-2) 0 0}
+
+/* ---- strain hero ---- */
+.ge-strain-hero{text-align:center}
+.ge-strain-art{width:120px;margin:0 auto var(--ge-sp-3);border-radius:var(--ge-r-lg);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.1),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);padding:var(--ge-sp-3)}
+.ge-strain-art svg{width:100%;height:auto}
+.ge-strain-hero .ge-spec-badges{justify-content:center}
+.ge-strain-hero .ge-spec-lin{justify-content:center}
+
+/* ---- breeding lab ---- */
+.ge-breed-parent{display:flex;align-items:center;gap:var(--ge-sp-3)}
+.ge-breed-parent svg{width:64px;height:64px;flex:none}
+.ge-breed-parent select{flex:1;min-height:44px;background:var(--ge-surface-1);
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-md);color:var(--ge-ink);
+  padding:0 var(--ge-sp-2);font-size:14px;min-width:0}
+.ge-breed-vs{text-align:center;font-size:26px;color:var(--ge-red);font-weight:800;
+  margin:var(--ge-sp-1) 0;line-height:1}
+.ge-predict-parents{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--ge-sp-2);
+  align-items:center;margin-bottom:var(--ge-sp-3)}
+.ge-predict-par{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ge-predict-par span{font-weight:700;color:var(--ge-white);font-size:14px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.ge-predict-x{font-size:22px;color:var(--ge-red);font-weight:800}
+.ge-predict-row{margin-bottom:var(--ge-sp-2)}
+.ge-predict-row .ge-stars i{font-style:normal}
+
+/* ---- keeper identification cinematic ---- */
+.ge-kid-stage{position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:var(--ge-sp-3);width:100%;padding:var(--ge-sp-6) var(--ge-sp-4);text-align:center;
+  animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-kid-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 36%,rgba(224,32,32,.3),transparent 65%);
+  animation:ge-pulse-soft 2.4s var(--ge-ease) infinite}
+.ge-kid-plant{position:relative;z-index:1}
+.ge-kid-plant svg{width:150px;height:175px;filter:drop-shadow(0 0 22px rgba(255,59,59,.35))}
+.ge-kid-crown{position:relative;z-index:1;margin-top:calc(var(--ge-sp-3) * -1)}
+.ge-kid-crown svg{width:76px;height:auto;animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out) .3s backwards}
+.ge-kid-kicker{font-family:var(--ge-label);font-weight:700;font-size:10px;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--ge-red-glow)}
+.ge-kid-title{margin:0}
+.ge-kid-name{font-size:16px;font-weight:700;color:var(--ge-white)}
+.ge-kid-pheno{color:var(--ge-muted);font-weight:600}
+.ge-kid-desc{color:#d8d8d8;font-size:14px;line-height:1.5;margin:0;max-width:340px}
+.ge-kid-hint{font-family:var(--ge-label);font-size:10px;letter-spacing:.24em;color:var(--ge-faint);
+  text-transform:uppercase;margin:var(--ge-sp-2) 0 0}
+.ge-kid-traits{width:100%;max-width:330px;display:flex;flex-direction:column;gap:6px;z-index:1}
+.ge-kid-trait{display:flex;justify-content:space-between;align-items:center;min-height:44px;
+  padding:8px 14px;background:var(--ge-glass);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md);animation:ge-kid-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-kid-trait span{font-family:var(--ge-label);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--ge-muted)}
+.ge-kid-trait b{font-family:var(--ge-data);font-size:17px;color:var(--ge-white);font-variant-numeric:tabular-nums}
+.ge-kid-stage .ge-btn-block{position:relative;z-index:1;max-width:330px}
+.ge-mut-dna svg{width:84px;height:84px;color:var(--ge-gold)}
+.ge-mut-legend{margin-top:var(--ge-sp-1)}
+@keyframes ge-kid-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ---- animated lineage tree ---- */
+.ge-linwrap{padding:var(--ge-sp-1) 0}
+.ge-lin-scroll{overflow-x:auto;padding:var(--ge-sp-2) 0;-webkit-overflow-scrolling:touch}
+.ge-lin-svg{display:block;overflow:visible}
+.ge-lin-node{cursor:pointer;animation:ge-lin-node-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-lin-node:focus-visible{outline:2px solid var(--ge-red-glow);outline-offset:3px;border-radius:10px}
+.ge-lin-box{fill:var(--ge-surface-2);stroke:var(--ge-line-strong);stroke-width:1}
+.ge-lin-node:hover .ge-lin-box{stroke:var(--ge-red)}
+.ge-lin-center .ge-lin-box{stroke:var(--ge-red);stroke-width:1.6}
+.ge-lin-rar-legendary .ge-lin-box{stroke:var(--ge-gold);stroke-width:1.6}
+.ge-lin-rar-elite .ge-lin-box{stroke:rgba(224,32,32,.7)}
+.ge-lin-name{fill:var(--ge-white);font-size:12px;font-weight:700;font-family:var(--ge-body)}
+.ge-lin-sub{fill:var(--ge-muted);font-size:9.5px;letter-spacing:.06em;font-family:var(--ge-label)}
+.ge-lin-glabel{fill:var(--ge-faint);font-size:10px;letter-spacing:.14em;font-family:var(--ge-label)}
+.ge-lin-line{stroke:var(--ge-line-strong);stroke-width:1.5;
+  animation:ge-lin-line-in var(--ge-dur-slow) var(--ge-ease-out) backwards}
+@keyframes ge-lin-node-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ge-lin-line-in{from{opacity:0}to{opacity:1}}
+
+/* ---- compare table ---- */
+.ge-cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.ge-cmp-table th,.ge-cmp-table td{padding:10px 8px;border-bottom:1px solid var(--ge-line);text-align:center}
+.ge-cmp-table th{font-family:var(--ge-label);font-size:10px;letter-spacing:.08em;color:var(--ge-muted);
+  text-transform:uppercase}
+.ge-cmp-table td:first-child{text-align:left;color:var(--ge-muted)}
+.ge-cmp-table td.win{color:var(--ge-green);font-weight:700}
+
+/* ---- small screens ---- */
+@media (max-width:380px){
+  .ge-spec-card{grid-template-columns:64px 1fr}
+  .ge-spec-art{width:64px;min-height:64px}
+  .ge-spec-meters{grid-template-columns:1fr}
+}
+
+/* ===== UI OVERHAUL [EMPIRE] ===== */
+/* ============================================================================
+   EMPIRE worker area CSS — ge- prefixed, token-driven.
+   Loaded AFTER tokens.css. No legacy-class restyles, no fixed positioning.
+   All motion is transform/opacity only; reduced-motion respected.
+   ============================================================================ */
+
+/* ---- Segmented tab bar (scrollable, 44px tabs) ---- */
+.ge-tabs{
+  display:flex; gap:var(--ge-sp-1); overflow-x:auto; padding:var(--ge-sp-2) var(--ge-sp-1);
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-tabs::-webkit-scrollbar{ display:none; }
+.ge-tab{
+  flex:1 0 auto; min-height:44px; padding:0 var(--ge-sp-4);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill);
+  background:var(--ge-graphite); color:var(--ge-muted);
+  font:600 var(--ge-size-label)/1 var(--ge-label); letter-spacing:.08em;
+  cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), background var(--ge-dur-fast) var(--ge-ease), color var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+  white-space:nowrap;
+}
+.ge-tab.is-active{
+  background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent;
+  box-shadow:var(--ge-sh-glow);
+}
+.ge-tab:active{ transform:scale(.97); }
+
+/* ---- Facility progression strip ---- */
+.ge-strip{
+  display:flex; align-items:stretch; overflow-x:auto; gap:0;
+  padding:var(--ge-sp-3) var(--ge-sp-1); -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-strip::-webkit-scrollbar{ display:none; }
+.ge-strip-node{
+  flex:1 0 108px; display:flex; flex-direction:column; align-items:center; gap:var(--ge-sp-1);
+  text-align:center; padding:var(--ge-sp-2);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-strip-cur{ border-color:var(--ge-red); box-shadow:var(--ge-sh-glow); background:var(--ge-gunmetal); }
+.ge-strip-done{ opacity:.85; }
+.ge-strip-dot{
+  width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+  background:var(--ge-raised); border:1px solid var(--ge-line-strong); color:var(--ge-muted);
+}
+.ge-strip-cur .ge-strip-dot{ background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent; }
+.ge-strip-done .ge-strip-dot{ color:var(--ge-green); border-color:var(--ge-green); }
+.ge-strip-name{ font:600 var(--ge-size-caption)/1.2 var(--ge-label); letter-spacing:.04em; color:var(--ge-ink); }
+.ge-strip-sub{ font:500 var(--ge-size-caption)/1 var(--ge-data); color:var(--ge-faint); }
+.ge-strip-link{ flex:0 0 14px; align-self:center; height:2px; background:var(--ge-line-strong); }
+.ge-strip-link.done{ background:var(--ge-green); }
+
+/* ---- Facility cards ---- */
+.ge-facility{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-facility-art{ flex:0 0 104px; border-radius:var(--ge-r-sm); overflow:hidden; border:1px solid var(--ge-line); }
+.ge-fac-art{ display:block; width:104px; height:auto; }
+.ge-facility-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-benefits{ margin:0; padding-left:var(--ge-sp-4); color:var(--ge-muted); font-size:var(--ge-size-caption); line-height:var(--ge-lh); }
+.ge-benefits li{ margin:2px 0; }
+.ge-lockreq{ display:flex; gap:var(--ge-sp-2); align-items:flex-start; color:var(--ge-muted); }
+.ge-lockreq > svg{ flex:0 0 auto; margin-top:2px; }
+.ge-lockreq b{ color:var(--ge-ink); font-size:var(--ge-size-body); }
+.ge-lockreq p{ margin:2px 0 0; }
+
+/* ---- Tier ladder (hub card) ---- */
+.ge-tierladder{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-1); margin:var(--ge-sp-2) 0; }
+.ge-tierchip{
+  font:600 10px/1 var(--ge-label); letter-spacing:.06em; color:var(--ge-faint);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill); padding:6px 9px;
+}
+.ge-tierchip.owned{ color:var(--ge-muted); border-color:var(--ge-line-strong); }
+.ge-tierchip.cur{ color:var(--ge-white); background:var(--ge-grad-red); border-color:transparent; }
+
+/* ---- Equipment / crew / comp shared module layout ---- */
+.ge-equip{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-equip-ico{
+  flex:0 0 52px; width:52px; height:52px; border-radius:var(--ge-r-md);
+  display:grid; place-items:center; color:var(--ge-red-glow);
+  background:var(--ge-gunmetal); border:1px solid var(--ge-line-strong);
+}
+.ge-equip-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-comp-trophy{ color:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-hired{ border-color:var(--ge-green); }
+
+/* Level dot meter (●○○○○ as CSS, no glyphs) */
+.ge-dots{ display:inline-flex; gap:6px; align-items:center; }
+.ge-dots i{ width:10px; height:10px; border-radius:50%; background:var(--ge-raised); border:1px solid var(--ge-line-strong); }
+.ge-dots i.on{ background:var(--ge-red-glow); border-color:var(--ge-red-glow); box-shadow:0 0 6px rgba(255,59,59,.5); }
+
+/* ---- Staff cards ---- */
+.ge-benched{ opacity:.72; border-style:dashed; }
+.ge-ecard .ge-btn-row{ display:flex; gap:var(--ge-sp-2); }
+.ge-ecard .ge-btn-row .ge-btn{ flex:1 1 0; min-width:0; padding-left:4px; padding-right:4px; }
+
+/* ---- Ceremony ---- */
+.ge-cer-head h3{ display:flex; align-items:center; gap:var(--ge-sp-2); margin:0 0 var(--ge-sp-3); font-size:var(--ge-size-h2); }
+.ge-cer-hero{ text-align:center; padding:var(--ge-sp-4) 0; }
+.ge-cer-title{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-cer-rows{ display:flex; flex-direction:column; gap:var(--ge-sp-1); margin-bottom:var(--ge-sp-3); }
+.ge-cer-row{
+  display:flex; justify-content:space-between; align-items:center; gap:var(--ge-sp-2);
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); font-size:var(--ge-size-body);
+  animation:ge-rise var(--ge-dur-slow) var(--ge-ease-out) both;
+}
+.ge-cer-row.ge-cer-top{ border-color:var(--ge-line-strong); background:var(--ge-gunmetal); }
+.ge-cer-me{ border-color:var(--ge-red); box-shadow:inset 0 0 0 1px var(--ge-red); }
+.ge-cer-me span{ color:var(--ge-white); font-weight:700; }
+.ge-medal{
+  display:inline-block; min-width:30px; text-align:center; margin-right:6px;
+  font:700 11px/1.6 var(--ge-label); letter-spacing:.05em; border-radius:var(--ge-r-xs);
+  border:1px solid var(--ge-line-strong); color:var(--ge-ink); padding:0 5px;
+}
+.ge-medal-1{ color:#0a0a0a; background:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-medal-2{ color:var(--ge-white); background:var(--ge-gunmetal); }
+.ge-medal-3{ color:var(--ge-ember); border-color:var(--ge-ember); }
+.ge-cer-win{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); border:1px solid var(--ge-gold); border-radius:var(--ge-r-md); background:linear-gradient(180deg, rgba(212,160,23,.10), transparent); margin:var(--ge-sp-3) 0; }
+.ge-cer-crown{ display:flex; justify-content:center; margin-bottom:var(--ge-sp-2); }
+.ge-cer-wintext{ font-size:var(--ge-size-body); color:var(--ge-ink); margin:0; }
+.ge-cer-final{ animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+
+/* Entry picker rows (competition entry modal) */
+.ge-pick{
+  display:flex; align-items:center; gap:var(--ge-sp-3); min-height:56px;
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); margin-bottom:var(--ge-sp-2); cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-pick:active{ transform:scale(.98); border-color:var(--ge-red); }
+.ge-pick svg{ flex:0 0 40px; }
+
+/* ---- Facility unlock cinematic ---- */
+.ge-cine-fac{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); }
+.ge-cine-title{ font-size:var(--ge-size-display); letter-spacing:.08em; color:var(--ge-white); margin-bottom:var(--ge-sp-4); animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+.ge-cine-compare{ display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-cine-side{ flex:1 1 0; min-width:0; border:1px solid var(--ge-line-strong); border-radius:var(--ge-r-md); overflow:hidden; background:var(--ge-graphite); padding-bottom:var(--ge-sp-2); }
+.ge-cine-side .ge-label{ display:block; padding:var(--ge-sp-2) 0 var(--ge-sp-1); color:var(--ge-faint); }
+.ge-cine-side svg{ width:100%; height:auto; display:block; }
+.ge-cine-side b{ display:block; padding:var(--ge-sp-1) var(--ge-sp-2) 0; font-size:var(--ge-size-caption); color:var(--ge-ink); }
+.ge-cine-arrow{ flex:0 0 auto; color:var(--ge-red-glow); animation:ge-pulse 1.2s var(--ge-ease) infinite; }
+
+/* ---- Small utilities ---- */
+.ge-locknote{ display:flex; align-items:center; gap:var(--ge-sp-2); color:var(--ge-amber); font-size:var(--ge-size-caption); margin:var(--ge-sp-2) 0; }
+.ge-up{ font-weight:800; color:var(--ge-ink); }
+.ge-hub .hub-map{ width:100%; height:auto; display:block; margin:var(--ge-sp-2) 0; }
+.ge-loc p.ge-caption{ margin:var(--ge-sp-1) 0; }
+.ge-legacy{ border-color:var(--ge-gold); }
+
+/* ---- Motion (transform/opacity only) ---- */
+@keyframes ge-rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes ge-pop{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:none;} }
+@keyframes ge-pulse{ 0%,100%{ opacity:.6; transform:scale(1);} 50%{ opacity:1; transform:scale(1.12);} }
+
+@media (prefers-reduced-motion: reduce){
+  .ge-cer-row, .ge-cine-title, .ge-cine-arrow{ animation:none !important; }
+  .ge-tab, .ge-pick{ transition:none !important; }
+}
+
+/* ---- Tablet: facilities grid ---- */
+@media (min-width:768px){
+  .ge-facility-art{ flex-basis:140px; }
+  .ge-fac-art{ width:140px; }
+}
+
+/* ===== UI OVERHAUL [DISPENSARY] ===== */
+/* ============================================================
+   DISPENSARY WORKER — extra area CSS (ge-dp-* namespace)
+   Token-driven (var(--ge-*)); transform/opacity motion only.
+   Loaded after tokens.css. Does not restyle legacy classes.
+   ============================================================ */
+
+/* metric tile grid: 2 cols on phones, auto-fit on larger screens */
+.ge-dp-metrics{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:var(--ge-sp-2);
+  margin-bottom:var(--ge-sp-3);
+}
+@media (min-width:768px){
+  .ge-dp-metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+}
+
+/* premium product card: art + meta layout (extends ge-card) */
+.ge-dp-product{display:flex;gap:var(--ge-sp-3);align-items:flex-start;}
+.ge-dp-flower{width:72px;height:72px;flex:0 0 72px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 35%,var(--ge-raised),var(--ge-graphite));
+  border:1px solid var(--ge-line);}
+.ge-dp-product .ge-plant-meta{flex:1;min-width:0;}
+.ge-dp-tags{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-1) 0;}
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+
+/* buyer / flower pick lists inside modals */
+.ge-dp-buyers{display:flex;flex-direction:column;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-buyer{display:flex;gap:var(--ge-sp-3);align-items:center;cursor:pointer;min-height:44px;}
+.ge-dp-buyer-face{flex:0 0 48px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--ge-r-md);background:var(--ge-gunmetal);border:1px solid var(--ge-line);}
+.ge-dp-offer{display:flex;align-items:baseline;gap:var(--ge-sp-2);margin-top:var(--ge-sp-1);}
+
+/* customer queue card */
+.ge-dp-cust .ge-card-head h3{display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-cnum{color:var(--ge-red-glow);font-size:var(--ge-size-caption);letter-spacing:.08em;}
+.ge-dp-prefs{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-2) 0;}
+.ge-dp-lines{margin:var(--ge-sp-2) 0;}
+.ge-dp-total{margin:var(--ge-sp-2) 0;padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line);}
+.ge-dp-total b{font-size:var(--ge-size-h2);}
+.ge-dp-trust{margin-top:var(--ge-sp-2);display:flex;flex-direction:column;gap:var(--ge-sp-1);}
+.ge-dp-trustrow{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-browse{padding:var(--ge-sp-3);}
+
+/* feed / news rows */
+.ge-dp-feedrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-feedrow:last-child{border-bottom:none;}
+.ge-dp-dot{width:8px;height:8px;border-radius:50%;background:var(--ge-faint);flex:0 0 8px;}
+.ge-dp-dot-good{background:var(--ge-green);}
+.ge-dp-dot-warn{background:var(--ge-amber);}
+.ge-dp-dot-bad{background:var(--ge-danger);}
+
+/* market demand rows */
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-demrow:last-child{border-bottom:none;}
+.ge-dp-demname{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-why{margin:0 0 var(--ge-sp-2) calc(var(--ge-sp-2) + 20px);}
+.ge-dp-dim{opacity:.55;}
+
+/* production pipeline strip */
+.ge-dp-pipeline{display:flex;align-items:center;gap:var(--ge-sp-1);flex-wrap:wrap;margin-bottom:var(--ge-sp-3);}
+.ge-dp-arrow{color:var(--ge-faint);}
+
+/* production banner */
+.ge-dp-banner{margin-bottom:var(--ge-sp-3);}
+
+/* rank ladder + rankup modal */
+.ge-dp-ladder{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin-top:var(--ge-sp-2);}
+.ge-dp-rankname{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-rankcrown{width:40px;height:40px;}
+.ge-dp-rankup{display:flex;flex-direction:column;gap:var(--ge-sp-3);align-items:center;text-align:center;}
+.ge-dp-rankup-title{color:var(--ge-red-glow);}
+.ge-dp-rankup-name{color:var(--ge-gold);}
+
+/* process amount input */
+.ge-dp-input{width:100%;min-height:44px;background:var(--ge-graphite);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-sm);color:var(--ge-ink);padding:0 var(--ge-sp-3);font-size:var(--ge-size-body);
+  margin:var(--ge-sp-1) 0 var(--ge-sp-3);}
+
+/* entrance: transform/opacity only */
+@keyframes ge-dp-rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:no-preference){
+  .ge-dp-product,.ge-dp-cust,.ge-dp-buyer{animation:ge-dp-rise var(--ge-dur) var(--ge-ease-out) both;}
+  .ge-dp-buyer:nth-child(2){animation-delay:40ms;}
+  .ge-dp-buyer:nth-child(3){animation-delay:80ms;}
+  .ge-dp-buyer:nth-child(4){animation-delay:120ms;}
+}
+
+/* ===== UI OVERHAUL [MISSIONS] ===== */
+/* ============================================================
+   MISSIONS WORKER — extra area CSS (ms-* only, token-driven).
+   Coordinator merges tokens.css (all --ge-* tokens + ge-* classes).
+   No legacy classes restyled. Animations: opacity/color only.
+   ============================================================ */
+
+/* ---- missions command header ---- */
+.ms-command{margin-bottom:var(--ge-sp-3)}
+.ms-nextup{margin-top:var(--ge-sp-3);padding-top:var(--ge-sp-3);border-top:1px solid var(--ge-line)}
+.ms-nextup .ge-label{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--ge-muted)}
+.ms-nextup b{font-size:var(--ge-size-body)}
+
+/* ---- section tabs ---- */
+.ms-tabs{margin:var(--ge-sp-3) 0 var(--ge-sp-2)}
+.ms-tabs .ge-tab .ic{margin-right:6px}
+
+/* ---- mission card ---- */
+.ge-mission.is-done{opacity:.82}
+.ms-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ms-cat{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ge-muted)}
+.ms-diff{margin-left:auto}
+.ms-title{margin:2px 0 6px;font-size:var(--ge-size-h2);line-height:var(--ge-lh-tight)}
+.ms-title .ic{color:var(--ge-green);margin-right:6px}
+.ms-reward{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:var(--ge-size-caption);color:var(--ge-muted)}
+.ms-reward .ic{color:var(--ge-red-glow);flex:none;margin-top:1px}
+
+/* ---- objectives checklist ---- */
+.ms-objs{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ms-obj{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-obj .ms-check{display:inline-flex;color:var(--ge-faint);flex:none}
+.ms-obj.is-done .ms-check{color:var(--ge-green)}
+.ms-obj .ms-objt{flex:1;font-size:var(--ge-size-caption);line-height:var(--ge-lh);color:var(--ge-ink)}
+.ms-obj.is-done .ms-objt{color:var(--ge-muted);text-decoration:line-through}
+.ms-obj .ge-num,.ms-obj .ge-pill{flex:none}
+
+/* ---- timed mission timer ---- */
+.ms-timer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-timer .ge-progress{flex-basis:100%}
+.ms-timer .ge-btn{flex:1 1 100%}
+.ms-left{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.06em;color:var(--ge-muted)}
+/* near-expiry urgency: subtle color shift + soft pulse (never flashing) */
+.ms-timer.ms-urgent{border-color:var(--ge-orange)}
+.ms-timer.ms-urgent .ms-left{color:var(--ge-orange);animation:ms-pulse var(--ge-dur-slow) ease-in-out infinite}
+@keyframes ms-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.ms-timer.ms-urgent .ms-left{animation:none}}
+
+/* ---- achievements ---- */
+.ms-gold{color:var(--ge-gold)}
+.ms-ach.is-done{border-color:var(--ge-line-strong)}
+
+/* ---- leaderboards ---- */
+.ms-records{margin:var(--ge-sp-3) 0}
+.ms-titles{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ms-titles .ge-badge{display:inline-flex;align-items:center;gap:6px}
+
+/* ===== UI OVERHAUL [PROJECT 0] ===== */
+/* ============================================================================
+   PROJECT 0 — extra area CSS (worker: project0)
+   ge- prefixed only, token-driven. Darker, reduced-clutter prestige look.
+   The coordinator merges this after tokens.css. No legacy classes restyled.
+   ========================================================================== */
+
+/* Darker screen wash — Project 0 sits visually below the rest of the game. */
+#scr-project0 .ge-screen{
+  background:linear-gradient(180deg,var(--ge-black) 0%,#050607 40%,var(--ge-black) 100%);
+}
+
+/* ---- Hero: black/graphite seal card, restrained gold/crimson ---- */
+.ge-p0-hero{
+  text-align:center;
+  background:linear-gradient(180deg,#101114 0%,#08090b 62%,#060708 100%);
+  border-color:rgba(212,160,23,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 32px rgba(0,0,0,.55);
+  position:relative;
+  overflow:hidden;
+}
+.ge-p0-hero::before{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(122,13,13,.28),transparent 60%);
+}
+.ge-p0-hero > *{position:relative}
+.ge-p0-sealrow{margin:var(--ge-sp-4) auto 0;display:flex;flex-direction:column;align-items:center}
+.ge-p0-eyebrow{
+  display:inline-flex;align-items:center;gap:var(--ge-sp-2);
+  color:var(--ge-gold);letter-spacing:.22em;font-size:var(--ge-size-label);
+  font-weight:700;margin-top:var(--ge-sp-3);
+}
+.ge-p0-eyebrow .ic{color:var(--ge-gold)}
+.ge-p0-title{
+  margin:var(--ge-sp-2) 0 0;
+  font-size:var(--ge-size-display);
+  letter-spacing:.14em;color:var(--ge-white);
+  text-shadow:0 2px 18px rgba(224,32,32,.35);
+}
+.ge-p0-motto{
+  margin:var(--ge-sp-3) auto 0;max-width:34ch;
+  font-size:var(--ge-size-body);font-style:italic;
+  color:var(--ge-muted);line-height:var(--ge-lh);
+}
+.ge-p0-herorow{
+  display:flex;align-items:center;justify-content:center;
+  gap:var(--ge-sp-6);margin:var(--ge-sp-5) 0 var(--ge-sp-2);
+}
+.ge-p0-score .ge-display{font-size:34px;line-height:1}
+.ge-p0-pointspill{margin-top:var(--ge-sp-2);display:flex;justify-content:center}
+.ge-p0-titles{
+  display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);justify-content:center;
+  margin-top:var(--ge-sp-3);padding-bottom:var(--ge-sp-2);
+}
+.ge-p0-title-pill{display:inline-flex;align-items:center;gap:var(--ge-sp-2);font-weight:600}
+
+/* ---- Archive metric tiles: gold reserved for the score tile ---- */
+.ge-p0-metric{position:relative;overflow:hidden}
+.ge-p0-metric-ic{
+  display:flex;justify-content:center;margin-bottom:var(--ge-sp-2);
+  color:var(--ge-faint);
+}
+.ge-p0-metric-gold{border-color:rgba(212,160,23,.45)}
+.ge-p0-metric-gold .ge-p0-metric-ic{color:var(--ge-gold)}
+.ge-p0-metric-gold .ge-metric-value{color:var(--ge-gold)}
+.ge-p0-metric .ge-metric-value{font-size:var(--ge-size-h1)}
+
+/* ---- Track cards: minimal, hairline, gold only when maxed ---- */
+.ge-p0-track{border-left:2px solid var(--ge-line-strong)}
+.ge-p0-track .ge-card-head h3{font-size:var(--ge-size-h2);letter-spacing:.06em}
+
+/* ---- Rewards table ---- */
+.ge-p0-rewards{padding:0;overflow:hidden}
+.ge-p0-rewardrow{padding:var(--ge-sp-3) var(--ge-sp-4);border-bottom:1px solid var(--ge-line)}
+.ge-p0-rewardrow:last-child{border-bottom:none}
+.ge-p0-reward-track{
+  display:flex;align-items:center;gap:var(--ge-sp-2);
+  font-weight:700;letter-spacing:.08em;font-size:var(--ge-size-caption);
+  color:var(--ge-white);margin-bottom:var(--ge-sp-2);
+}
+.ge-p0-reward-track .ic{color:var(--ge-faint)}
+.ge-p0-reward-cells{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2)}
+.ge-p0-rewardcell{
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);
+  padding:var(--ge-sp-2) var(--ge-sp-3);min-height:44px;
+  display:flex;flex-direction:column;gap:var(--ge-sp-1);
+}
+.ge-p0-rewardcell.is-earned{border-color:rgba(212,160,23,.5);background:rgba(212,160,23,.06)}
+.ge-p0-rewarddesc{font-size:var(--ge-size-caption);color:var(--ge-ink);display:flex;align-items:center;gap:var(--ge-sp-1)}
+.ge-p0-rewardcell .ge-pill{align-self:flex-start}
+
+/* ---- Legacy prestige panel: crimson edge-light on black ---- */
+.ge-p0-legacy{
+  background:linear-gradient(180deg,#141014 0%,#0a090b 100%);
+  box-shadow:var(--ge-sh-2),inset 0 1px 0 rgba(255,59,59,.28);
+  border-color:rgba(122,13,13,.7);
+}
+.ge-p0-legacy .ge-card-head h3{color:var(--ge-white)}
+.ge-p0-legacy .ge-card-head .ic{color:var(--ge-red-glow)}
+.ge-p0-legacy p{margin:0 0 var(--ge-sp-3)}
+.ge-p0-locknote{
+  display:flex;align-items:center;justify-content:center;gap:var(--ge-sp-2);
+  color:var(--ge-muted);font-size:var(--ge-size-caption);
+  padding:var(--ge-sp-3) 0 var(--ge-sp-1);margin:0;
+}
+
+/* ---- Reduced motion: transform/opacity only everywhere else ---- */
+@media (prefers-reduced-motion: reduce){
+  .ge-p0-hero::before{display:none}
+  .ge-p0-hero .crown-anim{animation:none}
+}
+
+/* ===== UI OVERHAUL [PROFILE+MISC] ===== */
+/* ============================================================
+   GROW EMPIRE UI OVERHAUL — PROFILE+MISC WORKER (bucket K)
+   Extra area CSS only. ge- prefixed, token-driven (tokens.css owns tokens).
+   44px minimum touch targets · transform/opacity motion only.
+   ============================================================ */
+
+/* ---------- svg alignment inside new markup ---------- */
+.ge-term svg, .ge-welcome svg, .ge-dossier svg, .ge-notif svg,
+.ge-node svg, .ge-am-card svg, .ge-title svg, .ge-legal svg { flex:none; }
+.ge-datarow svg, .ge-metric-label svg, .ge-notif-meta svg { vertical-align:-0.18em; }
+
+/* ---------- secure terminal backdrop (login / welcome) ---------- */
+.ge-term-bg{
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(224,32,32,.14), transparent 60%),
+    var(--ge-grad-black);
+  overflow:hidden;
+}
+.ge-term-smoke{
+  position:absolute; width:140%; height:44%; left:-20%; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,255,255,.05), transparent 70%);
+  opacity:.7; animation:ge-term-drift 26s ease-in-out infinite alternate;
+}
+.ge-term-smoke.s1{ top:-12%; }
+.ge-term-smoke.s2{ top:30%; animation-delay:-13s; animation-duration:34s; }
+@keyframes ge-term-drift{
+  from{ transform:translateX(-4%) scale(1); }
+  to{ transform:translateX(4%) scale(1.06); }
+}
+.ge-term-scan{
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(to bottom, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+  opacity:.5;
+}
+.ge-term{
+  position:relative; margin:var(--ge-sp-4) auto; max-width:var(--ge-app-max);
+  padding:var(--ge-sp-6) var(--ge-sp-5);
+  background:var(--ge-glass); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-xl); box-shadow:var(--ge-sh-2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.ge-term-head{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label);
+  letter-spacing:.14em; color:var(--ge-muted);
+  padding-bottom:var(--ge-sp-3); border-bottom:1px solid var(--ge-line);
+}
+.ge-term-head svg{ color:var(--ge-red-glow); }
+.ge-term-dot{ width:8px; height:8px; border-radius:50%; background:var(--ge-green); margin-left:auto; box-shadow:0 0 8px var(--ge-green); }
+.ge-term-brand{ text-align:center; padding:var(--ge-sp-5) 0 var(--ge-sp-4); }
+.ge-term-brand .ge-display{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-term-local{
+  display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-5); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+  font-family:var(--ge-label); font-size:var(--ge-size-caption); color:var(--ge-faint);
+  text-align:center;
+}
+.ge-term h3.ge-h2{ margin:var(--ge-sp-4) 0 var(--ge-sp-3); letter-spacing:.08em; }
+
+/* ---------- inputs / checks ---------- */
+.ge-input{
+  display:block; width:100%; min-height:44px; margin:0 0 var(--ge-sp-3);
+  padding:var(--ge-sp-3) var(--ge-sp-4);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink);
+  font-family:var(--ge-body); font-size:var(--ge-size-body);
+}
+.ge-input:focus{ outline:none; border-color:var(--ge-red); box-shadow:0 0 0 2px rgba(255,59,59,.25); }
+select.ge-input{ appearance:auto; }
+.ge-check{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  min-height:44px; margin:0 0 var(--ge-sp-3);
+  font-size:var(--ge-size-body); color:var(--ge-muted); cursor:pointer;
+}
+.ge-check input{ width:22px; height:22px; accent-color:var(--ge-red); flex:none; }
+.ge-field{ display:block; flex:1; min-width:0; }
+.ge-field > span{
+  display:block; margin-bottom:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label); color:var(--ge-muted);
+  letter-spacing:.1em;
+}
+
+/* ---------- welcome ---------- */
+.ge-welcome{ max-width:var(--ge-app-max); margin:var(--ge-sp-6) auto; padding:0 var(--ge-sp-4) var(--ge-sp-8); text-align:center; }
+.ge-w-title{ letter-spacing:.08em; color:var(--ge-white); }
+.ge-w-name{ font-size:var(--ge-size-h1); font-weight:700; color:var(--ge-gold); margin-top:var(--ge-sp-2); }
+.ge-w-sub{ color:var(--ge-muted); margin:var(--ge-sp-1) 0 var(--ge-sp-3); }
+.ge-welcome .ge-card{ text-align:left; margin-top:var(--ge-sp-4); }
+
+/* ---------- dossier (profile) ---------- */
+.ge-dossier{ text-align:center; padding-top:var(--ge-sp-6); }
+.ge-dossier-mask{ color:var(--ge-red-glow); margin-bottom:var(--ge-sp-2); }
+.ge-dossier-name{ letter-spacing:.05em; color:var(--ge-white); margin-bottom:var(--ge-sp-2); word-break:break-word; }
+.ge-dossier .ge-badge{ font-size:var(--ge-size-label); letter-spacing:.12em; padding:6px 14px; }
+.ge-dossier-sub{ color:var(--ge-muted); margin:var(--ge-sp-3) 0 var(--ge-sp-2); }
+.ge-dossier-stars{ justify-content:center; margin-bottom:var(--ge-sp-3); }
+.ge-star{ color:var(--ge-faint); display:inline-flex; }
+.ge-star.on{ color:var(--ge-gold); }
+.ge-dossier-id{
+  display:flex; gap:var(--ge-sp-4); justify-content:center;
+  margin-top:var(--ge-sp-3); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+}
+.ge-dossier-id > div{ display:flex; flex-direction:column; gap:2px; }
+.ge-dossier-id b{ font-size:var(--ge-size-h2); font-family:var(--ge-data); }
+.ge-title-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-4); }
+.ge-title{
+  display:grid; grid-template-columns:1fr auto; gap:2px var(--ge-sp-3); align-items:center;
+  min-height:64px; padding:var(--ge-sp-3) var(--ge-sp-4); text-align:left;
+  background:var(--ge-graphite); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); color:var(--ge-faint); cursor:default;
+}
+.ge-title b{ font-size:var(--ge-size-body); }
+.ge-title span.ge-caption{ grid-column:1; }
+.ge-title svg{ grid-row:1 / span 2; grid-column:2; }
+.ge-title.has{ color:var(--ge-ink); border-color:var(--ge-line-strong); cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease); }
+.ge-title.has:hover{ border-color:var(--ge-red); }
+.ge-title.has:active{ transform:scale(.98); }
+.ge-title.has svg{ color:var(--ge-green); }
+.ge-title.sel{ border-color:var(--ge-gold); box-shadow:0 0 0 1px var(--ge-gold), var(--ge-sh-1); }
+.ge-ach-tags{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-2); }
+
+/* ---------- notification center ---------- */
+.ge-notif{
+  display:flex; align-items:flex-start; gap:var(--ge-sp-3); width:100%;
+  min-height:56px; padding:var(--ge-sp-3) var(--ge-sp-4); margin-bottom:var(--ge-sp-2);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink); text-align:left; cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), opacity var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-notif:active{ transform:scale(.99); }
+.ge-notif.is-read{ opacity:.62; }
+.ge-notif-ico{
+  flex:none; width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-notif.is-read .ge-notif-ico{ color:var(--ge-faint); }
+.ge-notif-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-notif-msg{ font-size:var(--ge-size-body); line-height:var(--ge-lh); word-break:break-word; }
+.ge-notif-msg svg{ width:16px; height:16px; }
+.ge-notif-meta{ letter-spacing:.08em; }
+.ge-unread{ flex:none; width:10px; height:10px; margin-top:6px; border-radius:50%; background:var(--ge-red-glow); box-shadow:0 0 8px var(--ge-red-glow); }
+
+/* ---------- tech tree ---------- */
+.ge-tree{ display:flex; flex-direction:column; }
+.ge-tier{
+  background:var(--ge-grad-surface); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-lg); padding:var(--ge-sp-4); box-shadow:var(--ge-sh-1);
+}
+.ge-tier-head{ display:flex; align-items:center; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-tier-head b{ letter-spacing:.1em; font-size:var(--ge-size-body); }
+.ge-tier-head p{ margin:2px 0 0; }
+.ge-tier-num{
+  flex:none; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--ge-grad-red); color:var(--ge-white);
+  font-family:var(--ge-data); font-size:var(--ge-size-h2); font-weight:700;
+}
+.ge-tier-nodes{ display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-node{
+  display:flex; gap:var(--ge-sp-3); align-items:flex-start;
+  padding:var(--ge-sp-3); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-node-ico{
+  flex:none; width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-muted);
+}
+.ge-node.owned .ge-node-ico{ color:var(--ge-green); }
+.ge-node.available .ge-node-ico{ color:var(--ge-gold); }
+.ge-node.locked{ opacity:.75; }
+.ge-node-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-node-body b{ font-size:var(--ge-size-body); }
+.ge-node-body p{ margin:0; }
+.ge-node .ge-btn{ align-self:center; flex:none; }
+.ge-tree-link{ width:2px; height:18px; margin:0 auto; background:var(--ge-line-strong); }
+
+/* ---------- automation ---------- */
+.ge-am-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-4); }
+.ge-am-head{ display:flex; gap:var(--ge-sp-3); align-items:center; margin-bottom:var(--ge-sp-2); }
+.ge-am-ico{
+  flex:none; width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-md); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-am-name{ font-weight:700; font-size:var(--ge-size-h2); }
+.ge-am-status{ margin-top:4px; }
+.ge-am-desc{ margin:0 0 var(--ge-sp-3); }
+.ge-am-stats{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-am-controls{ display:flex; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-am-actions .ge-caption{ margin-top:var(--ge-sp-2); }
+.ge-notes{ margin:0; padding-left:var(--ge-sp-5); color:var(--ge-muted); font-size:var(--ge-size-body); line-height:var(--ge-lh); }
+.ge-notes li{ margin-bottom:var(--ge-sp-2); }
+
+/* ---------- settings extras ---------- */
+.ge-prefbtn{ min-width:88px; min-height:44px; }
+.ge-inline-btns{ display:flex; gap:var(--ge-sp-2); flex:none; }
+.ge-inline-btns .ge-btn-sm{ min-height:44px; }
+.ge-legal{ text-align:left; max-height:50vh; overflow:auto; padding-right:var(--ge-sp-2); }
+.ge-legal p{ margin:0 0 var(--ge-sp-3); line-height:var(--ge-lh); font-size:var(--ge-size-body); }
+.ge-center{ text-align:center; }
+
+/* ---------- responsive: two columns on tablet+ ---------- */
+@media (min-width:768px){
+  .ge-title-grid{ grid-template-columns:1fr 1fr; }
+  .ge-am-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* ===== UI OVERHAUL [CHROME (loads last)] ===== */
+/* ==========================================================================
+   CHROME worker — app-shell area CSS (ge- prefixed, token-driven)
+   LOAD ORDER: styles.css -> tokens.css -> this file (must load LAST).
+   Covers: top command bar, HUD floats, bottom nav dock, cinematic stage,
+   level-up cinema, toast/modal confirm extras. No legacy classes redefined;
+   composites (.ge-x.legacy-y) only disambiguate where two stylesheets meet.
+   All motion is transform/opacity; tokens.css handles prefers-reduced-motion
+   for every [class*="ge-"] selector.
+   ========================================================================== */
+
+/* ---------------- top command bar: slim profile ---------------- */
+.ge-topbar-stat .ge-label{font-size:10px;letter-spacing:.08em;color:var(--ge-faint)}
+.ge-topbar-stat .ge-data{font-size:13px;color:var(--ge-ink)}
+/* compact pop on value rewrite (updateHUD re-creates the span -> replays) */
+.ge-hud-val{display:inline-block;animation:ge-hud-pop var(--ge-dur) var(--ge-ease-out)}
+@keyframes ge-hud-pop{0%{transform:scale(1.16);opacity:.45}100%{transform:scale(1);opacity:1}}
+/* XP micro-bar tucked under LVL */
+.ge-topbar-lvl{position:relative;padding-bottom:9px}
+.ge-topbar-xp{position:absolute;left:0;right:0;bottom:1px}
+
+/* ---------------- HUD floating gain/loss indicators ---------------- */
+.ge-hud-float{position:absolute;top:calc(100% - 4px);left:50%;z-index:61;
+  transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  font-family:var(--ge-data);font-weight:800;font-size:13px;
+  animation:ge-hud-float 1.6s ease-out forwards}
+.ge-hud-float.gain{color:var(--ge-green);text-shadow:0 0 8px rgba(61,220,95,.7)}
+.ge-hud-float.loss{color:var(--ge-danger);text-shadow:0 0 8px rgba(255,68,68,.7)}
+@keyframes ge-hud-float{0%{opacity:0;transform:translate(-50%,8px)}
+  18%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+
+/* ---------------- bottom nav: floating elevated dock ---------------- */
+#bottomnav.ge-navdock{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  padding-bottom:0;border:1px solid var(--ge-line-strong);border-radius:var(--ge-r-xl);
+  box-shadow:var(--ge-sh-3),var(--ge-sh-glow)}
+.ge-navdock-btn{transition:color var(--ge-dur) var(--ge-ease-out)}
+.ge-navdock-btn svg{transition:color var(--ge-dur) var(--ge-ease-out),filter var(--ge-dur) var(--ge-ease-out)}
+/* show() toggles legacy .active; alias it to the tokens .is-active treatment */
+.ge-navdock-btn.active{color:var(--ge-white)}
+.ge-navdock-btn.active::before{content:"";position:absolute;top:0;left:22%;right:22%;
+  height:2px;border-radius:2px;background:var(--ge-red);box-shadow:var(--ge-sh-glow)}
+.ge-navdock-btn.active svg{color:var(--ge-red-glow);filter:drop-shadow(0 0 6px rgba(255,59,59,.65))}
+/* body clearance for the floating dock (overrides legacy 104px) */
+body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) + 30px)}
+
+/* ---------------- cinematic overlay ---------------- */
+/* composite beats legacy .cine-back (centered, darker) AND tokens .ge-modal-back */
+.ge-modal-back.cine-back{align-items:center;background:rgba(4,4,6,.92)}
+.ge-cine-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:min(92vw,480px);max-height:84dvh;overflow-y:auto;text-align:center;
+  transform:scale(.94) translateY(12px);opacity:0;
+  transition:transform var(--ge-dur-slow) var(--ge-ease-out),opacity var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-modal-back.is-open .ge-cine-stage{transform:none;opacity:1}
+
+/* ---------------- level-up cinema ---------------- */
+.ge-cine-levelup .ge-cine-stage{background:radial-gradient(ellipse at 50% 32%,rgba(212,160,23,.14),transparent 62%)}
+.ge-lvlup{display:flex;flex-direction:column;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-6) 0}
+.ge-lvlup-crown{width:88px;height:auto;filter:drop-shadow(0 0 24px rgba(212,160,23,.7))}
+.ge-lvlup-title{color:var(--ge-gold);letter-spacing:.05em;text-shadow:0 0 26px rgba(212,160,23,.5)}
+.ge-lvlup-sub{color:var(--ge-muted);letter-spacing:.24em}
+
+/* P1.4 ALMOST THERE + P1.6 ONE MORE THING (read-only progress UI) */
+.ge-home-onemore{display:flex;flex-direction:column;gap:10px}
+.ge-onemore-card{position:relative}
+.ge-onemore-x{position:absolute;top:4px;right:4px;background:none;border:none;color:inherit;opacity:.55;padding:10px;cursor:pointer}
+.ge-onemore-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-right:28px}
+.ge-onemore-head b{font-size:13px;letter-spacing:.04em}
+.ge-almost-row{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}
+.ge-almost-row:first-of-type{border-top:none;padding-top:2px}
+.ge-almost-lbl{display:block;font-size:10px;letter-spacing:.1em;opacity:.55;margin:6px 0 2px}
+
+/* P1.5: locked-nav affordances (Genetics Lab level-3 hub gate) */
+.ge-locked{opacity:.55;}
+.ge-navdock-btn.nav-locked{opacity:.45;filter:grayscale(.6);}
+.ge-tease-card{margin-bottom:10px;}
