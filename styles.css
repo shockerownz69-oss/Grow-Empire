@@ -1896,7 +1896,8 @@ svg.ge-ic-xl{width:var(--ge-ic-xl);height:var(--ge-ic-xl)}
 .ge-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:44px;padding:0 18px;border-radius:var(--ge-r-md);border:1px solid transparent;
   font-family:var(--ge-label);font-weight:700;font-size:13px;letter-spacing:.07em;
-  text-transform:uppercase;cursor:pointer;color:var(--ge-ink);background:var(--ge-surface-3);
+  text-transform:uppercase;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  color:var(--ge-ink);background:var(--ge-surface-3);
   transition:transform var(--ge-dur-fast) var(--ge-ease),opacity var(--ge-dur-fast),background var(--ge-dur-fast)}
 .ge-btn svg{width:18px;height:18px}
 .ge-btn:active{transform:scale(.96)}

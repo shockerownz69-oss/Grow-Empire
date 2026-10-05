@@ -2001,7 +2001,7 @@ function phenoReportModal(report){
     }
     try{ requestAnimationFrame(tick); }catch(e){ el.textContent=target.toFixed(dec); }
   });
-  m.querySelector('#pr-keep').onclick=()=>{ closeModal(m); markKeeper(report); };
+  m.querySelector('#pr-keep').onclick=()=>{ try{ closeModal(m); markKeeper(report); }catch(e){ try{ toast(icon('x','ge-ic-md')+' Keeper error — preserving directly.'); }catch(e2){} try{ confirmKeeper(report); }catch(e3){} } };
   m.querySelector('#pr-arch').onclick=()=>{ closeModal(m); archivePheno(report); };
   m.querySelector('#pr-disc').onclick=()=>{ closeModal(m); toast('Phenotype discarded.'); save(); };
 }
@@ -2774,19 +2774,23 @@ function markKeeper(report){
 /* KEEPER DISCOVERY — full-screen cinematic: darken, red glow, silhouette,
    crown reveal, sequential trait count-up, then MARK AS KEEPER. */
 function keeperCine(report){
+  try{
   const g=report.genetics||{};
   const rows=[['RESIN',g.resinPot],['TERPENES',g.terpenePot],['POTENCY',g.potencyPot],['BAG APPEAL',g.bagAppeal]];
+  let plantArt='';
+  try{ plantArt=plantSVG(9,report.strainId+'#'+report.phenoNum,'keeper-plant',{frost:3,dense:true,purple:report.rarity==='legendary'}); }catch(e){ plantArt=''; }
   const back=cineOverlay(
    '<div class="ge-kid-stage">'+
    '<div class="ge-kid-glow"></div>'+
-   '<div class="ge-kid-plant">'+plantSVG(9,report.strainId+'#'+report.phenoNum,'keeper-plant',{frost:3,dense:true,purple:report.rarity==='legendary'})+'</div>'+
+   '<div class="ge-kid-plant">'+plantArt+'</div>'+
    '<div class="ge-kid-crown">'+crownSVG(report.rarity==='legendary','crown-anim')+'</div>'+
    '<div class="ge-kid-kicker">SECRET GENETIC ARCHIVE</div>'+
    '<div class="ge-display ge-kid-title">KEEPER IDENTIFIED</div>'+
    '<div class="ge-kid-name">'+esc(report.strainName)+' <span class="ge-kid-pheno">PHENO #'+report.phenoNum+'</span></div>'+
    '<div class="ge-kid-traits">'+rows.map((t,i)=>'<div class="ge-kid-trait" style="animation-delay:'+(0.6+i*0.5).toFixed(1)+'s"><span>'+t[0]+'</span><b data-count="'+num(t[1],0)+'" data-dec="0">0</b></div>').join('')+'</div>'+
-   '<button class="ge-btn ge-btn-gold ge-btn-block" id="kc-ok">'+icon('crown-gold','ge-ic-md')+'ADD TO KEEPER VAULT</button></div>',
+   '<button type="button" class="ge-btn ge-btn-gold ge-btn-block" id="kc-ok">'+icon('crown-gold','ge-ic-md')+'ADD TO KEEPER VAULT</button></div>',
    'cine-keeper',0);
+  if(!back) throw new Error('keeper overlay failed to open');
   back.querySelectorAll('[data-count]').forEach(el=>{
     const target=num(el.dataset.count,0), t0=performance.now(), dur=900, delay=600;
     function tick(t){
@@ -2798,7 +2802,17 @@ function keeperCine(report){
     try{ requestAnimationFrame(tick); }catch(e){ el.textContent=Math.round(target); }
   });
   try{ if(typeof CAP_haptic==='function') CAP_haptic('keeper'); }catch(e){}
-  back.querySelector('#kc-ok').onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); confirmKeeper(report); };
+  const okBtn=back.querySelector('#kc-ok');
+  if(!okBtn) throw new Error('keeper confirm button missing');
+  const okFn=(e)=>{ try{ if(e&&e.stopPropagation) e.stopPropagation(); }catch(e2){} back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); confirmKeeper(report); };
+  okBtn.addEventListener('click',okFn);
+  okBtn.onclick=okFn;
+  }catch(e){
+    /* The cinematic is garnish — the keeper is the payload. Never let a
+       ceremony failure silently swallow a keeper: save it directly. */
+    try{ toast(icon('warn','ge-ic-md')+' Keeper ceremony skipped — preserving genetics directly.'); }catch(e2){}
+    confirmKeeper(report);
+  }
 }
 
 function confirmKeeper(report){
