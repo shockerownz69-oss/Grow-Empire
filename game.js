@@ -11147,21 +11147,23 @@ function MS_rewardHTML(m){
 }
 function MS_objHTML(m,pr){
   const done=pr.cur>=pr.target;
+  const cur=Math.min(pr.cur,pr.target);
   let lis='';
-  if(pr.target>1){
-    const n=Math.min(pr.cur,pr.target);
+  if(pr.target>1&&pr.target<=10){
+    /* multi-part objectives: one row per part (e.g. "Objective 1 of 3") */
     for(let i=1;i<=pr.target;i++){
-      const pd=i<=n;
+      const pd=i<=cur;
       lis+='<li class="ms-obj'+(pd?' is-done':'')+'">'+
        '<span class="ms-check">'+icon(pd?'check':'clock','ge-ic-sm')+'</span>'+
        '<span class="ms-objt">Objective '+i+' of '+pr.target+'</span>'+
        '<span class="ge-pill '+(pd?'ge-pill-optimal':'ge-pill-neutral')+'">'+(pd?'DONE':'OPEN')+'</span></li>';
     }
   }else{
+    /* numeric progress: single compact row — never one row per unit */
     lis='<li class="ms-obj'+(done?' is-done':'')+'">'+
      '<span class="ms-check">'+icon(done?'check':'clock','ge-ic-sm')+'</span>'+
      '<span class="ms-objt">'+esc(m.desc)+'</span>'+
-     '<b class="ge-num">'+Math.min(pr.cur,pr.target)+'/'+pr.target+'</b></li>';
+     '<b class="ge-num">'+cur+'/'+pr.target+'</b></li>';
   }
   return '<ul class="ms-objs">'+lis+'</ul>';
 }
