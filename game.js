@@ -2567,7 +2567,7 @@ function buyerModal(invId){
    '<p class="ge-body ge-muted">'+esc(it.strainName)+' — Q'+it.quality+' • '+it.amount+' '+(it.type==='edible'?'units':'oz')+' • base '+fmt$(base)+'</p><div class="ge-dp-buyers">';
   BUYERS.forEach(by=>{
     const wxm=(typeof WX_sellMult==='function')?WX_sellMult(it.strainId,it,by.id):1;
-    const mult=by.mult(it)*wxm, offer=base*mult;
+    const mult=wxm, offer=base*mult;
     html+='<div class="ge-card ge-card-tap ge-dp-buyer" data-buyer="'+by.id+'" role="button" tabindex="0">'+
      '<div class="ge-dp-buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ge-ic-xl'))+'</div>'+
      '<div class="ge-plant-meta"><div class="ge-plant-name">'+esc(by.name)+'</div>'+
@@ -2586,7 +2586,7 @@ function sellToBuyer(invId,buyerId){
   const it=S.inventory.find(x=>x.id===invId); if(!it) return;
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
   const wxm=(typeof WX_sellMult==='function')?WX_sellMult(it.strainId,it,by.id):1;
-  const total=pricePerOz(it)*it.amount*by.mult(it)*wxm;
+  const total=pricePerOz(it)*it.amount*wxm;
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   S.stats.buyerSales[by.id]=int(S.stats.buyerSales[by.id],0)+1;
   gainXP(15); gainRep(by.id==='dscout'?4:2);
@@ -2935,6 +2935,11 @@ function confirmKeeper(report){
       overall:num(report.overall,0),
       bestQuality:num(hv.quality,0), bestYield:num(hv.yieldOz,0),
       avgQuality:num(hv.quality,0), avgYield:num(hv.yieldOz,0),
+      /* GE-329 follow-up: persist the full phenotype so keeper/mother production prices off real genetics */
+      bestPotency:num(hv.potency,0), avgPotency:num(hv.potency,0),
+      bestTerpenes:num(hv.terpenes,0), avgTerpenes:num(hv.terpenes,0),
+      bestResin:num(hv.resin,0), avgResin:num(hv.resin,0),
+      bestBagAppeal:num(hv.bagAppeal,0), avgBagAppeal:num(hv.bagAppeal,0),
       harvests:1, dayFound:int(S.day,1), generation:int(report.generation,0),
       lineage:String(report.lineage||'Seed'),
       isClone:!!report.isClone, motherId:report.motherId||null,
@@ -6144,8 +6149,8 @@ function TY_tierBadge(q){
    Raw flower always sells directly — the pipeline is optional depth, never a wall. */
 const TY_PRODUCTS=[
  {id:'premium',name:'Premium Flower',ico:'star',days:2,inPerOut:1.1,outAmt:1,outUnit:'oz',valMult:1.7,desc:'Slow-cured, hand-trimmed. Connoisseur grade.'},
- {id:'preroll',name:'Pre-Rolls',ico:'leaf',days:1,inPerOut:1,outAmt:12,outUnit:'units',valMult:2.2,desc:'12 packs. Convenience sells.'},
- {id:'seedpack',name:'Seed Packs',ico:'genetics',days:3,inPerOut:0,outAmt:5,outUnit:'packs',valMult:3.0,from:'keeper',desc:'From keeper genetics. Breeders pay.'},
+ {id:'preroll',name:'Pre-Rolls',ico:'leaf',days:1,inPerOut:1,outAmt:12,outUnit:'units',valMult:1.15,desc:'24 pre-rolls. Convenience sells.'},
+ {id:'seedpack',name:'Seed Packs',ico:'genetics',days:3,inPerOut:0,outAmt:5,outUnit:'packs',valMult:4.0,from:'keeper',desc:'From keeper genetics. Breeders pay.'},
  {id:'clonepack',name:'Clone Packs',ico:'clone',days:2,inPerOut:0,outAmt:6,outUnit:'packs',valMult:2.6,from:'mother',desc:'Rooted cuts from proven mothers.'}
 ];
 function TY_procCap(){ /* oz-equivalents per day */
@@ -6156,14 +6161,40 @@ function TY_procCap(){ /* oz-equivalents per day */
   return Math.max(2,Math.round(cap));
 }
 function TY_buildingLevelSafe(id){ try{ return (typeof EX_buildingLevel==='function')?EX_buildingLevel(id):1; }catch(e){ return 1; } }
+/* GE-329 follow-up: keeper/mother production runs price off the ACTUAL source genetics, not fixed
+   88/85 constants. Mothers fall back to their keeper; pre-fix keepers (no potency tracked) fall back
+   to the historical 88:85 quality:potency ratio so old saves keep parity. */
+function TY_srcStats(src){
+  const dflt={q:75,p:75,t:85,r:85,b:85};
+  if(!src||typeof src!=='object') return dflt;
+  let k=null;
+  if(src.keeperId){ try{ k=(S.keepers||[]).find(x=>x.id===src.keeperId)||null; }catch(e){ k=null; } }
+  const pick=function(){
+    for(let i=0;i<arguments.length;i++){ const v=num(arguments[i],0); if(v>0) return Math.round(v); }
+    return 0;
+  };
+  let q=pick(src.avgQuality,src.bestQuality,src.bestQ);
+  if(!q&&src.qualities&&src.qualities.length){
+    q=Math.round(src.qualities.reduce(function(a,b){ return a+num(b,0); },0)/src.qualities.length);
+  }
+  if(!q&&k) q=pick(k.avgQuality,k.bestQuality,k.overall);
+  let p=pick(src.avgPotency,src.bestPotency);
+  if(!p&&k) p=pick(k.avgPotency,k.bestPotency);
+  if(!p&&q) p=Math.round(q*85/88);
+  const t=pick(src.avgTerpenes,src.bestTerpenes)||(k?pick(k.avgTerpenes,k.bestTerpenes):0)||85;
+  const r=pick(src.avgResin,src.bestResin)||(k?pick(k.avgResin,k.bestResin):0)||85;
+  const b=pick(src.avgBagAppeal,src.bestBagAppeal)||(k?pick(k.avgBagAppeal,k.bestBagAppeal):0)||85;
+  return {q:q||75,p:p||75,t:t,r:r,b:b};
+}
 function TY_startProcess(invId,ptypeId){
   const pt=TY_PRODUCTS.find(p=>p.id===ptypeId); if(!pt) return;
   if(pt.from==='keeper'&&!(S.keepers&&S.keepers.length)){ toast(icon('x','ge-ic-md')+' Need a keeper first.'); return; }
   if(pt.from==='mother'&&!(S.mothers&&S.mothers.length)){ toast(icon('x','ge-ic-md')+' Need a mother plant first.'); return; }
-  let src=null, ozIn=0, st=null;
+  let src=null, ozIn=0, st=null, gsrc=null;
   if(pt.from){
-    st=pt.from==='keeper'?getStrain(S.keepers[0].strainId):getStrain(S.mothers[0].strainId);
-    ozIn=2;
+    gsrc=pt.from==='keeper'?S.keepers[0]:S.mothers[0];
+    st=getStrain(gsrc.strainId);
+    ozIn=0; /* GE-329 follow-up: keeper/mother runs consume no flower — ozIn was a phantom input doubling the output */
   } else {
     const it=S.inventory.find(x=>x.id===invId); if(!it||it.type!=='flower'){ toast(icon('x','ge-ic-md')+' Need flower in inventory.'); return; }
     if(it.amount<2){ toast(icon('x','ge-ic-md')+' Need at least 2 oz.'); return; }
@@ -6172,7 +6203,8 @@ function TY_startProcess(invId,ptypeId){
   const active=S.ty.proc.length;
   const cap=TY_procCap();
   if(active>=Math.max(1,Math.floor(cap/2))){ toast(icon('x','ge-ic-md')+' Processing queue full — upgrade the lab.'); return; }
-  const fee=Math.round(15*ozIn*(pt.days));
+  const gs=TY_srcStats(gsrc); /* actual keeper/mother genetics; null-safe defaults on the flower path */
+  const fee=pt.from?TY_fromFee(pt,gs.q,gs.p):Math.round(15*ozIn*(pt.days));
   if(S.cash<fee){ toast(icon('x','ge-ic-md')+' Need '+fmt$(fee)+' processing fee.'); return; }
   S.cash-=fee; TY_exp('processing',fee);
   if(src){ src.amount=Math.round((src.amount-ozIn)*10)/10; if(src.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==src.id); }
@@ -6182,8 +6214,8 @@ function TY_startProcess(invId,ptypeId){
   const qBonus=TY_buildingLevelSafe('processing')*1.5;
   S.ty.proc.push({id:S.ty.nextProcId++,strainId:st?st.id:'unknown',strainName:st?st.name:'Unknown',
     ptype:pt.id,ozIn:ozIn,daysLeft:days,daysTotal:days,eff:clamp(eff,0.8,1.4),qBonus:qBonus,
-    baseQ:src?num(src.quality,70):88,basePot:src?num(src.potency,70):85,baseTerp:src?num(src.terpenes,70):85,
-    baseResin:src?num(src.resin,70):85,baseBag:src?num(src.bagAppeal,70):85,custom:st?!!st.custom:false});
+    baseQ:src?num(src.quality,70):gs.q,basePot:src?num(src.potency,70):gs.p,baseTerp:src?num(src.terpenes,70):gs.t,
+    baseResin:src?num(src.resin,70):gs.r,baseBag:src?num(src.bagAppeal,70):gs.b,custom:st?!!st.custom:false});
   TY_notify(icon('flask','ge-ic-md')+' Processing started: '+esc(pt.name)+' ('+days+'d)','info',true);
   save(); updateHUD(); if(current==='production') RENDER.production();
 }
@@ -6198,7 +6230,8 @@ function TY_procTick(){
   t.proc=t.proc.filter(j=>j.daysLeft>0);
   done.forEach(j=>{
     const pt=TY_PRODUCTS.find(p=>p.id===j.ptype);
-    const outAmt=Math.round(j.ozIn*pt.outAmt/ (pt.inPerOut||1) *10)/10;
+    /* GE-329 follow-up: from-gated runs consume no flower — output is exactly outAmt packs, never ozIn×outAmt */
+    const outAmt=pt.from?num(pt.outAmt,1):Math.round(j.ozIn*pt.outAmt/(pt.inPerOut||1)*10)/10;
     const q=clamp(Math.round(j.baseQ+j.qBonus),5,100);
     t.prod.push({id:t.nextProdId++,strainId:j.strainId,strainName:j.strainName,ptype:pt.id,
       pname:pt.name,amount:outAmt,unit:pt.outUnit,quality:q,
@@ -6223,8 +6256,22 @@ function TY_packageProd(pid){
 function TY_prodPrice(p){
   const D=typeof DIFFS!=='undefined'?DIFFS[S.difficulty]:{econMult:1};
   const base=p.quality*2.4+p.potency*0.9;
-  const perUnit=Math.max(3,base*TY_repPriceMult()*(D.econMult||1));
+  const perOz=Math.max(3,base*(D.econMult||1));
+  /* GE-D: rep multiplier removed here — it already applies once at sale time inside
+     TY_priceFactor (via WX_sellMult). Keeping it here squared it (up to 1.39x at max rep). */
+  /* GE-329 follow-up: per-UNIT price is the per-oz price divided by units-per-oz (outAmt).
+     valMult is then the pure value-add premium. Premium Flower (outAmt 1, unit oz) is unchanged. */
+  const pt=typeof TY_PRODUCTS!=='undefined'?TY_PRODUCTS.find(x=>x.id===p.ptype):null;
+  const perUnit=perOz/Math.max(1,pt?num(pt.outAmt,1):1);
   return perUnit*num(p.valMult,1)*(p.packaged?1.15:0.8);
+}
+/* GE-329 follow-up: keeper/mother runs consume no flower, so the batch fee is a fixed share of the
+   expected packaged output value — a real marginal cost that scales with genetics and can never
+   be a zero-cost printer. */
+function TY_fromFee(pt,q,p){
+  const fake={quality:q,potency:p,valMult:pt.valMult,ptype:pt.id,packaged:true};
+  const gross=num(pt.outAmt,1)*TY_prodPrice(fake);
+  return Math.max(60,Math.round(gross*0.35));
 }
 function TY_prodBuyerModal(pid){
   const p=S.ty.prod.find(x=>x.id===pid); if(!p) return;
@@ -6235,7 +6282,7 @@ function TY_prodBuyerModal(pid){
   BUYERS.forEach(by=>{
     const item={quality:p.quality,potency:p.potency,terpenes:p.terpenes,bagAppeal:p.bagAppeal,resin:p.resin,custom:p.custom,type:'flower',ptype:p.ptype};
     const wxm=(typeof WX_sellMult==='function')?WX_sellMult(p.strainId,item,by.id):1;
-    const mult=by.mult(item)*wxm, offer=base*mult;
+    const mult=wxm, offer=base*mult;
     html+='<div class="ge-card ge-card-tap ge-dp-buyer" data-buyer="'+by.id+'" role="button" tabindex="0">'+
      '<div class="ge-dp-buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ge-ic-xl'))+'</div>'+
      '<div class="ge-plant-meta"><div class="ge-plant-name">'+esc(by.name)+'</div>'+
@@ -6253,7 +6300,7 @@ function TY_sellProduct(pid,buyerId){
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
   const item={quality:p.quality,potency:p.potency,terpenes:p.terpenes,bagAppeal:p.bagAppeal,resin:p.resin,custom:p.custom,type:'flower',ptype:p.ptype};
   const wxm=(typeof WX_sellMult==='function')?WX_sellMult(p.strainId,item,by.id):1;
-  const total=TY_prodPrice(p)*p.amount*by.mult(item)*wxm;
+  const total=TY_prodPrice(p)*p.amount*wxm;
   S.cash+=total; S.stats.lifetimeRevenue+=total; S.stats.sales++;
   if(p.ptype==='seedpack'||p.ptype==='clonepack') S.ty.stats.wholesale=int(S.ty.stats.wholesale,0)+1;
   TY_gainRep('business',3); TY_gainRep('service',1);
@@ -6377,7 +6424,9 @@ function TY_custTick(){
   (S.inventory||[]).forEach(it=>{ if(it.amount>0) stock.push({kind:'inv',ref:it,ptype:TY_ptypeOf(it),quality:it.quality,price:pricePerOz(it),name:it.strainName,strainId:it.strainId}); });
   for(let i=0;i<served;i++){
     const c=TY_makeCustomer();
-    const afford=stock.filter(s=>s.price<=c.budget&&s.quality>=c.qualExp-15);
+    /* GE-B: stock entries go stale mid-tick — re-check LIVE amount every customer,
+       otherwise depleted products keep selling phantom inventory */
+    const afford=stock.filter(s=>s.price<=c.budget&&s.quality>=c.qualExp-15&&num(s.ref.amount,0)>0);
     if(!afford.length){ short++; lost++; continue; }
     afford.sort((a,b)=>{
       const sa=(a.strainId===c.favStrain?30:0)+(a.ptype===c.prefPtype?20:0)+a.quality-a.price*c.priceSens*0.05;
@@ -6385,7 +6434,10 @@ function TY_custTick(){
       return sb-sa;
     });
     const pick1=afford[0];
-    const qty=pick1.kind==='prod'&&pick1.ref.unit==='units'?Math.min(4,Math.floor(pick1.ref.amount)):1;
+    const avail=num(pick1.ref.amount,0);
+    /* GE-B: clamp qty to what actually remains — never sell phantom stock */
+    const qty=pick1.kind==='prod'&&pick1.ref.unit==='units'?Math.min(4,Math.floor(avail)):Math.min(1,avail);
+    if(qty<=0){ short++; continue; }
     const total=pick1.price*qty;
     if(total>c.budget){ short++; continue; }
     /* complete sale */
