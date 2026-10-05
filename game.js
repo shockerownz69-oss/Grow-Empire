@@ -271,7 +271,7 @@ function unlockStrain(id){
   if(!S.lockedStrains.includes(id)) return false;
   S.lockedStrains = S.lockedStrains.filter(x=>x!==id);
   const st = getStrain(id);
-  toast('🧬 Unlocked genetics: '+(st?st.name:id));
+  toast(icon('dna','ge-ic-md')+' Unlocked genetics: '+(st?st.name:id));
   return true;
 }
 
@@ -399,8 +399,9 @@ function exportSave(){
   a.download = 'grow-empire-save-day'+S.day+'.json';
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
-  toast('💾 Save exported.');
+  toast(icon('check','ge-ic-md')+' Save exported.');
 }
+
 function importSaveFile(file){
   const r = new FileReader();
   r.onload = ()=>{
@@ -412,11 +413,12 @@ function importSaveFile(file){
       S.stats = Object.assign(def.stats, d.stats||{});
       normalizeState();
       save(); updateHUD(); show('menu');
-      toast('📥 Save imported.');
-    }catch(e){ toast('❌ Invalid save file.'); }
+      toast(icon('box','ge-ic-md')+' Save imported.');
+    }catch(e){ toast(icon('x','ge-ic-md')+' Invalid save file.'); }
   };
   r.readAsText(file);
 }
+
 
 /* ---------------- Utils ---------------- */
 const $ = id => document.getElementById(id);
@@ -479,7 +481,7 @@ drop:'<path d="M12 3s6.2 6.8 6.2 11.2a6.2 6.2 0 0 1-12.4 0C5.8 9.8 12 3 12 3z"/>
 /* --- brand --- */
 'crown-red':'<g fill="#e02020" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/><circle cx="2.5" cy="8" r="1.6"/><circle cx="12" cy="4.5" r="1.6"/><circle cx="21.5" cy="8" r="1.6"/></g>',
 'crown-gold':'<g fill="#d4a017" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/><circle cx="2.5" cy="8" r="1.6"/><circle cx="12" cy="4.5" r="1.6"/><circle cx="21.5" cy="8" r="1.6"/><circle cx="12" cy="14" r="1.8" fill="#7a0d0d"/></g>',
-gasmask:'<g fill="currentColor" stroke="none"><path d="M32 4C20 4 12 13 12 26c0 8 4 14.5 10 18l3 8h14l3-8c6-3.5 10-10 10-18C52 13 44 4 32 4z"/><circle cx="23" cy="26" r="7.5" fill="#0b0b0b"/><circle cx="41" cy="26" r="7.5" fill="#0b0b0b"/><circle cx="23" cy="26" r="3" fill="#ff3b3b"/><circle cx="41" cy="26" r="3" fill="#ff3b3b"/><rect x="27" y="36" width="10" height="8" rx="3" fill="#0b0b0b"/><path d="M14 12l4 3M50 12l-4 3" stroke="currentColor" stroke-width="3"/></g>',
+gasmask:'<g fill="currentColor" stroke="none"><path d="M12 1.5C7.5 1.5 4.5 4.88 4.5 9.75c0 3 1.5 5.44 3.75 6.75l1.12 3h5.25l1.12-3c2.25-1.31 3.75-3.75 3.75-6.75C19.5 4.88 16.5 1.5 12 1.5z"/><circle cx="8.62" cy="9.75" r="2.81" fill="#0b0b0b"/><circle cx="15.38" cy="9.75" r="2.81" fill="#0b0b0b"/><circle cx="8.62" cy="9.75" r="1.12" fill="#ff3b3b"/><circle cx="15.38" cy="9.75" r="1.12" fill="#ff3b3b"/><rect x="10.12" y="13.5" width="3.75" height="3" rx="1.12" fill="#0b0b0b"/><path d="M5.25 4.5l1.5 1.12M18.75 4.5l-1.5 1.12" stroke="currentColor" stroke-width="1.12"/></g>',
 leaf:'<path d="M12 21V9"/><path d="M12 9c0-2.8-1.8-4.8-4.8-5.6.4 2.8 2 4.8 4.8 5.6z"/><path d="M12 9c0-2.8 1.8-4.8 4.8-5.6-.4 2.8-2 4.8-4.8 5.6z"/><path d="M12 13.5c-2.8 0-5.6-1-7.5-3.5 2.8 0 5.6 1 7.5 3.5z"/><path d="M12 13.5c2.8 0 5.6-1 7.5-3.5-2.8 0-5.6 1-7.5 3.5z"/><path d="M12 17.5c-2.2 0-4.4-.8-6-2.8 2.2 0 4.4.8 6 2.8z"/><path d="M12 17.5c2.2 0 4.4-.8 6-2.8-2.2 0-4.4.8-6 2.8z"/>',
 dna:'<path d="M7 3c0 5.5 10 5.5 10 11s-10 5.5-10 7"/><path d="M17 3c0 5.5-10 5.5-10 11s10 5.5 10 7"/><path d="M8.6 6.8h6.8M8.6 17.2h6.8M7.9 12h8.2"/>',
 jar:'<rect x="6" y="8" width="12" height="13" rx="2.5"/><path d="M8.5 8V5.5h7V8M8.5 4.5h7"/><path d="M12 18v-4M12 15.5c-1.4 0-2.4-1-2.4-2.4 1.4 0 2.4 1 2.4 2.4zM12 15.5c1.4 0 2.4-1 2.4-2.4-1.4 0-2.4 1-2.4 2.4z"/>',
@@ -493,6 +495,49 @@ crew:'<circle cx="9" cy="8" r="3.4"/><path d="M3 20.5c0-3.2 2.7-5.3 6-5.3s6 2.1 
 preserve:'<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="12" r="4.2"/><path d="M12 9.8v4.4M9.8 12h4.4"/>',
 scroll:'<path d="M7 3.5h11a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7z"/><path d="M7 3.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2"/><path d="M10 8.5h6M10 12h6"/>'
 };
+/* UI OVERHAUL: extended icon set (merged from design-system/icons.js) */
+const GE_NEW_ICONS = {
+/* --- missing call sites (rendered empty today) --- */
+cart:'<circle cx="9.5" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2.2l2.5 12h10.8l2-8.5H6"/>',
+customers:'<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.4 2.8-5 5.5-5s4.9 1.6 5.5 5"/><circle cx="16.8" cy="9.5" r="2.6"/><path d="M16 15.2c2.3.3 3.9 1.8 4.4 4.3"/>',
+shop:'<path d="M6 8h12l1 12.5H5z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+terp:'<path d="M12 4s5 5.5 5 9a5 5 0 0 1-10 0c0-3.5 5-9 5-9z"/><path d="M5.5 5.5c-1 1.5-1.5 3-1.5 4.5M18.5 5.5c1 1.5 1.5 3 1.5 4.5"/>',
+/* --- environment telemetry --- */
+ph:'<path d="M9 3h6"/><path d="M12 3v9"/><rect x="8.5" y="12" width="7" height="9" rx="3.5"/><path d="M12 15.5v3"/>',
+ec:'<circle cx="12" cy="12" r="8.5"/><path d="M7 12h2.5l1.5-3 2 6 1.5-3H17"/>',
+vpd:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M12 7.5L9.8 9.7M12 7.5l2.2 2.2M12 16.5l-2.2-2.2M12 16.5l2.2-2.2"/>',
+humidity:'<path d="M12 3s6.2 6.8 6.2 11.2a6.2 6.2 0 0 1-12.4 0C5.8 9.8 12 3 12 3z"/>',
+lighting:'<path d="M9.5 18a4.5 4.5 0 1 1 5 0"/><path d="M10 21h4M12 2.5V5M4.9 4.9l1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+hvac:'<circle cx="12" cy="12" r="8.5"/><path d="M12 12c0-2.5.5-5 2-6.5 1.5 1.5 1 4-1 5.5z"/><path d="M12 12c2.5 0 5 .5 6.5 2-1.5 1.5-4 1-5.5-1z"/><path d="M12 12c0 2.5-.5 5-2 6.5-1.5-1.5-1-4 1-5.5z"/><path d="M12 12c-2.5 0-5-.5-6.5-2 1.5-1.5 4-1 5.5 1z"/>',
+irrigation:'<path d="M12 21v-6"/><path d="M5 10a7 7 0 0 1 14 0"/><path d="M12 3v4M5 10l2-2M19 10l-2-2M8 4.5L9 6.5M16 4.5L15 6.5"/>',
+nutrients:'<path d="M10 2.5h4"/><path d="M11 2.5V7l-5 11.5A2.4 2.4 0 0 0 8.2 22h7.6a2.4 2.4 0 0 0 2.2-3.5L13 7V2.5"/><path d="M7.8 14.5h8.4"/>',
+sensors:'<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
+drycure:'<path d="M5 4h14"/><path d="M12 4v3"/><path d="M12 7c-2.5 0-4 1.8-4 4.5 2.5 0 4-1.8 4-4.5z"/><path d="M12 7c2.5 0 4 1.8 4 4.5-2.5 0-4-1.8-4-4.5z"/><path d="M12 13v8"/>',
+/* --- commerce & structure --- */
+storefront:'<path d="M4 9l1-4h14l1 4"/><path d="M4 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-5h4v5"/>',
+facility:'<path d="M3 21V10l9-6 9 6v11"/><path d="M3 21h18"/><path d="M8 21v-8h8v8"/><path d="M8 17h8"/>',
+/* --- brand --- */
+crown:'<path d="M3 8.5l4 3 5-6 5 6 4-3-1.5 10h-15z"/><path d="M5 20.5h14"/>',
+'crown-gold':'<g fill="#d4a017" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/><circle cx="2.5" cy="8" r="1.6"/><circle cx="12" cy="4.5" r="1.6"/><circle cx="21.5" cy="8" r="1.6"/><circle cx="12" cy="14" r="1.8" fill="#7a0d0d"/></g>',
+/* --- general gaps --- */
+calendar:'<rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+wallet:'<path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="16.8" cy="13.5" r="1.3" fill="currentColor" stroke="none"/>',
+shield:'<path d="M12 3l7.5 2.8v5.4c0 4.6-3.2 7.9-7.5 9.8-4.3-1.9-7.5-5.2-7.5-9.8V5.8z"/><path d="M9.5 11.5l2.3 2.3 3.7-4"/>',
+flask:'<path d="M9.5 3h5"/><path d="M10.5 3v6l-4.8 6.9a4 4 0 0 0 3.4 6.1h5.8a4 4 0 0 0 3.4-6.1L13.5 9V3"/><path d="M7.5 14h9"/>',
+box:'<path d="M3.5 8L12 3.5 20.5 8v8L12 20.5 3.5 16z"/><path d="M3.5 8L12 12.5 20.5 8M12 12.5V20.5"/>',
+truck:'<path d="M2.5 6.5h12V16h-12z"/><path d="M14.5 10h3.8l3.2 3.5V16h-7"/><circle cx="7" cy="17.8" r="1.8"/><circle cx="17.5" cy="17.8" r="1.8"/>',
+users:'<circle cx="8.5" cy="8" r="3"/><path d="M3 19.5c.5-3 2.7-4.7 5.5-4.7s5 1.7 5.5 4.7"/><path d="M15.5 5.4a3 3 0 0 1 0 5.7M17.5 15c1.8.7 3 2 3.4 4.5"/>',
+chart:'<path d="M4 20h16"/><rect x="6" y="11" width="3" height="9"/><rect x="11" y="7" width="3" height="13"/><rect x="16" y="4" width="3" height="16"/>',
+pin:'<path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/>',
+filter:'<path d="M4 5h16l-6.2 7.2V19l-3.6-2v-4.8z"/>',
+'arrow-right':'<path d="M4 12h15M13 6l6 6-6 6"/>',
+minus:'<path d="M6 12h12"/>',
+clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+'alert-triangle':'<path d="M12 3.5L2.5 20h19z"/><path d="M12 9.5v5"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/>'
+};
+Object.assign(ICONS,GE_NEW_ICONS);
+
 function icon(n,cls){
   const p=ICONS[n];
   if(!p) return '<span class="ic-missing"></span>';
@@ -520,16 +565,18 @@ function plantSVG(stage,seedStr,cls,opts){
   const j=()=>(R()-0.5)*10;
   let inner='';
   inner+='<defs><linearGradient id="potg'+uid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#101010"/></linearGradient></defs>';
+  if(o.overwater) inner+='<ellipse cx="60" cy="134" rx="32" ry="4.5" fill="#16283a" opacity="0.45"/>';
   inner+='<ellipse cx="60" cy="112" rx="26" ry="6" fill="#0c0a08"/>';
   inner+='<path d="M36 108 h48 l-4 24 a4 4 0 0 1-4 4 H44 a4 4 0 0 1-4-4 z" fill="url(#potg'+uid+')" stroke="#000"/>';
-  inner+='<rect x="33" y="103" width="54" height="8" rx="3" fill="#3a0d0d" stroke="#7a0d0d" stroke-width="1"/>';
+  inner+='<rect x="33" y="103" width="54" height="8" rx="3" fill="'+(o.exceptional?'#3a2c08':'#3a0d0d')+'" stroke="'+(o.exceptional?'#d4a017':'#7a0d0d')+'" stroke-width="1"/>';
   const baseY=104;
   const leafC=o.defic?['#7a8a3a','#8a9a42','#6e7e32']:['#2e6b34','#35793b','#2a6130'];
   const droop=(o.wilt||o.overwater)?34:0;
-  function leaf(x,y,len,ang,c){
+  function leaf(x,y,len,ang,c,bleach){
     const w=len*0.42, a=ang+(ang<0?-droop:droop*0.4)+(ang>90?droop:-droop*0.3);
+    const fill=bleach?'#a9c08d':c;
     return '<g transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+a.toFixed(1)+')">'+
-      '<path d="M0 0 Q '+(len*0.32).toFixed(1)+' '+(-w).toFixed(1)+' '+len.toFixed(1)+' 0 Q '+(len*0.32).toFixed(1)+' '+w.toFixed(1)+' 0 0" fill="'+c+'"/>'+
+      '<path d="M0 0 Q '+(len*0.32).toFixed(1)+' '+(-w).toFixed(1)+' '+len.toFixed(1)+' 0 Q '+(len*0.32).toFixed(1)+' '+w.toFixed(1)+' 0 0" fill="'+fill+'"/>'+
       '<path d="M2 0 L '+(len-2).toFixed(1)+' 0" stroke="#1c4a22" stroke-width="1"/></g>';
   }
   function bud(x,y,r,purple){
@@ -583,14 +630,23 @@ function plantSVG(stage,seedStr,cls,opts){
       const purple=o.purple||R()<0.4, br=[0,5,8,11,13.5][G.bud]*(o.dense?1.2:1);
       inner+=bud(tx,ty-2,br,purple);
     }else{
-      inner+=leaf(tx,ty,15,-90,leafC[1])+leaf(tx,ty-2,12,-64,leafC[2])+leaf(tx,ty-2,12,-116,leafC[0]);
+      inner+=leaf(tx,ty,15,-90,leafC[1],o.lightStress)+leaf(tx,ty-2,12,-64,leafC[2],o.lightStress)+leaf(tx,ty-2,12,-116,leafC[0],o.lightStress);
     }
     if(s>=9){ for(let i=0;i<10;i++){ inner+='<circle cx="'+(42+R()*36).toFixed(1)+'" cy="'+(ty+R()*(baseY-ty)).toFixed(1)+'" r="'+(0.8+R()).toFixed(1)+'" fill="#fff" opacity="'+(0.4+R()*0.5).toFixed(2)+'"/>'; } }
   }
-  if(o.heat) inner+='<rect x="0" y="0" width="120" height="140" fill="#ff7a1a" opacity="0.10"/>';
-  inner+='<rect x="0" y="0" width="120" height="140" fill="url(#rimx'+uid+')" opacity="0"/>';
+  /* ---- condition atmosphere (display-only, no filters) ---- */
+  if(o.lightStress&&s>=2) inner+='<rect x="0" y="0" width="120" height="58" fill="#e8f0d8" opacity="0.10"/>';
+  if(o.heat){
+    inner+='<rect x="0" y="0" width="120" height="140" fill="#ff7a1a" opacity="0.10"/>';
+    for(let hi=0;hi<3;hi++){ const hx=42+hi*18; inner+='<path d="M'+hx+' 96 q 5 -8 0 -16 q -5 -8 0 -16" stroke="#ff7a1a" stroke-width="1.4" fill="none" opacity="0.45"/>'; }
+  }
+  if(o.wilt) inner+='<rect x="0" y="0" width="120" height="140" fill="#8a8a8a" opacity="0.07"/>';
+  if(o.exceptional&&s>=2){
+    for(let gi=0;gi<7;gi++){ inner+='<circle cx="'+(44+R()*32).toFixed(1)+'" cy="'+(26+R()*52).toFixed(1)+'" r="'+(0.9+R()*0.8).toFixed(1)+'" fill="#ffd76a" opacity="'+(0.5+R()*0.4).toFixed(2)+'"/>'; }
+  }
   return '<svg class="plant-art '+(cls||'')+'" viewBox="0 0 120 140" aria-hidden="true">'+inner+'</svg>';
 }
+
 /* ============================================================
    NPC CAST (original characters) + MARKET BUYERS + EMPIRE HUB
    + FACILITY TIERS + STAGE HELPERS
@@ -916,41 +972,55 @@ function strainSeed(st){ return (st?st.id:'x')+'|'+(st?st.name:''); }
 /* ---- cinematic overlay shell (keeper / legendary / levelup) ---- */
 function cineOverlay(inner,cls,ms){
   const root=$('modal-root');
-  const back=document.createElement('div'); back.className='cine-back '+(cls||'');
-  back.innerHTML='<div class="cine-stage">'+inner+'</div>';
+  const back=document.createElement('div'); back.className='cine-back ge-modal-back '+(cls||'');
+  back.innerHTML='<div class="cine-stage ge-cine-stage">'+inner+'</div>';
   root.appendChild(back);
-  if(ms!==0) setTimeout(()=>{ back.classList.add('cine-out'); setTimeout(()=>back.remove(),450); }, ms||4200);
+  /* force reflow so the tokens entrance transition (.is-open) plays */
+  void back.offsetWidth;
+  back.classList.add('is-open');
+  if(ms!==0) setTimeout(()=>{ back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),450); }, ms||4200);
   /* only close when the backdrop itself is tapped — never on bubbled content taps */
-  back.addEventListener('click',(e)=>{ if(e&&e.target!==back) return; back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); });
+  back.addEventListener('click',(e)=>{ if(e&&e.target!==back) return; back.classList.add('cine-out'); back.classList.remove('is-open'); setTimeout(()=>back.remove(),300); });
   const stage=back.querySelector('.cine-stage');
   if(stage) stage.addEventListener('click',(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); });
   return back;
 }
+
 function toast(msg,ms){
-  const t=document.createElement('div'); t.className='toast'; t.innerHTML=msg;
+  const t=document.createElement('div'); t.className='ge-toast'; t.innerHTML=msg;
   $('toast-root').appendChild(t);
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, ms||2600);
 }
+
 function modal(html){
   const root=$('modal-root');
-  const back=document.createElement('div'); back.className='modal-back';
-  back.innerHTML='<div class="modal">'+html+'</div>';
+  const back=document.createElement('div'); back.className='modal-back ge-modal-back';
+  back.innerHTML='<div class="modal ge-modal">'+html+'</div>';
   root.appendChild(back);
+  /* force reflow so the tokens entrance transition (.is-open) plays */
+  void back.offsetWidth;
+  back.classList.add('is-open');
   return back;
 }
+
 function closeModal(back){ back.remove(); }
 function confirmModal(title,text,onYes){
-  const m=modal('<h3>'+esc(title)+'</h3><p>'+esc(text)+'</p>'+
-    '<div class="btn-row"><button class="btn btn-danger" id="cm-no">CANCEL</button>'+
-    '<button class="btn btn-primary" id="cm-yes">CONFIRM</button></div>');
+  const m=modal('<div class="ge-modal-head"><h3>'+esc(title)+'</h3></div>'+
+    '<div class="ge-modal-body"><p class="ge-body">'+esc(text)+'</p></div>'+
+    '<div class="ge-modal-foot"><button class="ge-btn ge-btn-danger" id="cm-no">CANCEL</button>'+
+    '<button class="ge-btn ge-btn-primary" id="cm-yes">CONFIRM</button></div>');
   m.querySelector('#cm-no').onclick=()=>closeModal(m);
   m.querySelector('#cm-yes').onclick=()=>{ closeModal(m); onYes(); };
 }
+
 function statBar(label,val,max,color){
   max=max||100;
   const pct=clamp(Math.round(val/max*100),0,100);
-  return '<div class="statrow"><span class="slabel">'+label+'</span><div class="bar '+(color||'')+'"><i style="width:'+pct+'%"></i></div><span class="sval">'+Math.round(val)+'</span></div>';
+  const tone=color==='green'?'ge-progress-ok':color==='amber'?'ge-progress-warn':color==='red'?'ge-progress-bad':color==='gold'?'ge-progress-gold':'';
+  return '<div class="ge-progress-meta"><span class="ge-label">'+label+'</span><b class="ge-data">'+Math.round(val)+'</b></div>'+
+    '<div class="ge-progress '+tone+'"><i style="width:'+pct+'%"></i></div>';
 }
+
 
 /* ---------------- Navigation ---------------- */
 const SCREENS=['splash','difficulty','menu','home','grow','grows','genetics','dispensary','breeding','project0','empire','missions','challenges','achievements','leaderboards','locations','keepers','settings'];
@@ -978,15 +1048,17 @@ function show(name){
   window.scrollTo(0,0);
 }
 function screenHead(ico,title){
-  return '<div class="screenhead"><button class="backbtn" onclick="show(\'menu\')">'+icon('x')+'<span>MENU</span></button><h2>'+icon(ico,'sh-ico')+esc(title)+'</h2></div>';
+  return '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+icon('x','ge-ic-md')+'<span>MENU</span></button><h2 class="ge-screenhead-title">'+icon(ico,'ge-ic-lg')+esc(title)+'</h2></div>';
 }
+
 let _hudPrev={cash:0,rep:0,xp:0,level:1,day:1};
 function hudFloat(text,cls){
   const hud=$('hud'); if(!hud) return;
-  const f=document.createElement('div'); f.className='hud-float '+(cls||''); f.textContent=text;
+  const f=document.createElement('div'); f.className='ge-hud-float '+(cls||''); f.textContent=text;
   hud.appendChild(f);
   setTimeout(()=>f.remove(),1600);
 }
+
 function updateHUD(){
   if(!S) return;
   const cash=Math.round(num(S.cash,0)), rep=int(S.reputation,0),
@@ -995,18 +1067,23 @@ function updateHUD(){
   if(elC){
     if(cash>_hudPrev.cash&&_hudPrev.cash>0) hudFloat('+'+fmt$(cash-_hudPrev.cash),'gain');
     else if(cash<_hudPrev.cash) hudFloat(fmt$(cash-_hudPrev.cash),'loss');
-    elC.innerHTML=icon('cash','hud-ico')+'<span>'+fmt$(cash)+'</span>';
+    elC.innerHTML=icon('cash','ge-ic-sm')+'<span class="ge-num ge-hud-val">'+fmt$(cash)+'</span>';
   }
-  if(elR) elR.innerHTML=icon('rep','hud-ico')+'<span>'+rep+'</span>';
-  if(elL) elL.innerHTML=icon('level','hud-ico')+'<span>'+lvl+'</span>';
-  if(elD) elD.innerHTML=icon('day','hud-ico')+'<span>'+day+'</span>';
+  if(elR) elR.innerHTML=icon('rep','ge-ic-sm')+'<span class="ge-num ge-hud-val">'+rep+'</span>';
+  if(elL) elL.innerHTML=icon('level','ge-ic-sm')+'<span class="ge-num ge-hud-val">'+lvl+'</span>';
+  if(elD) elD.innerHTML=icon('day','ge-ic-sm')+'<span class="ge-num ge-hud-val">'+day+'</span>';
+  /* XP micro-bar under LVL (element lives in the new topbar markup; guarded) */
+  const elX=$('hud-xpbar');
+  if(elX){ try{ elX.style.width=clamp(Math.round(num(S.xp,0)/xpNeed(lvl)*100),0,100)+'%'; }catch(e){} }
   _hudPrev={cash:cash,rep:rep,xp:num(S.xp,0),level:lvl,day:day};
 }
+
 function levelUpOverlay(lvl){
-  cineOverlay('<div class="lvlup">'+crownSVG(true,'lvlup-crown')+
-   '<div class="display lvlup-title">LEVEL UP</div>'+
-   '<div class="lvlup-sub">LEVEL '+lvl+' &mdash; THE EMPIRE GROWS</div></div>','cine-levelup',2600);
+  cineOverlay('<div class="ge-lvlup ge-anim-rise">'+crownSVG(true,'ge-lvlup-crown')+
+   '<div class="ge-display ge-lvlup-title">LEVEL UP</div>'+
+   '<div class="ge-label ge-lvlup-sub">LEVEL '+lvl+' &mdash; THE EMPIRE GROWS</div></div>','cine-levelup ge-cine-levelup',2600);
 }
+
 
 /* ---------------- Progression ---------------- */
 function xpNeed(lvl){ lvl=Math.max(1,int(lvl,1)); return Math.round(100*Math.pow(1.35,lvl-1)); }
@@ -1045,11 +1122,11 @@ function checkP0Rewards(){
     const lvl=p0Level(tr), rw=P0_REWARDS[tr][lvl];
     if(rw&&!S.project0['rw_'+tr+'_'+lvl]){
       S.project0['rw_'+tr+'_'+lvl]=true;
-      if(rw.cash){ S.cash+=rw.cash; toast('🕊️ Project 0: +'+fmt$(rw.cash)); }
-      if(rw.rep){ gainRep(rw.rep); toast('🕊️ Project 0: +'+rw.rep+' rep'); }
+      if(rw.cash){ S.cash+=rw.cash; toast(icon('project0','ge-ic-md')+' Project 0: +'+fmt$(rw.cash)); }
+      if(rw.rep){ gainRep(rw.rep); toast(icon('project0','ge-ic-md')+' Project 0: +'+rw.rep+' rep'); }
       if(rw.xp){ gainXP(rw.xp); }
       if(rw.gen){ rw.gen.forEach(g=>unlockStrain(g)); }
-      if(rw.title){ S.project0.titles.push(rw.title); S.titles.push(rw.title); toast('🏅 Title earned: '+rw.title); }
+      if(rw.title){ S.project0.titles.push(rw.title); S.titles.push(rw.title); toast(icon('trophy','ge-ic-md')+' Title earned: '+rw.title); }
     }
   });
 }
@@ -1077,19 +1154,21 @@ function checkMissions(){
       if(r.p0) addP0('knowledge',r.p0);
       if(r.unlock){ try{ if(typeof TY_grantUnlock==='function') TY_grantUnlock(r.unlock,m.name); }catch(e){} }
       const nm=m.name;
-      setTimeout(()=>toast('🏆 Mission complete: <b>'+esc(nm)+'</b>'),50);
+      setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Mission complete: <b>'+esc(nm)+'</b>'),50);
       // mission-locked strain p0-2
       if(m.id==='p0-50') unlockStrain('project-zero-og');
     }
   });
 }
+
 function checkAchievements(){
   ACHIEVEMENTS.forEach(a=>{
     if(S.achievements.includes(a.id)) return;
     let ok=false; try{ ok=a.t(S); }catch(e){}
-    if(ok){ S.achievements.push(a.id); gainXP(100); setTimeout(()=>toast('🏅 Achievement: <b>'+esc(a.name)+'</b><br><span class="muted">'+esc(a.desc)+'</span>'),50); }
+    if(ok){ S.achievements.push(a.id); gainXP(100); setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Achievement: <b>'+esc(MS_stripEmoji(a.name))+'</b><br><span class="muted">'+esc(a.desc)+'</span>'),50); }
   });
 }
+
 
 /* ---------------- New game ---------------- */
 function newGame(diff){
@@ -1097,25 +1176,28 @@ function newGame(diff){
   const D=DIFFS[diff];
   S.difficulty=diff; S.cash=D.cash; S.started=true;
   show('home'); updateHUD(); save();
-  toast('👑 Welcome to the Empire, '+D.name+'!');
+  toast(icon('crown','ge-ic-md')+' Welcome to the Empire, '+D.name+'!');
 }
 RENDER.difficulty=function(){
   $('diff-list').innerHTML=Object.keys(DIFFS).map(k=>{
     const d=DIFFS[k];
-    return '<div class="diff-card" data-d="'+k+'"><div class="diff-crown">'+crownSVG(false,'c-ico-svg')+'</div><h3>'+d.name+'</h3><p class="muted">'+d.desc+'</p>'+
-      '<div class="kv"><span>'+icon('cash','kv-ico')+'Starting cash</span><b>'+fmt$(d.cash)+'</b></div>'+
-      '<div class="kv"><span>'+icon('star','kv-ico')+'Mission rewards</span><b>x'+d.missionReward+'</b></div></div>';
+    return '<div class="ge-card ge-card-tap ge-diff-card diff-card" data-d="'+k+'">'+
+     '<div class="ge-diff-crown">'+crownSVG(false,'c-ico-svg')+'</div>'+
+     '<h3 class="ge-h2">'+d.name+'</h3><p class="ge-muted ge-body">'+d.desc+'</p>'+
+     '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Starting cash</span><b class="ge-num">'+fmt$(d.cash)+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'Mission rewards</span><b class="ge-num">x'+d.missionReward+'</b></div></div>';
   }).join('');
   document.querySelectorAll('#diff-list .diff-card').forEach(c=>{
     c.onclick=()=>{ document.querySelectorAll('#diff-list .diff-card').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); };
     c.ondblclick=()=>newGame(c.dataset.d);
   });
   if(!$('diff-start')){
-    const b=document.createElement('button'); b.id='diff-start'; b.className='btn btn-primary btn-big'; b.textContent='START GROWING';
+    const b=document.createElement('button'); b.id='diff-start'; b.className='ge-btn ge-btn-primary ge-btn-block ge-diff-start'; b.textContent='START GROWING';
     b.onclick=()=>{ const sel=document.querySelector('#diff-list .diff-card.sel'); newGame(sel?sel.dataset.d:'grower'); };
     $('scr-difficulty').appendChild(b);
   }
 };
+
 
 /* ---------------- Main menu ---------------- */
 const MENU_ITEMS=[
@@ -1134,54 +1216,63 @@ const MENU_ITEMS=[
  {id:'settings',ico:'settings',label:'SETTINGS'}
 ];
 RENDER.menu=function(){
-  const openMissions=MISSIONS.filter(m=>!S.missionsDone.includes(m.id)).length;
-  let html='<div class="menu-hero">'+
-    '<div class="hero-scene">'+roomSceneSVG()+'<div class="hero-haze"></div></div>'+
-    '<div class="hero-brand">'+crownSVG(false,'hero-crown')+
-    '<div class="logo-text display">SHOCKER OWNZ</div><div class="logo-sub display">GROW EMPIRE</div>'+
-    '<div class="tagline">PLANT &bull; GROW &bull; BREED &bull; HARVEST &bull; BUILD</div><div class="tagline dim gold-tag">GROW LIKE YOU OWN THE SHOW.</div></div></div>';
-  html+='<div class="menu-grid">';
+  let openMissions=0;
+  try{ openMissions=MISSIONS.filter(m=>!S.missionsDone.includes(m.id)).length; }catch(e){}
+  let html=HM_identityHead();
+  html+='<div class="ge-section-title">COMMAND MODULES</div>';
+  html+=HM_menuModules(openMissions);
+  html+='<div class="ge-section-title">NAVIGATE</div>';
+  html+='<div class="ge-card ge-menu-nav">';
   MENU_ITEMS.forEach(mi=>{
     let badge='';
-    if(mi.id==='missions'&&openMissions>0) badge='<span class="m-badge">'+openMissions+'</span>';
-    html+='<button class="menu-btn" data-go="'+mi.id+'"><span class="m-ico">'+icon(mi.ico,'ic-xl')+'</span><span class="m-label">'+mi.label+'</span>'+badge+'</button>';
+    if(mi.id==='missions'&&openMissions>0) badge='<span class="ge-navdock-badge">'+openMissions+'</span>';
+    html+='<button class="ge-menu-navrow" data-go="'+mi.id+'">'+icon(mi.ico,'ge-ic-md')+'<span>'+mi.label+'</span>'+badge+icon('arrow-right','ge-ic-sm')+'</button>';
   });
-  html+='</div>'+nextUpCard();
+  html+='</div>';
+  html+=nextUpCard();
   const lvl=Math.max(1,int(S.level,1)), xp=num(S.xp,0), xpN=xpNeed(lvl);
   const fi=clamp(int(S.facility,0),0,FACILITIES.length-1);
-  html+='<div class="card status-card"><div class="kv"><span>Level '+lvl+' &mdash; '+Math.max(0,xpN-xp)+' XP to next</span><b>'+xp+'/'+xpN+'</b></div>'+
-    '<div class="xpbar"><i style="width:'+clamp(xp/xpN*100,0,100)+'%"></i></div>'+
-    '<div class="kv"><span>'+icon('empire','kv-ico')+' Facility</span><b>'+esc(FAC_TIERS[facTierIdx()].name)+'</b></div>'+
-    '<div class="kv"><span>'+icon('grow','kv-ico')+' Plants growing</span><b>'+S.plants.length+'/'+FACILITIES[fi].slots+'</b></div>'+
-    '<div class="kv"><span>'+icon('genetics','kv-ico')+' Genetics unlocked</span><b>'+unlockedCount(S)+'/'+allStrains().length+'</b></div>'+
-    (Array.isArray(S.titles)&&S.titles.length?'<div class="tags">'+S.titles.map(t=>'<span class="tag gold">'+esc(t)+'</span>').join('')+'</div>':'')+'</div>';
-  html+='<p class="motto">&ldquo;IT&rsquo;S NEVER ABOUT THE MONEY.&rdquo; &mdash; PROJECT 0</p>';
+  html+='<div class="ge-card ge-home-xp"><div class="ge-progress-meta"><span>'+icon('xp','ge-ic-md')+'LEVEL '+lvl+' &mdash; '+Math.max(0,xpN-xp)+' XP TO NEXT</span><b class="ge-num">'+int(xp,0)+'/'+xpN+'</b></div>'+
+   '<div class="ge-progress"><i style="width:'+clamp(xp/xpN*100,0,100)+'%"></i></div>'+
+   '<div class="ge-datarow"><span>'+icon('empire','ge-ic-md')+'Facility</span><b>'+esc(FAC_TIERS[facTierIdx()].name)+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('grow','ge-ic-md')+'Plants growing</span><b class="ge-num">'+S.plants.length+'/'+FACILITIES[fi].slots+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('genetics','ge-ic-md')+'Genetics unlocked</span><b class="ge-num">'+unlockedCount(S)+'/'+allStrains().length+'</b></div>'+
+   (Array.isArray(S.titles)&&S.titles.length?'<div class="ge-home-titles">'+S.titles.map(t=>'<span class="ge-badge ge-badge-legendary">'+esc(t)+'</span>').join('')+'</div>':'')+'</div>';
+  html+='<p class="ge-home-motto">&ldquo;IT&rsquo;S NEVER ABOUT THE MONEY.&rdquo; &mdash; PROJECT 0</p>';
   $('menu-buttons').innerHTML=html;
-  document.querySelectorAll('#menu-buttons .menu-btn').forEach(b=>b.onclick=()=>show(b.dataset.go));
+  document.querySelectorAll('#menu-buttons [data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
   const gm=document.querySelector('#menu-buttons [data-go-missions]'); if(gm) gm.onclick=()=>show('missions');
 };
+
 
 /* ---------------- Settings ---------------- */
 RENDER.settings=function(){
   const r=$('settings-root');
-  r.innerHTML=screenHead('settings','SETTINGS')+
-   '<div class="card"><h3>'+icon('preserve','ic-lg')+'SAVE DATA</h3>'+
-   '<div class="btn-row"><button class="btn btn-small" id="set-save">'+icon('check','b-ico')+'SAVE NOW</button>'+
-   '<button class="btn btn-small" id="set-export">'+icon('scroll','b-ico')+'EXPORT SAVE (JSON)</button>'+
-   '<button class="btn btn-small" id="set-import">'+icon('jar','b-ico')+'IMPORT SAVE (JSON)</button>'+
-   '<button class="btn btn-small btn-danger" id="set-reset">'+icon('warn','b-ico')+'RESET GAME</button></div></div>'+
-   '<div class="card"><h3>'+icon('trophy','ic-lg')+'ACHIEVEMENTS ('+S.achievements.length+'/'+ACHIEVEMENTS.length+')</h3>'+
-   ACHIEVEMENTS.map(a=>'<div class="kv"><span class="ach-ico">'+(S.achievements.includes(a.id)?icon('check','kv-ico'):icon('lock','kv-ico'))+'</span><span>'+esc(a.name)+'<br><span class="muted">'+esc(a.desc)+'</span></span></div>').join('')+'</div>'+
-   '<div class="card"><h3>'+icon('inspect','ic-lg')+'LIFETIME STATS</h3>'+
-   '<div class="kv"><span>Days survived</span><b>'+S.day+'</b></div>'+
-   '<div class="kv"><span>Lifetime harvest</span><b>'+num(S.stats.lifetimeHarvestOz,0).toFixed(1)+' oz</b></div>'+
-   '<div class="kv"><span>Lifetime revenue</span><b>'+fmt$(S.stats.lifetimeRevenue)+'</b></div>'+
-   '<div class="kv"><span>Best quality</span><b>'+Math.round(S.stats.bestQuality)+'</b></div>'+
-   '<div class="kv"><span>Crosses created</span><b>'+S.stats.crosses+'</b></div>'+
-   '<div class="kv"><span>Competitions won</span><b>'+S.stats.compsWon+'</b></div>'+
-   '<div class="kv"><span>Missions completed</span><b>'+int(S.stats.missionsDone,0)+'/'+MISSIONS.length+' ('+Math.round(int(S.stats.missionsDone,0)/MISSIONS.length*100)+'%)</b></div></div>'+
-   '<div class="card"><p class="muted display">SHOCKER OWNZ GROW EMPIRE v2.0 &mdash; VISUAL OVERHAUL<br>PLANT &bull; GROW &bull; BREED &bull; HARVEST &bull; BUILD</p></div>';
-  $('set-save').onclick=()=>{ save(); toast('💾 Saved.'); };
+  let html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+
+    icon('x','ge-ic-md')+'<span>MENU</span></button>'+
+   '<h2 class="ge-screenhead-title">'+icon('settings','ge-ic-lg')+'SETTINGS</h2></div>'+
+   '<div class="ge-card ge-card-hot"><div class="ge-card-head"><h3>'+icon('preserve','ge-ic-lg')+'SAVE DATA</h3></div>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-primary" id="set-save">'+icon('check','ge-ic-md')+'SAVE NOW</button>'+
+   '<button class="ge-btn ge-btn-ghost" id="set-export">'+icon('scroll','ge-ic-md')+'EXPORT SAVE</button>'+
+   '<button class="ge-btn ge-btn-ghost" id="set-import">'+icon('box','ge-ic-md')+'IMPORT SAVE</button>'+
+   '<button class="ge-btn ge-btn-danger" id="set-reset">'+icon('warn','ge-ic-md')+'RESET GAME</button></div>'+
+   '<p class="ge-caption ge-muted">Save lives on this device only. Export a JSON backup before switching profiles.</p></div>'+
+   '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-lg')+'ACHIEVEMENTS</h3><span class="ge-spread ge-num">'+S.achievements.length+'/'+ACHIEVEMENTS.length+'</span></div>'+
+   ACHIEVEMENTS.map(a=>'<div class="ge-datarow"><span>'+(S.achievements.includes(a.id)?icon('check','ge-ic-sm'):icon('lock','ge-ic-sm'))+icon((typeof MS_achIcon==='function'?MS_achIcon(a.id):'trophy'),'ge-ic-sm')+esc((typeof MS_stripEmoji==='function'?MS_stripEmoji(a.name):a.name))+'<br><span class="ge-caption ge-muted">'+esc(a.desc)+'</span></span></div>').join('')+'</div>'+
+   '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('inspect','ge-ic-lg')+'LIFETIME STATS</h3></div>'+
+   PF_kv('Days survived','<b class="ge-num">'+S.day+'</b>')+
+   PF_kv('Lifetime harvest','<b class="ge-num">'+num(S.stats.lifetimeHarvestOz,0).toFixed(1)+' oz</b>')+
+   PF_kv('Lifetime revenue','<b class="ge-num">'+fmt$(S.stats.lifetimeRevenue)+'</b>')+
+   PF_kv('Best quality','<b class="ge-num">'+Math.round(S.stats.bestQuality)+'</b>')+
+   PF_kv('Crosses created','<b class="ge-num">'+S.stats.crosses+'</b>')+
+   PF_kv('Competitions won','<b class="ge-num">'+S.stats.compsWon+'</b>')+
+   PF_kv('Missions completed','<b class="ge-num">'+int(S.stats.missionsDone,0)+'/'+MISSIONS.length+' ('+Math.round(int(S.stats.missionsDone,0)/MISSIONS.length*100)+'%)</b>')+
+   '</div>'+
+   '<div class="ge-card ge-card-flat"><p class="ge-caption ge-muted ge-center">SHOCKER OWNZ GROW EMPIRE v2.0 &mdash; VISUAL OVERHAUL<br>PLANT &bull; GROW &bull; BREED &bull; HARVEST &bull; BUILD</p></div>'+
+  '</div>';
+  r.innerHTML=html;
+  $('set-save').onclick=()=>{ save(); toast(icon('check','ge-ic-md')+' Saved.'); };
   $('set-export').onclick=exportSave;
   $('set-import').onclick=()=>$('import-file').click();
   $('set-reset').onclick=()=>confirmModal('Reset game?','This erases ALL progress. This cannot be undone.',()=>{
@@ -1189,6 +1280,7 @@ RENDER.settings=function(){
     freshStart(); show('splash');
   });
 };
+
 
 /* ---------------- Boot ---------------- */
 function boot(){
@@ -1203,7 +1295,7 @@ function boot(){
   setTimeout(()=>{ if(current==='splash'){ if(S.started) show('home'); else show('difficulty'); } },4000);
   document.querySelectorAll('#bottomnav button').forEach(b=>b.onclick=()=>show(b.dataset.nav));
   $('import-file').addEventListener('change',e=>{ if(e.target.files[0]) importSaveFile(e.target.files[0]); e.target.value=''; });
-  if(res==='corrupt') setTimeout(()=>toast('⚠️ Old save was unreadable — started fresh.'),600);
+  if(res==='corrupt') setTimeout(()=>toast(icon('warn','ge-ic-md')+' Old save was unreadable — started fresh.'),600);
   updateHUD();
   show('splash');
 }
@@ -1307,20 +1399,22 @@ RENDER.breeding=function(){
   if(!breedA||!getStrain(breedA)) breedA=avail[0]?avail[0].id:null;
   if(!breedB||!getStrain(breedB)) breedB=avail[1]?avail[1].id:breedA;
   const A=getStrain(breedA), B=getStrain(breedB);
-  let html=screenHead('breeding','BREEDING LAB');
-  html+='<div class="card breed-parent"><h3>'+icon('dna','ic')+' PARENT A</h3>'+(A?flowerSVG(strainSeed(A),'breed-flower'):'')+breedPickList('breed-a',breedA)+'</div>';
-  html+='<div class="breed-vs display">\u00D7</div>';
-  html+='<div class="card breed-parent"><h3>'+icon('dna','ic')+' PARENT B</h3>'+(B?flowerSVG(strainSeed(B),'breed-flower'):'')+breedPickList('breed-b',breedB)+'</div>';
+  let html='<div class="ge-screen">'+screenHead('breeding','BREEDING LAB');
+  html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>PARENT A</h3></div><div class="ge-breed-parent">'+(A?flowerSVG(strainSeed(A),'breed-flower'):'')+breedPickList('breed-a',breedA)+'</div></div>';
+  html+='<div class="ge-breed-vs">×</div>';
+  html+='<div class="ge-card card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>PARENT B</h3></div><div class="ge-breed-parent">'+(B?flowerSVG(strainSeed(B),'breed-flower'):'')+breedPickList('breed-b',breedB)+'</div></div>';
   if(A&&B){
     const traits=predictTraits(A,B);
-    html+='<div class="card"><h3>'+icon('inspect','ic')+' PREDICTED OFFSPRING TRAITS</h3>'+
-      traits.map(t=>statBar(t.n,t.v)).join('')+'</div>';
-    html+='<div class="card"><h3>'+icon('star','ic')+' NAME YOUR CROSS</h3><input type="text" id="cross-name" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
-      '<p class="muted">Breeding fee: $150'+(S.crew.breeder?' (breeder bonus: more stable)':'')+'</p>'+
-      '<button class="btn btn-primary" id="btn-cross">'+icon('preserve','ic')+'CREATE CROSS</button></div>';
+    html+='<div class="ge-card"><div class="ge-card-head">'+icon('inspect','ge-ic-md')+'<h3>PREDICTED OFFSPRING</h3></div>'+
+      traits.map(t=>'<div class="ge-progress-meta"><span>'+esc(t.n)+'</span><b>'+Math.round(num(t.v,0))+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(t.v,0)),0,100)+'%"></i></div>').join('')+'</div>';
+    html+='<div class="ge-card card"><div class="ge-card-head">'+icon('star','ge-ic-md')+'<h3>NAME YOUR CROSS</h3></div>'+
+      '<input type="text" id="cross-name" class="ge-input" maxlength="28" placeholder="e.g. Revenge Cake" value="'+esc(A.name.split(' ')[0])+' x '+esc(B.name.split(' ')[0])+'">'+
+      '<p class="ge-caption">Breeding fee: $150'+(S.crew.breeder?' (breeder bonus: more stable)':'')+'</p>'+
+      '<button class="ge-btn ge-btn-primary ge-btn-block" id="btn-cross">'+icon('dna','ge-ic-md')+'CREATE CROSS</button></div>';
   }
-  html+='<div class="card"><h3>'+icon('dna','ic')+' YOUR CROSSES ('+S.customStrains.length+')</h3>'+
-    (S.customStrains.length?S.customStrains.map(s=>'<div class="kv"><span>'+esc(s.name)+'<br><span class="muted">'+esc(s.lineage)+'</span></span><span class="badge gold">R'+Math.round(s.resin)+'</span></div>').join(''):'<p class="muted">No custom crosses yet.</p>')+'</div>';
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>YOUR CROSSES</h3><span class="ge-spread ge-num ge-muted">'+S.customStrains.length+'</span></div>'+
+    (S.customStrains.length?S.customStrains.map(s=>'<div class="ge-datarow"><span>'+esc(s.name)+'<br><span class="ge-caption ge-muted">'+esc(s.lineage)+'</span></span><span class="ge-badge">R'+Math.round(s.resin)+'</span></div>').join(''):'<p class="ge-muted">No custom crosses yet.</p>')+'</div>';
+  html+='</div>';
   r.innerHTML=html;
   $('breed-a').onchange=e=>{ breedA=e.target.value; RENDER.breeding(); };
   $('breed-b').onchange=e=>{ breedB=e.target.value; RENDER.breeding(); };
@@ -1328,10 +1422,11 @@ RENDER.breeding=function(){
   if(btn) btn.onclick=()=>{ const nm=($('cross-name').value||'Untitled Cross'); createCross(nm); };
   try{ if(typeof GX_wireBreeding==='function') GX_wireBreeding(r); }catch(e){}
 };
+
 function createCross(name){
   const A2=getStrain(breedA), B2=getStrain(breedB);
-  if(!A2||!B2){ toast('❌ Select two parents.'); return false; }
-  if(S.cash<150){ toast('❌ Need $150 breeding fee.'); return false; }
+  if(!A2||!B2){ toast(icon('x','ge-ic-md')+' Select two parents.'); return false; }
+  if(S.cash<150){ toast(icon('x','ge-ic-md')+' Need $150 breeding fee.'); return false; }
   S.cash-=150;
   const breederBonus=S.crew.breeder?6:0;
   const blend=(a,b)=>clamp(Math.round((a+b)/2+rnd(-8-breederBonus/2,8)),10,100);
@@ -1348,11 +1443,12 @@ function createCross(name){
   S.stats.crosses++;
   if(A2.custom||B2.custom) S.stats.secondGenCrosses++;
   addP0('genetics',3); addP0('nocompromise',1); gainXP(80); gainRep(5);
-  toast('🧬 New strain created: <b>'+esc(nm)+'</b>');
+  toast(icon('dna','ge-ic-md')+' New strain created: <b>'+esc(nm)+'</b>');
   save(); updateHUD(); checkMissions(); checkAchievements();
   if(current==='breeding') RENDER.breeding();
   return true;
 }
+
 
 /* ============================================================
    PHENOTYPE HUNTING + KEEPER / MOTHER PLANT SYSTEM
@@ -1532,7 +1628,7 @@ function revealForStage(p){
 function countRarity(ph,strainId){
   if(!ph||ph.rarityCounted) return;
   ph.rarityCounted=true;
-  if(ph.rarity==='elite'){ S.stats.eliteFound++; addP0('nocompromise',3); addP0('genetics',2); toast('💎 ELITE phenotype discovered!'); }
+  if(ph.rarity==='elite'){ S.stats.eliteFound++; addP0('nocompromise',3); addP0('genetics',2); toast(icon('star','ge-ic-md')+' ELITE phenotype discovered!'); }
   if(ph.rarity==='legendary'){ S.stats.legendaryFound++; addP0('genetics',6); addP0('preservation',3); }
   const h=phist(strainId);
   if(ph.rarity==='elite') h.elite++;
@@ -1601,7 +1697,7 @@ function inspectPheno(pid){
   }
   const ug='<span class="unknown-gene">???</span>';
   const tRow=(label,key)=>'<div class="kv"><span>'+label+'</span><b>'+(ph.known[key]?Math.round(ph[key]):ug)+'</b></div>';
-  let html='<h3>'+icon('inspect','ic')+' '+esc(phenoName(p))+'</h3>'+
+  let html='<h3>'+icon('inspect','ic')+' '+esc(phenoName(p)).replace('\U0001F9EC','')+'</h3>'+
    '<p>'+rarityBadge(ph)+(ph.keeperId?' <span class="badge gold">'+icon('keepers','b-ico')+' KEEPER</span>':'')+(ph.isClone?' <span class="badge green">'+icon('clone','b-ico')+' CLONE</span>':'')+'</p>'+
    '<div class="kv"><span>'+icon('grow','kv-ico')+' Stage</span><b>'+STAGES[s]+'</b></div>'+
    '<div class="kv"><span>'+icon('day','kv-ico')+' Age</span><b>Day '+Math.floor(p.day)+'</b></div>'+
@@ -1639,23 +1735,28 @@ function stageOf(p){
 }
 function plantIcon(p){
   const seed=p.strainId+'#'+(p.pheno&&p.pheno.num?p.pheno.num:'0');
-  return plantSVG(visStageOf(p),seed,'slot-plant',plantVisOpts(p));
+  const o=plantVisOpts(p);
+  try{ o.lightStress=num(S.env.light,80)>95; }catch(e){}
+  o.exceptional=!!(p.pheno&&(p.pheno.rarity==='elite'||p.pheno.rarity==='legendary'));
+  return plantSVG(visStageOf(p),seed,'slot-plant',o);
 }
+
 function envEval(){
   const D=DIFFS[S.difficulty], e=S.env, q=S.equipment;
   const tol=D.envTol;
   const issues=[]; let score=100;
   const tTol=6*(1+0.08*(q.hvac-1))*tol, hTol=8*(1+0.08*(q.humid-1))*tol, hhTol=8*(1+0.08*(q.dehumid-1))*tol;
-  if(e.temp<70-tTol){ issues.push('❄️ Too cold'); score-=14; }
-  else if(e.temp>82+tTol){ issues.push('🔥 Too hot'); score-=14; }
-  if(e.humidity<40-hTol){ issues.push('🏜️ Humidity low'); score-=10; }
-  else if(e.humidity>60+hhTol){ issues.push('💦 Humidity high'); score-=10; }
+  if(e.temp<70-tTol){ issues.push({icon:'temp',text:'Too cold',tone:'watch'}); score-=14; }
+  else if(e.temp>82+tTol){ issues.push({icon:'temp',text:'Too hot',tone:'critical'}); score-=14; }
+  if(e.humidity<40-hTol){ issues.push({icon:'humid',text:'Humidity low',tone:'watch'}); score-=10; }
+  else if(e.humidity>60+hhTol){ issues.push({icon:'humid',text:'Humidity high',tone:'warning'}); score-=10; }
   const lTol=10*tol;
-  if(e.light<70-lTol){ issues.push('💡 Light low'); score-=12; }
-  if(e.co2<800){ issues.push('🫧 CO2 low'); score-=8; }
-  else if(e.co2>1500){ issues.push('🫧 CO2 high'); score-=6; }
+  if(e.light<70-lTol){ issues.push({icon:'light',text:'Light low',tone:'warning'}); score-=12; }
+  if(e.co2<800){ issues.push({icon:'co2',text:'CO2 low',tone:'watch'}); score-=8; }
+  else if(e.co2>1500){ issues.push({icon:'co2',text:'CO2 high',tone:'warning'}); score-=6; }
   return { score:clamp(Math.round(score),0,100), issues:issues };
 }
+
 function newPlant(strainId){
   const st=getStrain(strainId);
   const p={ id:S.nextPlantId++, strainId:strainId, day:0, health:100, water:70, nutrition:60,
@@ -1667,9 +1768,9 @@ function newPlant(strainId){
 function plantSeed(strainId){
   const st=getStrain(strainId);
   const slots=FACILITIES[S.facility].slots;
-  if(S.plants.length>=slots){ toast('❌ No free grow slots. Expand your facility!'); return false; }
-  if(!isUnlocked(strainId)){ toast('🔒 Genetics locked.'); return false; }
-  if(S.cash<st.seed){ toast('❌ Need '+fmt$(st.seed)+' for seeds.'); return false; }
+  if(S.plants.length>=slots){ toast(icon('x','ge-ic-md')+' No free grow slots. Expand your facility!'); return false; }
+  if(!isUnlocked(strainId)){ toast(icon('lock','ge-ic-md')+' Genetics locked.'); return false; }
+  if(S.cash<st.seed){ toast(icon('x','ge-ic-md')+' Need '+fmt$(st.seed)+' for seeds.'); return false; }
   S.cash-=st.seed;
   const p=newPlant(strainId);
   S.plants.push(p);
@@ -1707,17 +1808,17 @@ function doAction(pid,action){
   const p=S.plants.find(x=>x.id===pid); if(!p) return;
   const st=getStrain(p.strainId);
   if(action==='water'){
-    if(p.water>92){ p.health=clamp(p.health-6,0,100); p.stress=clamp(p.stress+10,0,100); p.problems.push('Overwatered!'); toast('💧 Overwatered! Roots are stressed.'); }
-    else { p.water=clamp(p.water+38,0,100); toast('💧 Watered.'); }
+    if(p.water>92){ p.health=clamp(p.health-6,0,100); p.stress=clamp(p.stress+10,0,100); p.problems.push('Overwatered!'); toast(icon('water','ge-ic-md')+' Overwatered! Roots are stressed.'); }
+    else { p.water=clamp(p.water+38,0,100); toast(icon('water','ge-ic-md')+' Watered.'); }
     S.stats.waterings++;
   }else if(action==='feed'){
     const eff=1+0.15*(S.equipment.nutrients-1);
-    if(p.nutrition>88){ p.health=clamp(p.health-8,0,100); p.stress=clamp(p.stress+12,0,100); p.problems.push('Nutrient burn!'); toast('🧪 Nutrient burn! Too much.'); }
-    else { p.nutrition=clamp(p.nutrition+32*eff,0,100); toast('🧪 Fed.'); }
+    if(p.nutrition>88){ p.health=clamp(p.health-8,0,100); p.stress=clamp(p.stress+12,0,100); p.problems.push('Nutrient burn!'); toast(icon('flask','ge-ic-md')+' Nutrient burn! Too much.'); }
+    else { p.nutrition=clamp(p.nutrition+32*eff,0,100); toast(icon('flask','ge-ic-md')+' Fed.'); }
     S.stats.feedings++;
   }else if(action==='train'){
     p.stress=clamp(p.stress+12,0,100); p.trained=true;
-    p.health=clamp(p.health-3,0,100); toast('✂️ Trained: +yield potential, +stress.');
+    p.health=clamp(p.health-3,0,100); toast(icon('train','ge-ic-md')+' Trained: +yield potential, +stress.');
     S.stats.trainings++;
   }else if(action==='inspect'){
     inspectPheno(pid); return;
@@ -1732,7 +1833,7 @@ function refreshGrowUI(){ if(current==='grow') RENDER.grow(); if(current==='grow
 /* ---------------- Harvest ---------------- */
 function harvestPlant(p){
   const st=getStrain(p.strainId);
-  if(stageOf(p)<5){ toast('⏳ Not ready yet — '+STAGES[stageOf(p)]+'.'); return; }
+  if(stageOf(p)<5){ toast(icon('clock','ge-ic-md')+' Not ready yet \u2014 '+STAGES[stageOf(p)]+'.'); return; }
   if(!p.pheno){ p.pheno=genPheno(st); p.pheno.num=nextPhenoNum(p.strainId); }
   const ph=p.pheno;
   sanitizePheno(ph);
@@ -1801,7 +1902,7 @@ function harvestPlant(p){
   const overall=Math.round(qq*0.3+potency*0.2+resin*0.15+terpenes*0.15+bagAppeal*0.1+yieldScore*0.1);
   S.stats.bestPhenoScore=Math.max(S.stats.bestPhenoScore,overall);
   if(overall>h.bestScore){ h.bestScore=overall; h.bestPheno=ph.num; }
-  /* clone harvest → mother stats */
+  /* clone harvest -> mother stats */
   if(ph.isClone&&ph.motherId){
     const mo=S.mothers.find(m=>m.id===ph.motherId);
     if(mo){
@@ -1809,7 +1910,7 @@ function harvestPlant(p){
       if(mo.qualities.length>20) mo.qualities.shift();
       if(mo.yields.length>20) mo.yields.shift();
       mo.bestQ=Math.max(mo.bestQ,qq); mo.bestY=Math.max(mo.bestY,oz);
-      if(qq>=90) mo.awards.push('💎 90+');
+      if(qq>=90) mo.awards.push('\uD83D\uDCAE 90+');
       S.stats.cloneHarvests++;
       if(ph.keeperId){
         S.keeperCloneRuns[ph.keeperId]=int(S.keeperCloneRuns[ph.keeperId],0)+1;
@@ -1857,39 +1958,38 @@ function harvestPlant(p){
     }
   }catch(e){}
 }
+
 function phenoReportModal(report){
   const r=report.harvest;
   const isRecord=Math.round(r.quality)>=Math.round(num(S.stats.bestQuality,0))&&r.quality>0;
   const topShelf=r.quality>=90, masterGrow=report.overall>=92;
   let callout='';
-  if(isRecord) callout+='<div class="callout record">'+icon('trophy','c-ico')+'NEW RECORD</div>';
-  if(topShelf) callout+='<div class="callout topshelf">TOP SHELF</div>';
-  if(masterGrow) callout+='<div class="callout master">'+crownSVG(true,'c-ico-svg')+'MASTER GROW</div>';
-  function cnt(label,val,dec,suf){
-    return '<div class="count-cell"><span class="cc-label">'+label+'</span>'+
-     '<span class="cc-val" data-count="'+val+'" data-dec="'+(dec||0)+'">0'+(suf||'')+'</span></div>';
+  if(isRecord) callout+='<div class="ge-badge ge-badge-legendary">'+icon('trophy','ge-ic-sm')+'NEW RECORD</div>';
+  if(topShelf) callout+='<div class="ge-badge ge-badge-elite">TOP SHELF</div>';
+  if(masterGrow) callout+='<div class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'MASTER GROW</div>';
+  function cnt(label,val,dec){
+    return '<div class="ge-metric-tile"><div class="ge-metric-value ge-num" data-count="'+val+'" data-dec="'+(dec||0)+'">0</div><div class="ge-metric-label">'+label+'</div></div>';
   }
-  const tier=r.quality>=95?['LEGENDARY RUN','legendary']:r.quality>=90?['MASTER GROW','master']:r.quality>=85?['TOP SHELF','topshelf']:r.quality>=75?['PREMIUM','premium']:['STANDARD','standard'];
-  let html='<div class="pheno-report harvest-cine">'+
-   '<div class="petal-fall"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
-   '<div class="display harvest-title">HARVEST COMPLETE</div>'+
-   '<div class="harvest-plant">'+plantSVG(9,report.strainId+'#'+report.phenoNum,'harvest-plant',{frost:3,dense:true,purple:report.rarity==='legendary'})+'</div>'+
-   '<div class="harvest-flower">'+flowerSVG(report.strainId+'#'+report.phenoNum,'harvest-bud')+'</div>'+
-   '<div class="harvest-tier '+tier[1]+'">'+icon('trophy','c-ico')+' '+tier[0]+'</div>'+
-   '<h3>'+esc(report.strainName)+' #'+report.phenoNum+(report.isClone?' '+icon('clone','b-ico'):'')+'</h3>'+
-   '<p>'+rarityBadge({rarity:report.rarity})+(report.legendaryTrait?' <span class="badge r-legendary">'+icon('crown-gold','b-ico')+esc(report.legendaryTrait)+'</span>':'')+'</p>'+
+  const tier=r.quality>=95?['LEGENDARY RUN','ge-badge-legendary']:r.quality>=90?['MASTER GROW','ge-badge-keeper']:r.quality>=85?['TOP SHELF','ge-badge-elite']:r.quality>=75?['PREMIUM','ge-badge']:['STANDARD','ge-badge'];
+  let html='<div class="ge-harvest-report">'+
+   '<div class="ge-petal-fall"><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+   '<div class="ge-display">HARVEST COMPLETE</div>'+
+   '<div class="ge-harvest-art">'+plantSVG(9,report.strainId+'#'+report.phenoNum,'harvest-plant',{frost:3,dense:true,purple:report.rarity==='legendary',exceptional:report.rarity==='legendary'})+flowerSVG(report.strainId+'#'+report.phenoNum,'harvest-bud')+'</div>'+
+   '<div class="ge-badge '+tier[1]+'">'+icon('trophy','ge-ic-sm')+' '+tier[0]+'</div>'+
+   '<h3 class="ge-h2">'+esc(report.strainName)+' #'+report.phenoNum+(report.isClone?' '+icon('clone','ge-ic-sm'):'')+'</h3>'+
+   '<p>'+rarityBadge({rarity:report.rarity})+(report.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(report.legendaryTrait)+'</span>':'')+'</p>'+
    callout+
-   '<div class="report-overall"><span>OVERALL</span><b data-count="'+report.overall+'" data-dec="0">0</b></div>'+
-   '<div class="count-grid">'+
-   cnt('DRY YIELD',r.yieldScore,0)+cnt('QUALITY',r.quality,0)+cnt('POTENCY',r.potency,0)+
+   '<div class="ge-report-overall"><span class="ge-label">OVERALL</span><b class="ge-display ge-num" data-count="'+report.overall+'" data-dec="0">0</b></div>'+
+   '<div class="ge-tiles">'+
+   cnt('YIELD',r.yieldScore,0)+cnt('QUALITY',r.quality,0)+cnt('POTENCY',r.potency,0)+
    cnt('TERPENES',r.terpenes,0)+cnt('RESIN',r.resin,0)+cnt('BAG APPEAL',r.bagAppeal,0)+
    '</div>'+
-   '<div class="kv"><span>Actual yield</span><b>'+r.yieldOz+' oz</b></div>'+
-   (report.traits.length?'<div class="tags" style="justify-content:center">'+report.traits.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>':'')+
-   '<p class="muted">Lineage: '+esc(report.lineage)+'</p>'+
-   '<div class="btn-row"><button class="btn btn-small btn-gold" id="pr-keep">'+icon('crown-gold','b-ico')+' KEEP</button>'+
-   '<button class="btn btn-small" id="pr-arch">'+icon('preserve','b-ico')+' ARCHIVE</button></div>'+
-   '<button class="btn btn-small btn-danger" id="pr-disc">DISCARD</button></div>';
+   '<div class="ge-datarow"><span>Actual yield</span><b class="ge-num">'+r.yieldOz+' oz</b></div>'+
+   (report.traits.length?'<div class="ge-tags">'+report.traits.map(t=>'<span class="ge-pill ge-pill-neutral">'+esc(t)+'</span>').join('')+'</div>':'')+
+   '<p class="ge-caption ge-muted">Lineage: '+esc(report.lineage)+'</p>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="pr-keep">'+icon('crown-gold','ge-ic-md')+'KEEP</button>'+
+   '<button class="ge-btn ge-btn-ghost" id="pr-arch">'+icon('preserve','ge-ic-md')+'ARCHIVE</button>'+
+   '<button class="ge-btn ge-btn-danger" id="pr-disc">'+icon('x','ge-ic-md')+'DISCARD</button></div></div>';
   const m=modal(html);
   /* animated count-ups */
   m.querySelectorAll('[data-count]').forEach(el=>{
@@ -1905,12 +2005,14 @@ function phenoReportModal(report){
   m.querySelector('#pr-arch').onclick=()=>{ closeModal(m); archivePheno(report); };
   m.querySelector('#pr-disc').onclick=()=>{ closeModal(m); toast('Phenotype discarded.'); save(); };
 }
+
 function archivePheno(report){
   S.phenoArchive.unshift({strainName:report.strainName,phenoNum:report.phenoNum,rarity:report.rarity,
     overall:report.overall,day:S.day,traits:report.traits.slice(0,6)});
   if(S.phenoArchive.length>200) S.phenoArchive.length=200;
-  save(); toast('📦 Phenotype archived.');
+  save(); toast(icon('box','ge-ic-md')+' Phenotype archived.');
 }
+
 
 /* ---------------- Random events ---------------- */
 function rollEvents(){
@@ -1938,28 +2040,28 @@ function evModal(p,title,text,choices){
 }
 function miteEvent(p){ const st=getStrain(p.strainId);
   return evModal(p,'🕷️ Spider Mites!','Spider mites on your '+st.name+'.',
-   [['Buy predatory mites ($40)',()=>{ if(S.cash>=40){S.cash-=40; toast('🐞 Mites deployed. Problem solved.');} else {p.health-=10; toast('❌ Could not afford it!');} }],
-    ['Neem oil spray ($15, +stress)',()=>{ if(S.cash>=15){S.cash-=15; p.stress=clamp(p.stress+8,0,100); p.problems=p.problems.filter(x=>x!=='Spider mites'); toast('🌿 Sprayed.');} else {p.health-=10; toast('❌ Could not afford it!');} }],
+   [['Buy predatory mites ($40)',()=>{ if(S.cash>=40){S.cash-=40; toast('🐞 Mites deployed. Problem solved.');} else {p.health-=10; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
+    ['Neem oil spray ($15, +stress)',()=>{ if(S.cash>=15){S.cash-=15; p.stress=clamp(p.stress+8,0,100); p.problems=p.problems.filter(x=>x!=='Spider mites'); toast('🌿 Sprayed.');} else {p.health-=10; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
     ['Ignore it',()=>{ p.health=clamp(p.health-16,0,100); p.problems.push('Spider mites'); toast('🕷️ Mites spread! Health -16.'); }]]);
 }
 function gnatEvent(p){ const st=getStrain(p.strainId);
   return evModal(p,'🦟 Fungus Gnats','Fungus gnats buzzing around your '+st.name+'.',
    [['Let soil dry out (water -15)',()=>{ p.water=clamp(p.water-15,0,100); p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast('🏜️ Soil dried. Gnats gone.'); }],
-    ['Sticky traps ($10)',()=>{ if(S.cash>=10){S.cash-=10; p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast('🪤 Traps set.');} else {p.health-=8; toast('❌ Could not afford it!');} }],
+    ['Sticky traps ($10)',()=>{ if(S.cash>=10){S.cash-=10; p.problems=p.problems.filter(x=>x!=='Fungus gnats'); toast('🪤 Traps set.');} else {p.health-=8; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
     ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Fungus gnats'); toast('🦟 Larvae munch roots! Health -10.'); }]]);
 }
 function mildewEvent(p){ const st=getStrain(p.strainId);
   return evModal(p,'🤍 Powdery Mildew','White powder on leaves of '+st.name+'. Lower humidity!',
-   [['Defoliate (+stress)',()=>{ p.stress=clamp(p.stress+10,0,100); p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast('✂️ Infected leaves removed.'); }],
-    ['Fungicide ($25)',()=>{ if(S.cash>=25){S.cash-=25; p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast('🧴 Treated.');} else {p.health-=12; toast('❌ Could not afford it!');} }],
+   [['Defoliate (+stress)',()=>{ p.stress=clamp(p.stress+10,0,100); p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast(icon('train','ge-ic-md')+' Infected leaves removed.'); }],
+    ['Fungicide ($25)',()=>{ if(S.cash>=25){S.cash-=25; p.problems=p.problems.filter(x=>x!=='Powdery mildew'); toast('🧴 Treated.');} else {p.health-=12; toast(icon('x','ge-ic-md')+' Could not afford it!');} }],
     ['Ignore it',()=>{ p.health=clamp(p.health-14,0,100); p.problems.push('Powdery mildew'); toast('🤍 Mildew spreads! Health -14.'); }]]);
 }
 function defEvent(p,kind){ const st=getStrain(p.strainId);
   if(kind==='deficiency') return evModal(p,'🥀 Nutrient Deficiency','Your '+st.name+' is hungry — leaves yellowing.',
-   [['Feed now',()=>{ p.nutrition=clamp(p.nutrition+30,0,100); toast('🧪 Fed. Crisis averted.'); }],
-    ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Deficiency'); toast('🥀 Health -10.'); }]]);
+   [['Feed now',()=>{ p.nutrition=clamp(p.nutrition+30,0,100); toast(icon('flask','ge-ic-md')+' Fed. Crisis averted.'); }],
+    ['Ignore it',()=>{ p.health=clamp(p.health-10,0,100); p.problems.push('Deficiency'); toast(icon('warn','ge-ic-md')+' Health -10.'); }]]);
   return evModal(p,'🔥 Nutrient Burn','Leaf tips burning on '+st.name+' — too much feed!',
-   [['Flush with water',()=>{ p.nutrition=clamp(p.nutrition-35,0,100); p.water=clamp(p.water+20,0,100); toast('💧 Flushed.'); }],
+   [['Flush with water',()=>{ p.nutrition=clamp(p.nutrition-35,0,100); p.water=clamp(p.water+20,0,100); toast(icon('water','ge-ic-md')+' Flushed.'); }],
     ['Ignore it',()=>{ p.health=clamp(p.health-12,0,100); p.problems.push('Nutrient burn'); toast('🔥 Health -12.'); }]]);
 }
 function stressEvent(p,kind){ const st=getStrain(p.strainId);
@@ -1975,8 +2077,8 @@ function goodEvent(p,kind){ const st=getStrain(p.strainId);
 }
 function mutationEvent(p){ const st=getStrain(p.strainId);
   return evModal(p,'🧬 Mutation!','A rare mutation on '+st.name+'.',
-   [['Stabilize it (+vigor, +resin)',()=>{ p.growthBoost+=1; p.resinBoost=(p.resinBoost||0)+8; addP0('genetics',2); toast('🧬 Mutation stabilized!'); }],
-    ['Cull the branch',()=>{ p.health=clamp(p.health-5,0,100); toast('✂️ Culled.'); }]]);
+   [['Stabilize it (+vigor, +resin)',()=>{ p.growthBoost+=1; p.resinBoost=(p.resinBoost||0)+8; addP0('genetics',2); toast(icon('dna','ge-ic-md')+' Mutation stabilized!'); }],
+    ['Cull the branch',()=>{ p.health=clamp(p.health-5,0,100); toast(icon('train','ge-ic-md')+' Culled.'); }]]);
 }
 function hermEvent(p){ const st=getStrain(p.strainId);
   return evModal(p,'⚠️ Herm Warning','Bananas spotted on '+st.name+' — it may pollinate the room!',
@@ -1985,8 +2087,8 @@ function hermEvent(p){ const st=getStrain(p.strainId);
 }
 function equipFailEvent(){
   return evModal(null,'🔧 Equipment Failure','Your HVAC sputters — environment control degraded for 2 days!',
-   [['Repair ($75)',()=>{ if(S.cash>=75){S.cash-=75; toast('🔧 Repaired.');} else { S.envPenalty=2; toast('❌ Running degraded 2 days!'); } }],
-    ['Run degraded',()=>{ S.envPenalty=2; toast('⚠️ Environment -15 score for 2 days.'); }]]);
+   [['Repair ($75)',()=>{ if(S.cash>=75){S.cash-=75; toast(icon('equipment','ge-ic-md')+' Repaired.');} else { S.envPenalty=2; toast(icon('x','ge-ic-md')+' Running degraded 2 days!'); } }],
+    ['Run degraded',()=>{ S.envPenalty=2; toast(icon('warn','ge-ic-md')+' Environment -15 score for 2 days.'); }]]);
 }
 function showEventQueue(queue){
   if(!queue.length){ return; }
@@ -2050,7 +2152,7 @@ function advanceDay(){
     if(p.health<=0){ p.dead=true; }
   });
   const dead=S.plants.filter(p=>p.dead);
-  if(dead.length){ toast('💀 '+dead.length+' plant(s) died!'); }
+  if(dead.length){ toast(icon('warn','ge-ic-md')+' '+dead.length+' plant(s) died!'); }
   S.plants=S.plants.filter(p=>!p.dead);
   // crew wages
   let wages=0; Object.keys(S.crew).forEach(k=>{ if(S.crew[k]) wages+=CREW_DEFS.find(c=>c.id===k).wage; });
@@ -2058,7 +2160,7 @@ function advanceDay(){
     if(S.cash>=wages){ S.cash-=wages; }
     else{
       const hired=Object.keys(S.crew).filter(k=>S.crew[k]).sort((a,b)=>CREW_DEFS.find(c=>c.id===b).wage-CREW_DEFS.find(c=>c.id===a).wage);
-      while(hired.length&&S.cash<wages){ const f=hired.shift(); S.crew[f]=false; wages-=CREW_DEFS.find(c=>c.id===f).wage; toast('💸 '+CREW_DEFS.find(c=>c.id===f).name+' quit — could not pay wages!'); }
+      while(hired.length&&S.cash<wages){ const f=hired.shift(); S.crew[f]=false; wages-=CREW_DEFS.find(c=>c.id===f).wage; toast(icon('cash','ge-ic-md')+' '+CREW_DEFS.find(c=>c.id===f).name+' quit \u2014 could not pay wages!'); }
       S.cash=Math.max(0,S.cash-wages);
     }
   }
@@ -2079,70 +2181,77 @@ function advanceDay(){
   setTimeout(()=>{ try{ if(typeof WX_showPendingEvent==='function') WX_showPendingEvent(); }catch(e){} },1800);
 }
 
+
 /* ---------------- PLAY: Grow Room ---------------- */
 /* ---------------- PLAY: Grow Room (interactive) ---------------- */
 function envSlider(key,label,val,min,max,unit){
-  return '<div class="env-ctl"><div class="kv"><span>'+label+'</span><span class="env-val">'+val+unit+'</span></div>'+
-   '<input type="range" min="'+min+'" max="'+max+'" value="'+val+'" data-env="'+key+'" data-unit="'+unit+'"></div>';
+  return '<div class="env-ctl ge-env-ctl"><div class="ge-datarow"><span>'+label+'</span><b class="env-val ge-num">'+val+unit+'</b></div>'+
+   '<input type="range" min="'+min+'" max="'+max+'" value="'+val+'" data-env="'+key+'" data-unit="'+unit+'" aria-label="'+label+'"></div>';
 }
+
 function growPlantHtml(p){
-  const R=sRng('gpos|'+p.id);
-  const jx=((R()-0.5)*12).toFixed(1), jy=((R()-0.5)*8).toFixed(1);
-  const st=getStrain(p.strainId), s=stageOf(p);
-  const bad=p.health<40||p.water<18||p.nutrition<15||p.nutrition>92;
-  const dot=p.health>=70?'good':p.health>=40?'warn':'bad';
-  return '<div class="gplant'+(bad?' prob':'')+'" data-pid="'+p.id+'" style="--jx:'+jx+'px;--jy:'+jy+'px" role="button" tabindex="0" aria-label="'+esc(phenoName(p))+'">'+
-   '<div class="gp-art">'+plantIcon(p)+'</div>'+
-   '<div class="gp-meta"><span class="gp-dot '+dot+'"></span><span class="gp-day">D'+Math.floor(p.day)+'</span>'+
-   (s>=5?'<span class="gp-ready">READY</span>':'')+
-   (bad?'<span class="gp-warn">'+icon('warn','ic')+'</span>':'')+'</div>'+
-   '<div class="gp-name">'+esc((st?st.name.split(' ')[0]:'??')+' #'+(p.pheno&&p.pheno.num?p.pheno.num:''))+'</div></div>';
+  const st=getStrain(p.strainId), vs=visStageOf(p), s=stageOf(p);
+  const tone=GR_condTone(p);
+  const probs=(p.problems||[]).slice(-2);
+  const wTone=p.water<18||p.water>92?'bad':p.water<35?'warn':'ok';
+  const nTone=p.nutrition<15||p.nutrition>92?'bad':p.nutrition<30?'warn':'ok';
+  return '<div class="ge-card ge-plant-card ge-card-tap'+(tone==='bad'?' ge-card-hot':'')+'" data-pid="'+p.id+'" role="button" tabindex="0" aria-label="'+esc(phenoName(p)).replace('\U0001F9EC',' (clone)')+'">'+
+   '<div class="ge-plant-art">'+plantIcon(p)+'<span class="ge-slot-ring">'+GR_ring(p.health,tone)+'</span></div>'+
+   '<div class="ge-plant-meta">'+
+    '<div class="ge-plant-name ge-truncate">'+GR_plantName(p)+'</div>'+
+    '<div class="ge-plant-sub"><span class="ge-pill '+(s>=5?'ge-pill-optimal':tone==='ok'?'ge-pill-neutral':tone==='warn'?'ge-pill-watch':'ge-pill-critical')+'">'+VIS_STAGES[vs]+'</span>'+
+    '<span class="ge-muted ge-num ge-caption">D'+Math.floor(p.day)+' / ~'+st.ft+'d</span></div>'+
+    GR_bar('HEALTH',p.health,tone)+
+    GR_bar('WATER',p.water,wTone)+
+    GR_bar('NUTRITION',p.nutrition,nTone)+
+    (probs.length?'<div class="ge-issue-row">'+probs.map(pr=>'<span class="ge-pill ge-pill-warning">'+icon('warn','ge-ic-sm')+' '+esc(pr)+'</span>').join('')+'</div>':'')+
+   '</div></div>';
 }
+
 RENDER.grow=function(){
   const r=$('grow-root'), ev=envEval(), slots=FACILITIES[S.facility].slots, tier=facTierIdx();
-  const evCls=v=>v>=80?'good':v>=55?'warn':'bad';
-  const iss=ev.issues.join(' | ');
+  const iss=ev.issues.map(i=>i.text).join(' | ');
   const tele=[
-    {i:'light',l:'LIGHT',v:S.env.light+'%',bad:/Light/.test(iss)},
-    {i:'temp',l:'TEMP',v:S.env.temp+'\u00B0F',bad:/cold|hot/.test(iss)},
-    {i:'humid',l:'RH',v:S.env.humidity+'%',bad:/Humidity/.test(iss)},
-    {i:'co2',l:'CO2',v:S.env.co2,bad:/CO2/.test(iss)}
+    {i:'light',l:'LIGHT',v:S.env.light+'%',sub:'target 70\u2013100%',bad:/Light/.test(iss)},
+    {i:'temp',l:'TEMP',v:S.env.temp+'\u00B0F',sub:'target 70\u201382\u00B0F',bad:/cold|hot/i.test(iss)},
+    {i:'humid',l:'RH',v:S.env.humidity+'%',sub:'target 40\u201360%',bad:/Humidity/.test(iss)},
+    {i:'co2',l:'CO2',v:S.env.co2,sub:'target 800\u20131500',bad:/CO2/.test(iss)}
   ];
   let html=screenHead('grow','GROW ROOM')+
-   '<div class="tent fac-banner">'+facilitySceneSVG(tier)+
-   '<div class="kv"><span>'+icon('grow','kv-ico')+' '+esc(FAC_TIERS[tier].name)+'</span><b>'+S.plants.length+'/'+slots+' slots</b></div></div>'+
-   '<div class="tele-grid">'+tele.map(t=>'<div class="tele-cell"><span class="tele-label">'+icon(t.i,'ic')+' '+t.l+'</span><span class="tele-val '+(t.bad?'warn':'good')+'">'+t.v+'</span></div>').join('')+'</div>'+
-   '<div class="kv"><span>'+icon('leaf','kv-ico')+' ENV SCORE</span><b class="tele-val '+evCls(ev.score)+'">'+ev.score+'</b></div>'+
-   (typeof TY_envPanel==='function'?TY_envPanel():'')+
-   (ev.issues.length?'<p class="prob">'+ev.issues.map(esc).join(' \u2022 ')+'</p>':'<p class="muted">'+icon('check','kv-ico')+' Environment dialed in.</p>');
+   '<div class="ge-card ge-card-hot ge-facility">'+
+    GR_facilityScene(tier)+
+    '<div class="ge-facility-meta">'+
+     '<span class="ge-label">'+icon('grow','ge-ic-md')+' '+esc(FAC_TIERS[tier].name)+'</span>'+
+     '<span class="ge-facility-slots ge-num ge-muted">'+S.plants.length+'/'+slots+' SLOTS</span>'+
+     '<span class="ge-facility-env">'+GR_ring(ev.score,ev.score>=80?'ok':ev.score>=55?'warn':'bad')+'<span class="ge-label ge-muted">ENV</span></span>'+
+    '</div></div>'+
+   '<div class="ge-tiles ge-tiles-4">'+tele.map(t=>GR_tile(t.i,t.l,t.v,t.sub,t.bad?'ge-red':'ge-green')).join('')+'</div>'+
+   (ev.issues.length?'<div class="ge-issue-row">'+ev.issues.map(GR_issuePill).join('')+'</div>'
+     :'<p class="ge-caption ge-green">'+icon('check','ge-ic-md')+' Environment dialed in.</p>')+
+   (typeof TY_envPanel==='function'?TY_envPanel():'');
   if(S.day<=7&&!S.tips.mentorDone){
     const tip=MENTOR_TIPS[Math.min(S.day-1,MENTOR_TIPS.length-1)];
-    html+='<div class="mentor-tip">'+npcPortrait('vic','npc-sm')+
+    html+='<div class="ge-card ge-mentor">'+npcPortrait('vic','npc-sm')+
      '<div class="npc-text"><b>Vic Malone</b><span class="npc-role">CULTIVATION MENTOR</span><p>&ldquo;'+esc(tip)+'&rdquo;</p>'+
-     '<button class="btn btn-small" id="mentor-ok">GOT IT</button></div></div>';
+     '<button class="ge-btn ge-btn-sm" id="mentor-ok">GOT IT</button></div></div>';
   }
-  html+='<div class="growfloor" id="growfloor">';
+  html+='<div class="ge-section-title">'+icon('grows','ge-ic-md')+'CULTIVATION FLOOR<span class="ge-spread ge-muted ge-num">'+S.plants.length+'/'+slots+'</span></div>';
+  html+='<div class="ge-growfloor" id="growfloor">';
   S.plants.forEach(p=>{ html+=growPlantHtml(p); });
   const empt=Math.min(6,slots-S.plants.length);
-  for(let i=0;i<empt;i++) html+='<div class="gplant empty" data-empty="1" role="button" tabindex="0"><span class="gp-plus">'+icon('plus','ic')+'</span><span class="gp-name">PLANT</span></div>';
+  for(let i=0;i<empt;i++) html+='<div class="ge-empty-slot" data-empty="1" role="button" tabindex="0" aria-label="Plant a seed">'+GR_emptyPlanter()+'<span class="ge-label">PLANT</span></div>';
   html+='</div>';
-  if(slots-S.plants.length>6) html+='<p class="muted" style="text-align:center">+'+(slots-S.plants.length-6)+' more open slots</p>';
-  html+='<div class="card"><h3>'+icon('settings','ic')+' ENVIRONMENT CONTROLS</h3>'+
-   envSlider('light','Light Intensity',S.env.light,40,100,'%')+
-   envSlider('temp','Temperature',S.env.temp,60,95,'\u00B0F')+
-   envSlider('humidity','Humidity',S.env.humidity,20,90,'%')+
-   envSlider('co2','CO2',S.env.co2,400,1600,' PPM')+'</div>';
-  html+='<button class="btn btn-primary btn-big" id="btn-day">'+icon('day','ic')+' ADVANCE DAY ('+S.day+' \u2192 '+(S.day+1)+')</button>';
+  if(slots-S.plants.length>6) html+='<p class="ge-caption ge-muted" style="text-align:center">+'+(slots-S.plants.length-6)+' more open slots</p>';
+  try{ html+=(typeof WX_envControlHTML==='function'?WX_envControlHTML():''); }catch(e){}
+  html+='<button class="ge-btn ge-btn-primary ge-btn-block ge-daybtn" id="btn-day">'+icon('day','ge-ic-md')+' ADVANCE DAY <span class="ge-num">'+S.day+' \u2192 '+(S.day+1)+'</span></button>';
   r.innerHTML=html;
-  r.querySelectorAll('input[type=range][data-env]').forEach(s=>{
-    s.oninput=e=>{ S.env[e.target.dataset.env]=+e.target.value; e.target.closest('.env-ctl').querySelector('.env-val').textContent=e.target.value+e.target.dataset.unit; };
-    s.onchange=()=>{ save(); RENDER.grow(); };
-  });
+  try{ if(typeof WX_wireEnvControls==='function') WX_wireEnvControls(r); }catch(e){}
   $('btn-day').onclick=advanceDay;
   const mo=$('mentor-ok'); if(mo) mo.onclick=()=>{ S.tips.mentorDone=1; save(); RENDER.grow(); };
   r.querySelectorAll('[data-empty]').forEach(s=>s.onclick=()=>plantSeedModal());
   r.querySelectorAll('[data-pid]').forEach(s=>s.onclick=()=>plantFocus(+s.dataset.pid));
 };
+
 /* ---- plant focus view: tap a plant, sheet slides in ---- */
 let focusPid=null;
 function closeFocus(){
@@ -2155,33 +2264,60 @@ function plantFocus(pid){
   closeFocus(); focusPid=pid;
   const st=getStrain(p.strainId), s=stageOf(p), vs=visStageOf(p);
   const ready=s>=5;
-  const qp=Math.round(clamp(st.pot*0.5+p.health*0.3+envEval().score*0.2-p.stress*0.15,5,100));
+  const evS=envEval().score;
+  const qp=Math.round(clamp(st.pot*0.5+p.health*0.3+evS*0.2-p.stress*0.15,5,100));
+  const tone=GR_condTone(p);
+  const ph=p.pheno||{}, known=(ph.known||{});
+  const canClone=!!(ph.isClone&&ph.motherId&&(S.mothers||[]).some(m=>m.id===ph.motherId));
+  const starRows=[
+    ['VIGOR',ph.vigor,known.vigor],['STRUCTURE',ph.structure,known.structure],
+    ['YIELD',ph.yieldPot,known.yieldPot],['POTENCY',ph.potencyPot,known.potencyPot],
+    ['RESIN',ph.resinPot,known.resinPot],['TERPENES',ph.terpenePot,known.terpenePot]
+  ];
+  const tTone=v=>v>=70?'ge-green':v>=45?'ge-amber':'ge-red';
   const bd=document.createElement('div'); bd.id='focus-back'; bd.className='focus-back';
   bd.onclick=closeFocus;
-  const sh=document.createElement('div'); sh.id='plant-focus'; sh.className='focus-sheet';
+  const sh=document.createElement('div'); sh.id='plant-focus'; sh.className='focus-sheet ge-focus';
   sh.innerHTML='<div class="focus-handle"></div>'+
-   '<div class="focus-stage"><div class="focus-plant" id="focus-plant">'+plantIcon(p)+'</div><div class="focus-fx" id="focus-fx"></div></div>'+
-   '<h3>'+esc(phenoName(p))+'</h3>'+
-   '<p><span class="badge">'+STAGES[s]+'</span> <span class="muted">'+VIS_STAGES[vs]+' \u2022 Day '+Math.floor(p.day)+'/~'+st.ft+'</span></p>'+
-   (p.pheno?'<p>'+rarityBadge(p.pheno)+(p.pheno.isClone?' <span class="badge green">'+icon('clone','b-ico')+' CLONE</span>':'')+'</p>':'')+
-   statBar('Health',p.health,100,'green')+statBar('Water',p.water)+statBar('Nutrition',p.nutrition)+
-   statBar('Stress',p.stress)+'<div class="statrow"><span class="slabel">Quality pot.</span><span class="sval" style="width:auto">'+qp+'</span></div>'+
-   (p.problems.length?'<p class="prob">'+icon('warn','kv-ico')+' '+p.problems.map(esc).join(', ')+'</p>':'')+
-   '<div class="p-actions">'+
-   '<button class="btn btn-small" data-fa="water">'+icon('water','ic')+' WATER</button>'+
-   '<button class="btn btn-small" data-fa="feed">'+icon('feed','ic')+' FEED</button>'+
-   '<button class="btn btn-small" data-fa="train">'+icon('train','ic')+' TRAIN</button>'+
-   '<button class="btn btn-small" data-fa="inspect">'+icon('inspect','ic')+' INSPECT</button>'+
-   '<button class="btn btn-small btn-green" data-fa="harvest" '+(ready?'':'disabled')+'>'+icon('harvest','ic')+' HARVEST</button>'+
-   '<button class="btn btn-small" data-fa="close">'+icon('x','ic')+' CLOSE</button></div>';
+   '<div class="ge-focus-grid">'+
+   '<div class="ge-focus-art"><div class="focus-stage"><div class="focus-plant" id="focus-plant">'+plantIcon(p)+'</div><div class="focus-fx" id="focus-fx"></div></div>'+
+    '<div class="ge-focus-title ge-truncate">'+GR_plantName(p)+'</div>'+
+    '<div class="ge-plant-sub"><span class="ge-pill '+(ready?'ge-pill-optimal':'ge-pill-neutral')+'">'+STAGES[s]+'</span>'+
+    (p.pheno?rarityBadge(p.pheno):'')+
+    (ph.isClone?'<span class="ge-badge ge-badge-mother">'+icon('clone','ge-ic-sm')+'CLONE</span>':'')+'</div>'+
+    '<div class="ge-caption ge-muted ge-num">'+VIS_STAGES[vs]+' \u2022 DAY '+Math.floor(p.day)+' / ~'+st.ft+'</div></div>'+
+   '<div class="ge-focus-data">'+
+    '<div class="ge-tiles">'+
+     GR_tile('leaf','HEALTH',Math.round(p.health)+'%',null,tTone(p.health))+
+     GR_tile('xp','VIGOR',qp+'%',null,tTone(qp))+
+     GR_tile('water','WATER',Math.round(p.water)+'%',null,p.water<18||p.water>92?'ge-red':p.water<35?'ge-amber':'ge-green')+
+     GR_tile('feed','NUTRITION',Math.round(p.nutrition)+'%',null,p.nutrition<15||p.nutrition>92?'ge-red':p.nutrition<30?'ge-amber':'ge-green')+
+     GR_tile('warn','STRESS',Math.round(p.stress)+'%',null,p.stress>=60?'ge-red':p.stress>=30?'ge-amber':'ge-green')+
+     GR_tile('temp','ENVIRONMENT',evS,null,tTone(evS))+
+    '</div>'+
+    '<div class="ge-section-title">'+icon('dna','ge-ic-md')+'GENETIC POTENTIAL</div>'+
+    '<div class="ge-stars-list">'+starRows.map(r=>GR_starMeter(r[0],r[1],r[2])).join('')+'</div>'+
+    (p.problems.length?'<div class="ge-issue-row">'+p.problems.map(pr=>'<span class="ge-pill ge-pill-warning">'+icon('warn','ge-ic-sm')+' '+esc(pr)+'</span>').join('')+'</div>':'')+
+    '<div class="ge-section-title">'+icon('train','ge-ic-md')+'ACTIONS</div>'+
+    '<div class="ge-btn-grid">'+
+     '<button class="ge-btn ge-btn-ghost" data-fa="water">'+icon('water','ge-ic-md')+'WATER</button>'+
+     '<button class="ge-btn ge-btn-ghost" data-fa="feed">'+icon('feed','ge-ic-md')+'FEED</button>'+
+     '<button class="ge-btn ge-btn-ghost" data-fa="train">'+icon('train','ge-ic-md')+'TRAIN</button>'+
+     '<button class="ge-btn ge-btn-ghost" data-fa="inspect">'+icon('inspect','ge-ic-md')+'INSPECT</button>'+
+     (canClone?'<button class="ge-btn ge-btn-ghost" data-fa="clone">'+icon('clone','ge-ic-md')+'CLONE</button>':'')+
+     '<button class="ge-btn ge-btn-primary" data-fa="harvest" '+(ready?'':'disabled')+'>'+icon('harvest','ge-ic-md')+'HARVEST</button>'+
+     '<button class="ge-btn ge-btn-ghost" data-fa="close">'+icon('x','ge-ic-md')+'CLOSE</button>'+
+    '</div></div></div>';
   document.body.appendChild(bd); document.body.appendChild(sh);
   try{ requestAnimationFrame(()=>{ sh.classList.add('open'); }); }catch(e){ sh.classList.add('open'); }
   sh.querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>focusAction(pid,b.dataset.fa));
 }
+
 function focusAction(pid,a){
   if(a==='close'){ closeFocus(); return; }
   if(a==='inspect'){ closeFocus(); inspectPheno(pid); return; }
   if(a==='harvest'){ closeFocus(); doAction(pid,'harvest'); return; }
+  if(a==='clone'){ const pl=S.plants.find(x=>x.id===pid); closeFocus(); if(pl&&pl.pheno&&pl.pheno.motherId) takeClone(pl.pheno.motherId); return; }
   const fx=$('focus-fx'), pl=$('focus-plant');
   if(fx){
     if(a==='water') fx.innerHTML='<div class="fx-drops"><i></i><i></i><i></i><i></i><i></i><i></i></div>';
@@ -2194,43 +2330,53 @@ function focusAction(pid,a){
     if(p&&current==='grow') plantFocus(pid); else closeFocus();
   }, a==='train'?700:650);
 }
+
 /* ---------------- MY GROWS ---------------- */
 RENDER.grows=function(){
   const r=$('grows-root');
   let html=screenHead('grows','MY GROWS')+
-   '<div class="btn-row"><button class="btn btn-gold" id="btn-vault">'+icon('keepers','ic')+' KEEPER VAULT ('+S.keepers.length+'/'+S.keeperCapacity+')</button>'+
-   '<button class="btn btn-primary" id="btn-plant">'+icon('plus','ic')+' PLANT NEW SEED</button></div>';
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="btn-vault">'+icon('keepers','ge-ic-md')+' KEEPER VAULT <span class="ge-num">'+S.keepers.length+'/'+S.keeperCapacity+'</span></button>'+
+   '<button class="ge-btn ge-btn-primary" id="btn-plant">'+icon('plus','ge-ic-md')+' PLANT NEW SEED</button></div>';
   S.phenoHunts.filter(h=>h.active).forEach(h=>{
-    html+='<div class="card hunt-card"><h3>'+icon('hunt','ic')+' PHENO HUNT: '+esc(h.strainName)+'</h3>'+
-     '<div class="kv"><span>Planted</span><b>'+h.planted+' / '+h.total+'</b></div>'+
-     '<div class="kv"><span>Harvested</span><b>'+h.harvested+'</b></div>'+
-     '<div class="kv"><span>Keepers found</span><b>'+h.keepersFound+'</b></div>'+
-     '<div class="kv"><span>Best score</span><b>'+(h.bestScore>0?h.bestScore+' (#'+h.bestPheno+')':'\u2014')+'</b></div>'+
-     '<div class="progress"><i style="width:'+clamp(h.harvested/Math.max(1,h.total)*100,0,100)+'%"></i></div></div>';
+    html+='<div class="ge-card ge-card-compact"><div class="ge-card-head"><h3>'+icon('hunt','ge-ic-md')+'PHENO HUNT: '+esc(h.strainName)+'</h3></div>'+
+     '<div class="ge-datarow"><span>Planted</span><b class="ge-num">'+h.planted+' / '+h.total+'</b></div>'+
+     '<div class="ge-datarow"><span>Harvested</span><b class="ge-num">'+h.harvested+'</b></div>'+
+     '<div class="ge-datarow"><span>Keepers found</span><b class="ge-num">'+h.keepersFound+'</b></div>'+
+     '<div class="ge-datarow"><span>Best score</span><b class="ge-num">'+(h.bestScore>0?h.bestScore+' (#'+h.bestPheno+')':'\u2014')+'</b></div>'+
+     '<div class="ge-progress"><i style="width:'+clamp(h.harvested/Math.max(1,h.total)*100,0,100)+'%"></i></div></div>';
   });
-  if(!S.plants.length) html+='<div class="card"><p class="muted">'+icon('grow','ic-lg')+'<br>No plants growing. Plant your first seed to start the empire.</p></div>';
+  if(!S.plants.length) html+='<div class="ge-empty">'+icon('grow','ge-ic-xl')+'<h3>NO PLANTS GROWING</h3><p class="ge-muted">Plant your first seed to start the empire.</p></div>';
   S.plants.forEach(p=>{
     const st=getStrain(p.strainId), s=stageOf(p);
     const phn=p.pheno&&p.pheno.num?p.pheno.num:'0';
-    html+='<div class="plant-card"><div class="p-head">'+flowerSVG(p.strainId+'#'+phn,'p-flower')+
-     '<span class="p-name">'+esc(phenoName(p))+'</span><span class="p-stage">'+STAGES[s]+'</span></div>'+
-     (p.pheno?'<p>'+rarityBadge(p.pheno)+(p.pheno.isClone?' <span class="badge green">'+icon('clone','b-ico')+' CLONE</span>':'')+'</p>':'')+
-     '<div class="kv"><span>'+icon('day','kv-ico')+' DAY</span><b>'+Math.floor(p.day)+' / ~'+st.ft+'</b></div>'+
-     statBar('Health',p.health,100,'green')+statBar('Water',p.water)+statBar('Nutrition',p.nutrition)+statBar('Stress',p.stress)+
-     (p.problems.length?'<p class="prob">'+icon('warn','kv-ico')+' '+p.problems.map(esc).join(', ')+'</p>':'')+
-     '<div class="p-actions">'+
-     '<button class="btn btn-small" data-p="'+p.id+'" data-a="water">'+icon('water','ic')+' WATER</button>'+
-     '<button class="btn btn-small" data-p="'+p.id+'" data-a="feed">'+icon('feed','ic')+' FEED</button>'+
-     '<button class="btn btn-small" data-p="'+p.id+'" data-a="train">'+icon('train','ic')+' TRAIN</button>'+
-     '<button class="btn btn-small" data-p="'+p.id+'" data-a="inspect">'+icon('inspect','ic')+' INSPECT</button>'+
-     '<button class="btn btn-small btn-green" data-p="'+p.id+'" data-a="harvest" '+(s>=5?'':'disabled')+'>'+icon('harvest','ic')+' HARVEST</button>'+
-     '</div></div>';
+    const tone=GR_condTone(p);
+    html+='<div class="ge-card ge-plant-card'+(tone==='bad'?' ge-card-hot':'')+'">'+
+     '<div class="ge-plant-art">'+flowerSVG(p.strainId+'#'+phn,'p-flower')+'<span class="ge-slot-ring">'+GR_ring(p.health,tone)+'</span></div>'+
+     '<div class="ge-plant-meta">'+
+      '<div class="ge-plant-name ge-truncate">'+GR_plantName(p)+'</div>'+
+      '<div class="ge-plant-sub"><span class="ge-pill '+(s>=5?'ge-pill-optimal':'ge-pill-neutral')+'">'+STAGES[s]+'</span>'+
+      (p.pheno?rarityBadge(p.pheno):'')+
+      (p.pheno&&p.pheno.isClone?'<span class="ge-badge ge-badge-mother">'+icon('clone','ge-ic-sm')+'CLONE</span>':'')+'</div>'+
+      '<div class="ge-datarow"><span>'+icon('day','ge-ic-sm')+' DAY</span><b class="ge-num">'+Math.floor(p.day)+' / ~'+st.ft+'</b></div>'+
+      GR_bar('HEALTH',p.health,tone)+
+      GR_bar('WATER',p.water,p.water<18||p.water>92?'bad':p.water<35?'warn':'ok')+
+      GR_bar('NUTRITION',p.nutrition,p.nutrition<15||p.nutrition>92?'bad':p.nutrition<30?'warn':'ok')+
+      GR_bar('STRESS',p.stress,p.stress>=60?'bad':p.stress>=30?'warn':'ok')+
+      (p.problems.length?'<div class="ge-issue-row"><span class="ge-pill ge-pill-warning">'+icon('warn','ge-ic-sm')+' '+p.problems.map(esc).join(', ')+'</span></div>':'')+
+      '<div class="ge-btn-grid">'+
+       '<button class="ge-btn ge-btn-ghost" data-p="'+p.id+'" data-a="water">'+icon('water','ge-ic-md')+'WATER</button>'+
+       '<button class="ge-btn ge-btn-ghost" data-p="'+p.id+'" data-a="feed">'+icon('feed','ge-ic-md')+'FEED</button>'+
+       '<button class="ge-btn ge-btn-ghost" data-p="'+p.id+'" data-a="train">'+icon('train','ge-ic-md')+'TRAIN</button>'+
+       '<button class="ge-btn ge-btn-ghost" data-p="'+p.id+'" data-a="inspect">'+icon('inspect','ge-ic-md')+'INSPECT</button>'+
+       '<button class="ge-btn ge-btn-primary" data-p="'+p.id+'" data-a="harvest" '+(s>=5?'':'disabled')+'>'+icon('harvest','ge-ic-md')+'HARVEST</button>'+
+      '</div></div></div>';
   });
   r.innerHTML=html;
   $('btn-vault').onclick=()=>show('keepers');
   $('btn-plant').onclick=plantSeedModal;
   r.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>doAction(+b.dataset.p,b.dataset.a));
 };
+
 
 /* ---------------- Dispensary ---------------- */
 let dispTab='flower';
@@ -2243,30 +2389,50 @@ function pricePerOz(it){
 }
 RENDER.dispensary=function(){
   const r=$('dispensary-root');
+  try{ if(typeof CT_migrate==='function') CT_migrate(); }catch(e){}
   const tabIco={flower:'leaf',concentrate:'drop',edible:'jar'};
-  let html=screenHead('dispensary','DISPENSARY')+
-   '<div class="tabs">'+
-   ['flower','concentrate','edible'].map(t=>'<button class="tab'+(dispTab===t?' active':'')+'" data-tab="'+t+'">'+icon(tabIco[t],'b-ico')+t.toUpperCase()+'S</button>').join('')+'</div>';
+  const cst=(S.ct&&S.ct.stats)||{completed:0,abandoned:0,revenue:0,transactions:0,lostSales:0,itemsSold:0};
+  const avg=cst.completed?Math.round(cst.revenue/cst.completed):0;
+  const sat=DP_avgSat();
+  let html=screenHead('storefront','DISPENSARY');
+  /* retail command dashboard */
+  html+='<div class="ge-dp-metrics">'+
+   DP_metricTile('cash',fmt$(DP_todaySales()),"TODAY'S SALES",'all registers')+
+   DP_metricTile('customers',int(S.ct?S.ct.servedToday:0,0),'CUSTOMERS','served at counter')+
+   DP_metricTile('cart',fmt$(avg),'AVERAGE ORDER',cst.completed+' completed carts')+
+   DP_metricTile('star',sat+'%','RATING','customer satisfaction')+
+   DP_metricTile('box',fmt$(DP_invValue()),'INVENTORY VALUE','shelf stock')+
+  '</div>';
+  html+='<div class="ge-tabs" role="tablist">'+
+   ['flower','concentrate','edible'].map(t=>'<button class="ge-tab'+(dispTab===t?' is-active':'')+'" data-tab="'+t+'">'+icon(tabIco[t],'ge-ic-md')+t.toUpperCase()+'S</button>').join('')+'</div>';
   try{ if(typeof WX_marketPanel==='function') html+=WX_marketPanel(); }catch(e){}
   try{ if(typeof WX_contractsHTML==='function') html+=WX_contractsHTML(); }catch(e){}
   try{ if(typeof TY_custPanel==='function') html+=TY_custPanel(); }catch(e){}
   try{ if(typeof TY_prodBanner==='function') html+=TY_prodBanner(); }catch(e){}
   try{ if(typeof CT_dispensaryHTML==='function') html+=CT_dispensaryHTML(); }catch(e){}
+  /* shelf stock — premium product cards */
   const items=S.inventory.filter(i=>i.type===(dispTab==='flower'?'flower':dispTab));
-  if(!items.length) html+='<div class="card"><p class="muted">Nothing here yet. '+(dispTab==='flower'?'Harvest some plants!':'Process flower in the FLOWER tab.')+'</p></div>';
+  html+=DP_sectionTitle(tabIco[dispTab],'SHELF STOCK','<span class="ge-num">'+items.length+'</span> ITEMS');
+  if(!items.length) html+='<div class="ge-empty">'+icon('box','ge-ic-xl')+'<h3>SHELVES EMPTY</h3><p>'+(dispTab==='flower'?'Harvest some plants!':'Process flower in the FLOWER tab.')+'</p></div>';
   items.forEach(it=>{
     const ppo=pricePerOz(it), total=ppo*it.amount;
-    html+='<div class="card product-card"><div class="product-thumb">'+flowerSVG(it.strainId+'#'+it.id,'product-flower')+'</div>'+
-     '<h3>'+esc(it.strainName)+' <span class="badge gold">Q'+it.quality+'</span></h3>'+
-     '<div class="kv"><span>'+icon('jar','kv-ico')+'Amount</span><b>'+it.amount+' '+(it.type==='edible'?'units':'oz')+'</b></div>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+'Potency</span><b>'+it.potency+'%</b></div>'+
-     '<div class="kv"><span>'+icon('cash','kv-ico')+'Price</span><b>'+fmt$(ppo)+' / '+(it.type==='edible'?'unit':'oz')+'</b></div>'+
-     '<div class="kv"><span>'+icon('sell','kv-ico')+'Total value</span><b>'+fmt$(total)+'</b></div>'+
-     '<div class="btn-row"><button class="btn btn-small btn-green" data-sell="'+it.id+'">'+icon('sell','b-ico')+'SELL ALL</button>'+
-     (dispTab==='flower'?'<button class="btn btn-small" data-proc="'+it.id+'">'+icon('feed','b-ico')+'PROCESS</button>':'')+'</div></div>';
+    const unit=it.type==='edible'?'unit':'oz';
+    html+='<div class="ge-card ge-card-hot ge-dp-product">'+
+     '<div class="ge-plant-art">'+flowerSVG(it.strainId+'#'+it.id,'ge-dp-flower')+'</div>'+
+     '<div class="ge-plant-meta">'+
+      '<div class="ge-plant-name">'+esc(it.strainName)+' '+DP_gradeBadge(it.quality)+'</div>'+
+      '<div class="ge-dp-tags">'+DP_terpTags(it)+'</div>'+
+      '<div class="ge-dp-demrow">'+DP_demPill(TY_ptypeOf(it))+'<span class="ge-caption ge-muted">POTENCY '+Math.round(it.potency)+'%</span></div>'+
+      '<div class="ge-datarow"><span>'+icon('jar','ge-ic-sm')+' Stock</span><b class="ge-num">'+it.amount+' '+unit+'s</b></div>'+
+      '<div class="ge-datarow"><span>'+icon('cash','ge-ic-sm')+' Price</span><b class="ge-num">'+fmt$(ppo)+' / '+unit+'</b></div>'+
+      '<div class="ge-datarow"><span>'+icon('sell','ge-ic-sm')+' Total value</span><b class="ge-num ge-green">'+fmt$(total)+'</b></div>'+
+      '<div class="ge-btn-row"><button class="ge-btn ge-btn-primary" data-sell="'+it.id+'">'+icon('sell','ge-ic-md')+'SELL ALL</button>'+
+      (dispTab==='flower'?'<button class="ge-btn ge-btn-ghost" data-proc="'+it.id+'">'+icon('flask','ge-ic-md')+'PROCESS</button>':'')+'</div>'+
+     '</div></div>';
   });
   if(dispTab==='flower'&&items.length){
-    html+='<div class="card"><h3>'+icon('feed','ic-lg')+'PROCESSING</h3><p class="muted">Turn flower into concentrates (6x price, 18% yield, $30/oz) or edibles (2.5x price, 10 units/oz, $25/oz). Use PROCESS on an item above.</p></div>';
+    html+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('flask','ge-ic-md')+'PROCESSING</h3></div>'+
+     '<p class="ge-body ge-muted">Turn flower into concentrates (6x price, 18% yield, $30/oz) or edibles (2.5x price, 10 units/oz, $25/oz). Use PROCESS on an item above.</p></div>';
   }
   r.innerHTML=html;
   r.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{ dispTab=t.dataset.tab; RENDER.dispensary(); });
@@ -2274,16 +2440,17 @@ RENDER.dispensary=function(){
   try{ if(typeof CT_wireDispensary==='function') CT_wireDispensary(r); }catch(e){}
   r.querySelectorAll('[data-proc]').forEach(b=>b.onclick=()=>{
     const it=S.inventory.find(x=>x.id===+b.dataset.proc); if(!it) return;
-    const m=modal('<h3>'+icon('feed','ic-lg')+'PROCESS '+esc(it.strainName)+'</h3><p class="muted">'+it.amount+' oz available.</p>'+
-     '<label>Amount (oz)</label><input type="number" id="proc-amt" min="1" max="'+it.amount+'" value="1">'+
-     '<div class="btn-row"><button class="btn btn-small btn-gold" id="proc-conc">CONCENTRATE<br><span class="muted">→18%/oz $30</span></button>'+
-     '<button class="btn btn-small btn-gold" id="proc-ed">EDIBLES<br><span class="muted">→10u/oz $25</span></button></div>'+
-     '<button class="btn btn-small" id="proc-x">'+icon('x','b-ico')+'CANCEL</button>');
+    const m=modal('<h3 class="ge-h2">'+icon('flask','ge-ic-lg')+'PROCESS '+esc(it.strainName)+'</h3>'+
+     '<p class="ge-body ge-muted">'+it.amount+' oz available.</p>'+
+     '<label class="ge-label" for="proc-amt">Amount (oz)</label><input class="ge-dp-input" type="number" id="proc-amt" min="1" max="'+it.amount+'" value="1">'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-gold" id="proc-conc">CONCENTRATE<br><span class="ge-caption ge-muted">→18%/oz $30</span></button>'+
+     '<button class="ge-btn ge-btn-gold" id="proc-ed">EDIBLES<br><span class="ge-caption ge-muted">→10u/oz $25</span></button></div>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-block" id="proc-x">'+icon('x','ge-ic-md')+'CANCEL</button>');
     m.querySelector('#proc-x').onclick=()=>closeModal(m);
     const doProc=kind=>{
       const amt=clamp(+m.querySelector('#proc-amt').value||0,1,it.amount);
       const cost=kind==='concentrate'?30*amt:25*amt;
-      if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+      if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
       S.cash-=cost; it.amount=Math.round((it.amount-amt)*10)/10;
       const outAmt=kind==='concentrate'?Math.round(amt*0.18*10)/10:Math.round(amt*10);
       S.inventory.push({ id:S.nextInvId++, strainId:it.strainId, strainName:it.strainName, amount:outAmt,
@@ -2291,7 +2458,7 @@ RENDER.dispensary=function(){
         resin:it.resin, type:kind, custom:it.custom });
       if(it.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==it.id);
       S.stats.processedOz+=amt; gainXP(10);
-      closeModal(m); toast('⚗️ Processed '+amt+' oz → '+outAmt+' '+(kind==='concentrate'?'oz concentrate':'edible units'));
+      closeModal(m); toast(icon('flask','ge-ic-md')+' Processed '+amt+' oz → '+outAmt+' '+(kind==='concentrate'?'oz concentrate':'edible units'));
       save(); updateHUD(); checkMissions(); RENDER.dispensary();
     };
     m.querySelector('#proc-conc').onclick=()=>doProc('concentrate');
@@ -2299,27 +2466,30 @@ RENDER.dispensary=function(){
   });
 };
 
+
 /* ---------------- Market buyers: choose who buys your harvest ---------------- */
 function buyerModal(invId){
   const it=S.inventory.find(x=>x.id===invId); if(!it) return;
   const base=pricePerOz(it)*it.amount;
-  let html='<h3>'+icon('sell','ic-lg')+'CHOOSE YOUR BUYER</h3>'+
-   '<p class="muted">'+esc(it.strainName)+' \u2014 Q'+it.quality+' \u2022 '+it.amount+' '+(it.type==='edible'?'units':'oz')+' \u2022 base '+fmt$(base)+'</p><div class="buyer-list">';
+  let html='<h3 class="ge-h2">'+icon('sell','ge-ic-lg')+'CHOOSE YOUR BUYER</h3>'+
+   '<p class="ge-body ge-muted">'+esc(it.strainName)+' — Q'+it.quality+' • '+it.amount+' '+(it.type==='edible'?'units':'oz')+' • base '+fmt$(base)+'</p><div class="ge-dp-buyers">';
   BUYERS.forEach(by=>{
     const wxm=(typeof WX_sellMult==='function')?WX_sellMult(it.strainId,it,by.id):1;
     const mult=by.mult(it)*wxm, offer=base*mult;
-    html+='<div class="buyer-card" data-buyer="'+by.id+'" role="button" tabindex="0">'+
-     '<div class="buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ic-xl'))+'</div>'+
-     '<div class="buyer-info"><b>'+esc(by.name)+'</b><span class="buyer-title">'+esc(by.title)+'</span>'+
-     '<span class="muted">'+esc(by.values)+'</span>'+
-     '<span class="buyer-blurb">'+esc(by.blurb)+'</span>'+
-     '<span class="buyer-offer">OFFER <b>'+fmt$(offer)+'</b> <span class="muted">\u00D7'+mult.toFixed(2)+'</span></span></div></div>';
+    html+='<div class="ge-card ge-card-tap ge-dp-buyer" data-buyer="'+by.id+'" role="button" tabindex="0">'+
+     '<div class="ge-dp-buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ge-ic-xl'))+'</div>'+
+     '<div class="ge-plant-meta"><div class="ge-plant-name">'+esc(by.name)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+esc(by.title)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+esc(by.values)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+esc(by.blurb)+'</div>'+
+     '<div class="ge-dp-offer"><span class="ge-label">OFFER</span><b class="ge-num ge-green">'+fmt$(offer)+'</b><span class="ge-caption ge-muted">×'+mult.toFixed(2)+'</span></div></div></div>';
   });
-  html+='</div><button class="btn btn-small" id="bm-x">'+icon('x','b-ico')+'CANCEL</button>';
+  html+='</div><button class="ge-btn ge-btn-ghost ge-btn-block" id="bm-x">'+icon('x','ge-ic-md')+'CANCEL</button>';
   const m=modal(html);
   m.querySelector('#bm-x').onclick=()=>closeModal(m);
   m.querySelectorAll('[data-buyer]').forEach(c=>c.onclick=()=>{ closeModal(m); sellToBuyer(invId,c.dataset.buyer); });
 }
+
 function sellToBuyer(invId,buyerId){
   const it=S.inventory.find(x=>x.id===invId); if(!it) return;
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
@@ -2330,20 +2500,22 @@ function sellToBuyer(invId,buyerId){
   gainXP(15); gainRep(by.id==='dscout'?4:2);
   if(S.stats.quickTurnReady){ S.stats.quickTurnarounds++; S.stats.quickTurnReady=false; }
   S.inventory=S.inventory.filter(x=>x.id!==it.id);
-  toast('\uD83D\uDCB5 Sold to '+esc(by.name)+' for '+fmt$(total));
+  toast(icon('cash','ge-ic-md')+' Sold to '+esc(by.name)+' for '+fmt$(total));
   save(); updateHUD(); checkMissions(); checkAchievements(); RENDER.dispensary();
 }
+
 
 
 /* ---------------- Empire ---------------- */
 let empireTab='facilities';
 function empireHubHTML(){
   const openN=HUB_AREAS.filter(a=>a.un()).length, ct=facTierIdx();
-  return '<div class="card hub-card"><h3>'+icon('empire','ic-lg')+'SHOCKER OWNZ COMPOUND</h3>'+
-   '<p class="muted">'+openN+'/'+HUB_AREAS.length+' sectors online. Tap a sector to enter.</p>'+empireHubSVG()+
-   '<div class="tier-ladder">'+FAC_TIERS.map((t,i)=>'<div class="tier-chip'+(i===ct?' cur':i<ct?' owned':'')+'"><span>'+esc(t.name)+'</span></div>').join('')+'</div>'+
-   '<p class="muted">Current tier: <b>'+esc(FAC_TIERS[ct].name)+'</b></p></div>';
+  return '<div class="ge-card ge-hub"><div class="ge-card-head"><h3>'+icon('empire','ge-ic-lg')+'SHOCKER OWNZ COMPOUND</h3></div>'+
+   '<p class="ge-caption ge-muted">'+openN+'/'+HUB_AREAS.length+' sectors online. Tap a sector to enter.</p>'+empireHubSVG()+
+   '<div class="ge-tierladder" aria-label="Facility tier ladder">'+FAC_TIERS.map((t,i)=>'<span class="ge-tierchip'+(i===ct?' cur':i<ct?' owned':'')+'">'+esc(t.name)+'</span>').join('')+'</div>'+
+   '<div class="ge-datarow"><span>Current tier</span><b>'+esc(FAC_TIERS[ct].name)+'</b></div></div>';
 }
+
 function equipCost(def,lvl){
   const disc=S.crew.manager?0.9:1;
   const sdisc=(typeof WX_discount==='function')?WX_discount('equip'):1;
@@ -2351,82 +2523,64 @@ function equipCost(def,lvl){
 }
 RENDER.empire=function(){
   const r=$('empire-root');
-  let html=screenHead('empire','EMPIRE')+empireHubHTML()+'<div class="card mgmt-head"><h3>'+icon('empire','ic-lg')+'FACILITY MANAGEMENT</h3></div><div class="tabs">'+
-   [['facilities','FACILITIES'],['equipment','EQUIPMENT'],['crew','CREW'],['compete','COMPETE']].map(t=>'<button class="tab'+(empireTab===t[0]?' active':'')+'" data-etab="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
+  let html='<div class="ge-screen">'+screenHead('empire','EMPIRE')+empireHubHTML()+
+   '<div class="tabs ge-tabs" role="tablist">'+
+   [['facilities','FACILITIES'],['equipment','EQUIPMENT'],['crew','CREW'],['compete','COMPETE']].map(t=>'<button class="tab ge-tab'+(empireTab===t[0]?' active is-active':'')+'" data-etab="'+t[0]+'" role="tab">'+t[1]+'</button>').join('')+'</div>';
   if(empireTab==='facilities'){
-    html+='<div class="card status-card"><div class="kv"><span>'+icon('empire','kv-ico')+'Current facility</span><b>'+FACILITIES[S.facility].name+'</b></div>'+
-     '<div class="kv"><span>'+icon('grow','kv-ico')+'Grow slots</span><b>'+FACILITIES[S.facility].slots+'</b></div></div>';
-    FACILITIES.forEach((f,i)=>{
-      const owned=i<=S.facility, next=i===S.facility+1;
-      html+='<div class="card fac-card"><div class="fac-thumb" style="filter:hue-rotate('+(i*45)+'deg)">'+icon('empire','ic-xl')+'</div>'+
-       '<h3>'+(owned?icon('check','b-ico'):'')+f.name+'</h3><div class="kv"><span>'+icon('grow','kv-ico')+'Grow slots</span><b>'+f.slots+'</b></div>'+
-       (owned?'<p class="muted">Owned.</p>':next?'<button class="btn btn-small btn-gold" data-buyfac="'+i+'">'+icon('empire','b-ico')+'EXPAND — '+fmt$(f.cost)+'</button>':'<p class="lock-note">'+icon('lock','kv-ico')+' Expand in order.</p>')+'</div>';
-    });
-    html+='<div class="card"><h3>'+icon('mothers','ic-lg')+'MOTHER ROOM</h3><p class="muted">House mother plants to take identical clones.</p>'+
-     '<div class="kv"><span>'+icon('mothers','kv-ico')+'Mother slots</span><b>'+S.motherCapacity+' / 4</b></div>'+
-     (S.motherCapacity>=4?'<p class="muted">MAXED.</p>':'<button class="btn btn-small btn-gold" data-buymother="1">'+icon('plus','b-ico')+'ADD SLOT — '+fmt$(MOTHER_CAP_COSTS[S.motherCapacity])+'</button>')+'</div>';
+    html+=EM_facilitiesHTML();
   }else if(empireTab==='equipment'){
-    html+=npcBlurb('sal');
-    EQUIP_DEFS.forEach(d=>{
-      const lvl=S.equipment[d.id], maxed=lvl>=d.max;
-      html+='<div class="card eq-card"><div class="eq-thumb">'+icon(d.ic,'ic-xl')+'</div>'+
-       '<h3>'+d.name+' <span class="badge">Lv '+lvl+'/'+d.max+'</span></h3><p class="muted">'+d.desc+'</p>'+
-       (maxed?'<p class="muted">MAXED OUT.</p>':'<button class="btn btn-small btn-gold" data-buye="'+d.id+'">'+icon('equipment','b-ico')+'UPGRADE — '+fmt$(equipCost(d,lvl))+'</button>')+'</div>';
-    });
+    html+=EM_equipmentHTML();
   }else if(empireTab==='crew'){
-    html+='<div class="card"><p class="muted">Crew members charge a daily wage, deducted each day.</p></div>';
-    CREW_DEFS.forEach(c=>{
-      const hired=S.crew[c.id];
-      html+='<div class="card crew-card"><div class="crew-thumb">'+icon(c.ic,'ic-xl')+'</div>'+
-       '<h3>'+(hired?icon('check','b-ico'):'')+c.name+'</h3><p class="muted">'+c.desc+'</p>'+
-       '<div class="kv"><span>'+icon('cash','kv-ico')+'Hire cost</span><b>'+fmt$(c.hire)+'</b></div><div class="kv"><span>'+icon('day','kv-ico')+'Daily wage</span><b>'+fmt$(c.wage)+'</b></div>'+
-       (hired?'<p class="muted">On payroll.</p>':'<button class="btn btn-small btn-green" data-hire="'+c.id+'">'+icon('crew','b-ico')+'HIRE</button>')+'</div>';
-    });
-  }else{
+    html+=EM_crewHTML();
+  }else if(empireTab==='compete'){
     html+=npcBlurb('marisol')+competeHtml();
   }
+  /* buildings / staff: EX_wireEmpire appends their content below the tabs */
+  html+='</div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-etab]').forEach(t=>t.onclick=()=>{ empireTab=t.dataset.etab; RENDER.empire(); });
   r.querySelectorAll('[data-hub]').forEach(g=>g.onclick=()=>{
     const a=HUB_AREAS.find(x=>x.id===g.dataset.hub); if(!a) return;
-    if(!a.un()){ toast('\uD83D\uDD12 '+a.label+' \u2014 '+a.hint); return; }
+    if(!a.un()){ toast(icon('lock','ge-ic-md')+' '+esc(a.label)+' — '+esc(a.hint)); return; }
     if(a.tab==='mothers'){ keeperTab='mothers'; show('keepers'); return; }
     if(a.tab){ empireTab=a.tab; show('empire'); return; }
     show(a.go);
   });
   r.querySelectorAll('[data-buyfac]').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.buyfac, f=FACILITIES[i];
-    if(S.cash<f.cost){ toast('❌ Need '+fmt$(f.cost)+'.'); return; }
+    if(S.cash<f.cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(f.cost)+'.'); return; }
     const prevT=facTierIdx();
     S.cash-=f.cost; S.facility=i; gainXP(150); gainRep(20);
     const newT=facTierIdx();
     save(); updateHUD(); checkMissions(); RENDER.empire();
-    facilityUnlockCine(prevT,newT,f.name);
+    EM_facilityUnlockCine(prevT,newT,f.name);
   });
   r.querySelectorAll('[data-buye]').forEach(b=>b.onclick=()=>{
     const d=EQUIP_DEFS.find(x=>x.id===b.dataset.buye), lvl=S.equipment[d.id], cost=equipCost(d,lvl);
-    if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+    if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
     S.cash-=cost; S.equipment[d.id]++; gainXP(40);
-    toast('⬆️ '+d.name+' → Lv '+S.equipment[d.id]);
+    toast('<span class="ge-up">↑</span> '+esc(d.name)+' → Lv '+S.equipment[d.id]);
     save(); updateHUD(); checkMissions(); RENDER.empire();
   });
   r.querySelectorAll('[data-hire]').forEach(b=>b.onclick=()=>{
     const c=CREW_DEFS.find(x=>x.id===b.dataset.hire);
-    if(S.cash<c.hire){ toast('❌ Need '+fmt$(c.hire)+'.'); return; }
+    if(S.cash<c.hire){ toast(icon('x','ge-ic-md')+' Need '+fmt$(c.hire)+'.'); return; }
     S.cash-=c.hire; S.crew[c.id]=true; gainXP(60);
-    toast('🤝 Hired '+c.name);
+    toast(icon('users','ge-ic-md')+' Hired '+esc(c.name));
     save(); updateHUD(); checkMissions(); RENDER.empire();
   });
   r.querySelectorAll('[data-buymother]').forEach(b=>b.onclick=()=>{
     const cost=MOTHER_CAP_COSTS[S.motherCapacity];
-    if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+    if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
     S.cash-=cost; S.motherCapacity++; gainXP(80);
-    toast('🌿 Mother room expanded: '+S.motherCapacity+' slots!');
+    toast(icon('leaf','ge-ic-md')+' Mother room expanded: '+S.motherCapacity+' slots!');
     save(); updateHUD(); checkMissions(); RENDER.empire();
   });
+  r.querySelectorAll('[data-ge-auto]').forEach(b=>b.onclick=()=>show('automation'));
   wireCompete(r);
   try{ if(typeof EX_wireEmpire==='function') EX_wireEmpire(); }catch(e){}
 };
+
 
 /* ---------------- Competitions ---------------- */
 function compScore(item,type){
@@ -2439,34 +2593,37 @@ function compScore(item,type){
   return item.quality;
 }
 function competeHtml(){
-  const flowers=S.inventory.filter(i=>i.type==='flower');
-  let html='<div class="card"><p class="muted">Enter your best flower against AI growers. Entry fees apply. Breeder Cup requires a CUSTOM cross.</p></div>';
+  let html='<div class="ge-card ge-card-flat"><p class="ge-caption ge-muted">Enter your best flower against AI growers. Entry fees apply. Breeder Cup requires a CUSTOM cross.</p></div>';
   COMP_TYPES.forEach(t=>{
     const fee=t.id==='breeder'?300:150;
-    html+='<div class="card comp-poster"><div class="comp-badge">'+icon('trophy','ic-xl')+'</div>'+
-     '<h3>'+icon(t.ic,'b-ico')+t.name+'</h3><p class="muted">'+t.desc+'</p>'+
-     '<div class="kv"><span>'+icon('cash','kv-ico')+'Entry fee</span><b>'+fmt$(fee)+'</b></div>'+
-     '<button class="btn btn-small btn-primary" data-comp="'+t.id+'">'+icon('compete','b-ico')+'ENTER — '+fmt$(fee)+'</button></div>';
+    html+='<div class="ge-card ge-equip"><div class="ge-equip-ico ge-comp-trophy">'+icon('trophy','ge-ic-xl')+'</div><div class="ge-equip-body">';
+    html+='<div class="ge-card-head"><h3>'+icon(t.ic,'ge-ic-md')+esc(t.name)+'</h3></div>';
+    html+='<p class="ge-caption ge-muted">'+esc(t.desc)+'</p>';
+    html+='<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Entry fee</span><b class="ge-num">'+fmt$(fee)+'</b></div>';
+    html+='<button class="ge-btn ge-btn-primary ge-btn-block" data-comp="'+t.id+'">'+icon('compete','ge-ic-md')+'ENTER — '+fmt$(fee)+'</button>';
+    html+='</div></div>';
   });
   return html;
 }
+
 function wireCompete(r){
   r.querySelectorAll('[data-comp]').forEach(b=>b.onclick=()=>{
     const t=COMP_TYPES.find(x=>x.id===b.dataset.comp);
     const fee=t.id==='breeder'?300:150;
-    if(S.cash<fee){ toast('❌ Need '+fmt$(fee)+' entry fee.'); return; }
+    if(S.cash<fee){ toast(icon('x','ge-ic-md')+' Need '+fmt$(fee)+' entry fee.'); return; }
     let pool=S.inventory.filter(i=>i.type==='flower');
     if(t.id==='breeder') pool=pool.filter(i=>i.custom);
-    if(!pool.length){ toast(t.id==='breeder'?'❌ You need a harvested CUSTOM cross to enter.':'❌ No flower in inventory. Harvest first!'); return; }
-    const m=modal('<h3>'+icon('compete','ic-lg')+t.name+'</h3><p class="muted">Choose your entry:</p><div id="comp-pick"></div><button class="btn btn-small" id="comp-x">'+icon('x','b-ico')+'CANCEL</button>');
+    if(!pool.length){ toast(icon('x','ge-ic-md')+' '+(t.id==='breeder'?'You need a harvested CUSTOM cross to enter.':'No flower in inventory. Harvest first!')); return; }
+    const m=modal('<div class="ge-cer-head"><h3>'+icon('compete','ge-ic-lg')+esc(t.name)+'</h3><p class="ge-caption ge-muted">Choose your entry:</p><div id="comp-pick"></div><button class="ge-btn ge-btn-ghost" id="comp-x">'+icon('x','ge-ic-md')+'CANCEL</button></div>');
     m.querySelector('#comp-x').onclick=()=>closeModal(m);
-    m.querySelector('#comp-pick').innerHTML=pool.map(i=>'<div class="strain-pick" data-entry="'+i.id+'">'+flowerSVG(i.strainId+'#'+i.id,'pick-flower')+'<span><b>'+esc(i.strainName)+'</b> — Q'+i.quality+' • '+i.amount+' oz</span></div>').join('');
+    m.querySelector('#comp-pick').innerHTML=pool.map(i=>'<div class="ge-pick" data-entry="'+i.id+'">'+flowerSVG(i.strainId+'#'+i.id,'pick-flower')+'<span><b>'+esc(i.strainName)+'</b> — Q'+i.quality+' • '+i.amount+' oz</span></div>').join('');
     m.querySelectorAll('[data-entry]').forEach(e=>e.onclick=()=>{
       const item=S.inventory.find(x=>x.id===+e.dataset.entry);
       closeModal(m); if(typeof EX_runCompetition==='function') EX_runCompetition(t,item,fee); else runCompetition(t,item,fee);
     });
   });
 }
+
 function runCompetition(t,item,fee){
   S.cash-=fee; S.stats.compsEntered++;
   const myScore=compScore(item,t.score)+rnd(-3,3);
@@ -2479,53 +2636,71 @@ function runCompetition(t,item,fee){
   rivals.sort((a,b)=>b.score-a.score);
   const rank=rivals.findIndex(r=>r.me)+1;
   const won=rank===1;
-  let html='<h3>'+icon('trophy','ic-lg')+t.name+' — RESULTS</h3>';
-  rivals.forEach((rv,i)=>{ html+='<div class="leader-row'+(rv.me?' me':'')+'"><span>'+(i+1)+'. '+esc(rv.name)+'</span><b>'+rv.score+'</b></div>'; });
+  let html='<div class="ge-cer-head"><h3>'+icon('trophy','ge-ic-lg')+esc(t.name)+' — RESULTS</h3></div>';
+  rivals.forEach((rv,i)=>{ html+='<div class="ge-cer-row'+(rv.me?' ge-cer-me':'')+'"><span>'+(i+1)+'. '+esc(rv.name)+'</span><b class="ge-num">'+rv.score+'</b></div>'; });
   if(won){
     const cashR=Math.round(800*DIFFS[S.difficulty].missionReward), repR=60;
     S.cash+=cashR; gainRep(repR); S.stats.compsWon++;
     if(t.id==='breeder') S.stats.breederCupWins++;
     addP0('freedom',3); addP0('cultivation',2); gainXP(200);
-    html+='<div class="callout record"><div class="callout-crown">'+crownSVG(true,'c-ico-svg')+'</div><p class="reward-line">YOU WIN! +'+fmt$(cashR)+' +'+repR+' rep</p></div>';
-    if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel'); html+='<p class="reward-line">'+icon('crown-gold','b-ico')+' Rare genetics unlocked: Crown Jewel!</p>'; }
-    toast('🏆 Competition WON!');
+    html+='<div class="ge-cer-win"><div class="ge-cer-crown">'+crownSVG(true,'c-ico-svg')+'</div><p class="ge-cer-wintext">YOU WIN! +'+fmt$(cashR)+' +'+repR+' rep</p></div>';
+    if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel'); html+='<p class="ge-cer-wintext">'+icon('crown-gold','ge-ic-md')+' Rare genetics unlocked: Crown Jewel!</p>'; }
+    toast(icon('trophy','ge-ic-md')+' Competition WON!');
   }else{
     gainXP(40);
-    html+='<p class="muted">Placed #'+rank+'. Better luck next time — the judges want higher '+(t.score==='overall'?'overall excellence':t.score)+'.</p>';
+    html+='<p class="ge-caption ge-muted">Placed #'+rank+'. Better luck next time — the judges want higher '+(t.score==='overall'?'overall excellence':t.score)+'.</p>';
   }
-  html+='<button class="btn" onclick="this.closest(\'.modal-back\').remove()">'+icon('x','b-ico')+'CLOSE</button>';
+  html+='<button class="ge-btn ge-btn-block" onclick="this.closest(\'.modal-back\').remove()">'+icon('x','ge-ic-md')+'CLOSE</button>';
   modal(html);
   save(); updateHUD(); checkMissions(); checkAchievements();
 }
 
+
 /* ---------------- Project 0 ---------------- */
 RENDER.project0=function(){
   const r=$('project0-root');
-  let html=screenHead('project0','PROJECT 0')+
-   '<div class="card p0-hero">'+gasmaskSVG('p0-seal')+
-   '<div class="p0-crown">'+crownSVG(false,'crown-anim')+'</div>'+
-   '<p class="motto display">"IT\'S NEVER ABOUT THE MONEY."</p>'+
-   '<p><span class="badge gold">'+icon('star','b-ico')+S.project0.points+' POINTS</span></p>'+
-   (S.project0.titles.length?'<div class="tags" style="justify-content:center">'+S.project0.titles.map(t=>'<span class="tag gold">'+esc(t)+'</span>').join('')+'</div>':'')+'</div>'+npcBlurb('quinn');
-  P0_TRACKS.forEach(tr=>{
-    const pts=S.project0.tracks[tr.id]||0, lvl=p0Level(tr.id);
-    const nextTh=P0_LEVEL_PTS[Math.min(lvl+1,P0_LEVEL_PTS.length-1)];
-    const pct=lvl>=5?100:clamp(pts/nextTh*100,0,100);
-    html+='<div class="card p0-track"><h3>'+icon(tr.ico,'ic-lg')+tr.name+' <span class="badge gold">Lv '+lvl+'</span></h3>'+
-     '<div class="progress"><i style="width:'+pct+'%"></i></div>'+
-     '<p class="muted">'+pts+' pts'+(lvl<5?' — '+nextTh+' for Lv '+(lvl+1):' — MAXED')+'</p></div>';
-  });
-  html+='<div class="card"><h3>'+icon('scroll','ic-lg')+'HOW TO EARN</h3>'+
-   '<div class="kv"><span>'+icon('genetics','kv-ico')+'Breeding</span></div>'+
-   '<div class="kv"><span>'+icon('preserve','kv-ico')+'Preserving genetics</span></div>'+
-   '<div class="kv"><span>'+icon('harvest','kv-ico')+'85+ quality harvests</span></div>'+
-   '<div class="kv"><span>'+icon('star','kv-ico')+'90+ keeper phenotypes</span></div>'+
-   '<div class="kv"><span>'+icon('missions','kv-ico')+'Missions</span></div>'+
-   '<div class="kv"><span>'+icon('trophy','kv-ico')+'Competitions</span></div>'+
-   '<div class="kv"><span>'+icon('crown-gold','kv-ico')+'Discovering keeper phenotypes</span></div></div>';
+  let html=screenHead('project0','PROJECT 0 — GENETIC PRESERVATION ARCHIVE')+
+   '<div class="ge-screen">'+
+   '<div class="ge-card ge-p0-hero ge-anim-rise">'+
+    '<div class="ge-p0-sealrow">'+gasmaskSVG('p0-seal')+
+     '<div class="p0-crown">'+crownSVG(false,'crown-anim')+'</div></div>'+
+    '<div class="ge-p0-eyebrow">'+icon('project0','ge-ic-sm')+'<span>GENETIC PRESERVATION ARCHIVE</span></div>'+
+    '<h1 class="ge-display ge-p0-title">PROJECT 0</h1>'+
+    '<p class="ge-p0-motto">"IT\'S NEVER ABOUT THE MONEY — ONLY THE GENETICS."</p>'+
+    '<div class="ge-p0-herorow">'+P0V_scoreRing()+
+     '<div class="ge-p0-score">'+
+      '<div class="ge-display ge-gold-text ge-num">'+int(S.project0.points,0)+'</div>'+
+      '<div class="ge-label ge-muted">PRESERVATION SCORE</div>'+
+      '<div class="ge-p0-pointspill"><span class="ge-pill ge-pill-gold">'+icon('star','ge-ic-sm')+int(S.project0.points,0)+' POINTS</span></div>'+
+     '</div></div>'+
+    (S.project0.titles.length?
+     '<div class="ge-divider"></div>'+
+     '<div class="ge-label ge-muted" style="text-align:center">EARNED TITLES</div>'+
+     '<div class="ge-p0-titles">'+S.project0.titles.map(t=>P0V_titleTag(t)).join('')+'</div>'
+     :'')+
+   '</div>'+
+   npcBlurb('quinn')+
+   '<div class="ge-section-title">'+icon('box','ge-ic-sm')+'ARCHIVE METRICS</div>'+
+   '<div class="ge-tiles">'+P0V_metricsHTML()+'</div>'+
+   '<div class="ge-section-title">'+icon('scroll','ge-ic-sm')+'PRESERVATION TRACKS<span class="ge-spread ge-muted">'+P0V_trackLevels()+'/40 LEVELS</span></div>'+
+   P0V_tracksHTML()+
+   '<div class="ge-section-title">'+icon('trophy','ge-ic-sm')+'TRACK REWARDS</div>'+
+   '<div class="ge-card ge-card-flat ge-p0-rewards">'+P0V_rewardsHTML()+'</div>'+
+   '<div class="ge-section-title">'+icon('dna','ge-ic-sm')+'HOW TO EARN</div>'+
+   '<div class="ge-card ge-card-flat">'+
+    '<div class="ge-datarow"><span>'+icon('genetics','ge-ic-md')+'Breeding</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('preserve','ge-ic-md')+'Preserving genetics</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('harvest','ge-ic-md')+'85+ quality harvests</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'90+ keeper phenotypes</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('missions','ge-ic-md')+'Missions</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('compete','ge-ic-md')+'Competitions</span></div>'+
+    '<div class="ge-datarow"><span>'+icon('crown-gold','ge-ic-md')+'Discovering keeper phenotypes</span></div>'+
+   '</div>'+
+   '</div>';
   r.innerHTML=html;
   try{ if(typeof EX_wireP0==='function') EX_wireP0(); }catch(e){}
 };
+
 
 /* ---------------- Missions screen ---------------- */
 let missionTab='active';
@@ -2534,38 +2709,55 @@ function missionProg(m){
 }
 RENDER.missions=function(){
   const r=$('missions-root');
+  if(!r) return;
   const cats={};
   MISSIONS.forEach(m=>{ (cats[m.cat]=cats[m.cat]||[]).push(m); });
-  let html=screenHead('missions','MISSIONS')+
-   '<div class="tabs">'+[['active','ACTIVE'],['available','AVAILABLE'],['completed','COMPLETED']].map(t=>'<button class="tab'+(missionTab===t[0]?' active':'')+'" data-mtab="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
-  const mDoneN=S.missionsDone.length, mTotN=MISSIONS.length, mPct=Math.round(mDoneN/Math.max(1,mTotN)*100), nm=nextMission();
-  html+='<div class="card campaign-head"><h3>'+icon('missions','ic-lg')+'CAMPAIGN: ROADSIDE TO EMPIRE</h3>'+
-   '<div class="progress big"><i style="width:'+mPct+'%"></i></div>'+
-   '<div class="kv"><span>Missions cleared</span><b>'+mDoneN+'/'+mTotN+'</b></div>'+
-   (nm?'<div class="nextup-inline"><span class="nextup-tag">'+icon('missions','b-ico')+'NEXT UP</span><b>'+esc(nm.name)+'</b><span class="muted"> \u2014 '+esc(nm.desc)+'</span></div>':'<p class="muted">'+icon('crown-gold','kv-ico')+' Campaign complete. Legend status.</p>')+'</div>';
+  let html=screenHead('missions','MISSIONS');
+  /* command header */
+  const mDoneN=S.missionsDone.length, mTotN=MISSIONS.length,
+        mPct=Math.round(mDoneN/Math.max(1,mTotN)*100), nm=nextMission();
+  html+='<div class="ge-screen"><div class="ge-card ge-card-hot ms-command">'+
+   '<div class="ge-card-head"><h3>'+icon('missions','ge-ic-lg')+'MISSION COMMAND</h3>'+
+   '<span class="ge-pill ge-pill-gold ge-num">'+mDoneN+'/'+mTotN+'</span></div>'+
+   '<div class="ge-progress ge-progress-gold"><i style="width:'+mPct+'%"></i></div>'+
+   '<div class="ge-progress-meta"><span>CAMPAIGN PROGRESS</span><b class="ge-num">'+mPct+'%</b></div>'+
+   (nm?'<div class="ms-nextup"><span class="ge-label">'+icon('missions','ge-ic-sm')+' NEXT UP</span><b>'+esc(nm.name)+'</b><span class="ge-muted"> \u2014 '+esc(nm.desc)+'</span></div>'
+      :'<div class="ms-nextup"><span class="ge-label">'+icon('crown-gold','ge-ic-md')+' LEGEND STATUS</span><b>Campaign complete.</b></div>')+
+  '</div>';
+  /* section tabs */
+  html+='<div class="ge-tabs ms-tabs" role="tablist" aria-label="Mission sections">'+
+   MS_SECTIONS.map(s=>'<button class="ge-tab'+(missionTab===s.id?' is-active':'')+'" role="tab" aria-selected="'+(missionTab===s.id)+'" data-mtab="'+s.id+'">'+icon(s.icon,'ge-ic-sm')+s.label+'</button>').join('')+
+  '</div>';
+  /* cards */
+  let total=0;
   Object.keys(cats).forEach(cat=>{
-    let list='';
+    const items=[];
     cats[cat].forEach(m=>{
       const done=S.missionsDone.includes(m.id);
       const pr=missionProg(m);
       const started=pr.cur>0;
-      const showIt=(missionTab==='completed'&&done)||(missionTab==='active'&&!done&&started)||(missionTab==='available'&&!done&&!started);
-      if(!showIt) return;
-      const rw=m.reward||{};
-      const rwTxt=[rw.cash?fmt$(Math.round(rw.cash*DIFFS[S.difficulty].missionReward)):'',rw.rep?'+'+rw.rep+' rep':'',rw.xp?'+'+rw.xp+' XP':'',rw.p0?'+'+rw.p0+' P0':'',(rw.gen||[]).length?'🧬 genetics':''].filter(Boolean).join(' • ');
-      list+='<div class="card mission-card"><span class="mission-cat">'+cat+'</span><h3 style="margin-top:4px">'+(done?icon('check','b-ico'):'')+esc(m.name)+'</h3><p class="muted">'+esc(m.desc)+'</p>'+
-       ((typeof MN_timedHTML==='function')?MN_timedHTML(m):'')+
-       '<div class="progress"><i style="width:'+clamp(pr.cur/pr.target*100,0,100)+'%"></i></div>'+
-       '<div class="kv"><span>'+icon('level','kv-ico')+'Progress</span><b>'+Math.min(pr.cur,pr.target)+'/'+pr.target+'</b></div>'+
-       (rwTxt?'<p class="reward-line">Reward: '+rwTxt+'</p>':'')+'</div>';
+      if(!MS_inSection(m,missionTab,done,started)) return;
+      items.push({m:m,pr:pr,done:done,started:started});
     });
-    if(list) html+='<h3 class="display" style="color:var(--gold);margin:14px 0 4px">'+cat.toUpperCase()+'</h3>'+list;
+    if(!items.length) return;
+    items.sort((a,b)=>{
+      const sa=a.done?2:(a.started?0:1), sb=b.done?2:(b.started?0:1);
+      return sa-sb;
+    });
+    total+=items.length;
+    html+='<div class="ge-section-title">'+esc(cat.toUpperCase())+'<span class="ge-spread ge-num">'+items.length+'</span></div>';
+    items.forEach(it=>{ html+=MS_cardHTML(it.m,cat,it.pr,it.done,it.started); });
   });
-  if(missionTab==='completed'&&!S.missionsDone.length) html+='<div class="card"><p class="muted">No missions completed yet. Get growing!</p></div>';
+  if(!total){
+    const em=MS_EMPTY[missionTab]||MS_EMPTY.active;
+    html+='<div class="ge-card"><div class="ge-empty">'+icon('missions','ge-ic-xl')+'<h3>'+em.t+'</h3><p>'+em.p+'</p></div></div>';
+  }
+  html+='</div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-mtab]').forEach(t=>t.onclick=()=>{ missionTab=t.dataset.mtab; RENDER.missions(); });
   try{ if(typeof MN_wireMissions==='function') MN_wireMissions(r); }catch(e){}
 };
+
 
 /* ============================================================
    KEEPER VAULT + MOTHER ROOM + CLONING + PHENO HUNTS
@@ -2585,14 +2777,15 @@ function keeperCine(report){
   const g=report.genetics||{};
   const rows=[['RESIN',g.resinPot],['TERPENES',g.terpenePot],['POTENCY',g.potencyPot],['BAG APPEAL',g.bagAppeal]];
   const back=cineOverlay(
-   '<div class="keeper-stage">'+
-   '<div class="keeper-glow"></div>'+
-   '<div class="keeper-plant-sil">'+plantSVG(9,report.strainId+'#'+report.phenoNum,'keeper-plant',{frost:3,dense:true,purple:report.rarity==='legendary'})+'</div>'+
-   '<div class="keeper-crown">'+crownSVG(report.rarity==='legendary','crown-anim')+'</div>'+
-   '<div class="display keeper-title">KEEPER CANDIDATE</div>'+
-   '<div class="keeper-name">'+esc(report.strainName)+' #'+report.phenoNum+'</div>'+
-   '<div class="keeper-traits">'+rows.map((t,i)=>'<div class="kt-row" style="animation-delay:'+(0.6+i*0.5).toFixed(1)+'s"><span>'+t[0]+'</span><b data-count="'+num(t[1],0)+'" data-dec="0">0</b></div>').join('')+'</div>'+
-   '<button class="btn btn-gold btn-big" id="kc-ok">'+icon('crown-gold','b-ico')+' MARK AS KEEPER</button></div>',
+   '<div class="ge-kid-stage">'+
+   '<div class="ge-kid-glow"></div>'+
+   '<div class="ge-kid-plant">'+plantSVG(9,report.strainId+'#'+report.phenoNum,'keeper-plant',{frost:3,dense:true,purple:report.rarity==='legendary'})+'</div>'+
+   '<div class="ge-kid-crown">'+crownSVG(report.rarity==='legendary','crown-anim')+'</div>'+
+   '<div class="ge-kid-kicker">SECRET GENETIC ARCHIVE</div>'+
+   '<div class="ge-display ge-kid-title">KEEPER IDENTIFIED</div>'+
+   '<div class="ge-kid-name">'+esc(report.strainName)+' <span class="ge-kid-pheno">PHENO #'+report.phenoNum+'</span></div>'+
+   '<div class="ge-kid-traits">'+rows.map((t,i)=>'<div class="ge-kid-trait" style="animation-delay:'+(0.6+i*0.5).toFixed(1)+'s"><span>'+t[0]+'</span><b data-count="'+num(t[1],0)+'" data-dec="0">0</b></div>').join('')+'</div>'+
+   '<button class="ge-btn ge-btn-gold ge-btn-block" id="kc-ok">'+icon('crown-gold','ge-ic-md')+'ADD TO KEEPER VAULT</button></div>',
    'cine-keeper',0);
   back.querySelectorAll('[data-count]').forEach(el=>{
     const target=num(el.dataset.count,0), t0=performance.now(), dur=900, delay=600;
@@ -2604,16 +2797,18 @@ function keeperCine(report){
     }
     try{ requestAnimationFrame(tick); }catch(e){ el.textContent=Math.round(target); }
   });
+  try{ if(typeof CAP_haptic==='function') CAP_haptic('keeper'); }catch(e){}
   back.querySelector('#kc-ok').onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); back.classList.add('cine-out'); setTimeout(()=>back.remove(),300); confirmKeeper(report); };
 }
+
 function confirmKeeper(report){
   try{
-    if(!report||typeof report!=='object'){ toast('❌ Keeper data invalid.'); return false; }
+    if(!report||typeof report!=='object'){ toast(icon('x','ge-ic-md')+' Keeper data invalid.'); return false; }
     if(!Array.isArray(S.keepers)) S.keepers=[];
     const strainId=report.strainId||'unknown', phenoNum=int(report.phenoNum,0);
     /* duplicate prevention: same strain + pheno number */
     const dupe=S.keepers.find(k=>k.strainId===strainId&&int(k.phenoNum,0)===phenoNum);
-    if(dupe){ toast('👑 Already a keeper: <b>'+esc(String(report.strainName||dupe.strainName))+' #'+phenoNum+'</b>'); return false; }
+    if(dupe){ toast(icon('crown','ge-ic-md')+' Already a keeper: <b>'+esc(String(report.strainName||dupe.strainName))+' #'+phenoNum+'</b>'); return false; }
     const g=report.genetics&&typeof report.genetics==='object'?report.genetics:{};
     const hv=report.harvest&&typeof report.harvest==='object'?report.harvest:{};
     let geneticsCopy={};
@@ -2652,78 +2847,83 @@ function confirmKeeper(report){
     if(current==='keepers') RENDER.keepers();
     return true;
   }catch(e){
-    try{ toast('❌ Keeper failed: '+esc(e.message)); }catch(e2){}
+    try{ toast(icon('x','ge-ic-md')+' Keeper failed: '+esc(e.message)); }catch(e2){}
     return false;
   }
 }
+
 function vaultFullModal(report){
   const sorted=S.keepers.slice().sort((a,b)=>a.overall-b.overall);
   const weakest=sorted[0];
-  let html='<h3>'+icon('warn','ic-lg')+'KEEPER VAULT FULL</h3>'+
-   '<p class="muted">'+S.keepers.length+'/'+S.keeperCapacity+' slots used. Compare the new phenotype against your vault.</p>'+
-   '<div class="kv"><span>'+icon('keepers','kv-ico')+'NEW: '+esc(report.strainName)+' #'+report.phenoNum+'</span><b>'+report.overall+'</b></div>';
-  if(weakest) html+='<div class="kv"><span>'+icon('star','kv-ico')+'Weakest keeper: '+esc(weakest.strainName)+' #'+weakest.phenoNum+'</span><b>'+weakest.overall+'</b></div>';
-  html+='<div class="btn-row"><button class="btn btn-small" id="vf-compare">'+icon('scroll','b-ico')+'COMPARE</button>'+
-   '<button class="btn btn-small btn-gold" id="vf-up">'+icon('plus','b-ico')+'UPGRADE VAULT</button></div>'+
-   '<button class="btn btn-small" id="vf-arch">'+icon('preserve','b-ico')+'ARCHIVE NEW PHENO</button>'+
-   '<button class="btn btn-small btn-danger" id="vf-x">'+icon('x','b-ico')+'CLOSE</button>';
+  let html='<div class="ge-modal-head">'+icon('warn','ge-ic-md')+'<h3>KEEPER VAULT FULL</h3></div><div class="ge-modal-body">'+
+   '<p class="ge-muted">'+S.keepers.length+'/'+S.keeperCapacity+' slots used. Compare the new phenotype against your vault.</p>'+
+   '<div class="ge-datarow"><span>'+icon('keepers','ge-ic-sm')+'NEW: '+esc(report.strainName)+' #'+report.phenoNum+'</span><b class="ge-num">'+report.overall+'</b></div>';
+  if(weakest) html+='<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Weakest keeper: '+esc(weakest.strainName)+' #'+weakest.phenoNum+'</span><b class="ge-num">'+weakest.overall+'</b></div>';
+  html+='</div><div class="ge-modal-foot"><div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-ghost" id="vf-compare">'+icon('scroll','ge-ic-sm')+'COMPARE</button>'+
+   '<button class="ge-btn ge-btn-sm ge-btn-gold" id="vf-up">'+icon('plus','ge-ic-sm')+'UPGRADE VAULT</button></div>'+
+   '<button class="ge-btn ge-btn-ghost" id="vf-arch">'+icon('box','ge-ic-md')+'ARCHIVE NEW PHENO</button>'+
+   '<button class="ge-btn ge-btn-danger" id="vf-x">'+icon('x','ge-ic-md')+'CLOSE</button></div>';
   const m=modal(html);
   m.querySelector('#vf-x').onclick=()=>closeModal(m);
   m.querySelector('#vf-arch').onclick=()=>{ closeModal(m); archivePheno(report); };
-  m.querySelector('#vf-up').onclick=()=>{ closeModal(m); keeperTab='vault'; show('keepers'); toast('⬆️ Expand vault capacity below.'); };
+  m.querySelector('#vf-up').onclick=()=>{ closeModal(m); keeperTab='vault'; show('keepers'); toast('<span class="ge-label">↑</span> Expand vault capacity below.'); };
   if(weakest) m.querySelector('#vf-compare').onclick=()=>{
     closeModal(m);
     compareModal(
       {name:report.strainName+' #'+report.phenoNum+' (NEW)',genetics:report.genetics,overall:report.overall},
       {name:weakest.strainName+' #'+weakest.phenoNum,genetics:weakest.genetics,overall:weakest.overall},
       [
-        {label:icon('crown-gold','b-ico')+' KEEP NEW',cls:'btn-gold',fn:()=>{ S.keepers=S.keepers.filter(x=>x.id!==weakest.id); toast('🗑️ Replaced '+esc(weakest.strainName)+' #'+weakest.phenoNum); markKeeper(report); }},
-        {label:'KEEP EXISTING',cls:'',fn:()=>{ archivePheno(report); }},
-        {label:'CANCEL',cls:'btn-danger',fn:()=>{}}
+        {label:icon('crown-gold','ge-ic-sm')+' KEEP NEW',cls:'ge-btn-gold',fn:()=>{ S.keepers=S.keepers.filter(x=>x.id!==weakest.id); toast(icon('x','ge-ic-md')+' Replaced '+esc(weakest.strainName)+' #'+weakest.phenoNum); markKeeper(report); }},
+        {label:'KEEP EXISTING',cls:'ge-btn-ghost',fn:()=>{ archivePheno(report); }},
+        {label:'CANCEL',cls:'ge-btn-danger',fn:()=>{}}
       ]);
   };
 }
+
 /* generic side-by-side comparison */
 function compareModal(a,b,actions){
   const rows=[['Vigor','vigor'],['Yield','yieldPot'],['Potency','potencyPot'],['Terpenes','terpenePot'],
     ['Resin','resinPot'],['Bag Appeal','bagAppeal'],['Flower Speed','flowerSpeed'],
     ['Stability','stability'],['Stress Tol.','stressTol']];
-  let html='<h3>'+icon('scroll','ic-lg')+'PHENOTYPE COMPARE</h3><table class="cmp-table"><tr><th></th><th>'+esc(a.name)+'</th><th>'+esc(b.name)+'</th></tr>';
+  let html='<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>PHENOTYPE COMPARE</h3></div><div class="ge-modal-body"><table class="ge-cmp-table"><tr><th></th><th>'+esc(a.name)+'</th><th>'+esc(b.name)+'</th></tr>';
   rows.forEach(([label,key])=>{
     const av=Math.round(num(a.genetics[key],0)), bv=Math.round(num(b.genetics[key],0));
     html+='<tr><td>'+label+'</td><td class="'+(av>bv?'win':'')+'">'+av+'</td><td class="'+(bv>av?'win':'')+'">'+bv+'</td></tr>';
   });
   const ao=Math.round(num(a.overall,0)), bo=Math.round(num(b.overall,0));
-  html+='<tr><td><b>OVERALL</b></td><td class="'+(ao>bo?'win':'')+'"><b>'+ao+'</b></td><td class="'+(bo>ao?'win':'')+'"><b>'+bo+'</b></td></tr></table>';
-  html+='<div class="btn-row">'+actions.map((ac,i)=>'<button class="btn btn-small '+ac.cls+'" data-cact="'+i+'">'+ac.label+'</button>').join('')+'</div>';
+  html+='<tr><td><b>OVERALL</b></td><td class="'+(ao>bo?'win':'')+'"><b>'+ao+'</b></td><td class="'+(bo>ao?'win':'')+'"><b>'+bo+'</b></td></tr></table></div>';
+  html+='<div class="ge-modal-foot"><div class="ge-btn-row">'+actions.map((ac,i)=>'<button class="ge-btn ge-btn-sm '+ac.cls+'" data-cact="'+i+'">'+ac.label+'</button>').join('')+'</div></div>';
   const m=modal(html);
   m.querySelectorAll('[data-cact]').forEach(btn=>btn.onclick=()=>{ const ac=actions[+btn.dataset.cact]; closeModal(m); ac.fn(); });
   S.stats.comparesDone++;
   save(); checkMissions();
 }
+
 function keeperCmpObj(k){ return {name:k.strainName+' #'+k.phenoNum,genetics:k.genetics,overall:k.overall}; }
 function compareKeepers(idA,idB){
   const a=S.keepers.find(x=>x.id===idA), b=S.keepers.find(x=>x.id===idB);
   if(!a||!b) return;
   compareModal(keeperCmpObj(a),keeperCmpObj(b),[
-    {label:icon('grow','b-ico')+' MOTHER #'+a.phenoNum,cls:'',fn:()=>promoteMother(a.id)},
-    {label:icon('grow','b-ico')+' MOTHER #'+b.phenoNum,cls:'',fn:()=>promoteMother(b.id)},
-    {label:'CLOSE',cls:'',fn:()=>{}}
+    {label:icon('grow','ge-ic-sm')+' MOTHER #'+a.phenoNum,cls:'ge-btn-ghost',fn:()=>promoteMother(a.id)},
+    {label:icon('grow','ge-ic-sm')+' MOTHER #'+b.phenoNum,cls:'ge-btn-ghost',fn:()=>promoteMother(b.id)},
+    {label:'CLOSE',cls:'ge-btn-danger',fn:()=>{}}
   ]);
 }
+
 function pickComparePartner(idA){
   const others=S.keepers.filter(x=>x.id!==idA);
   if(!others.length){ toast('Need at least 2 keepers to compare.'); return; }
-  const m=modal('<h3>'+icon('scroll','sh-ico')+'COMPARE WITH...</h3><div style="max-height:50vh;overflow-y:auto;">'+
-    others.map(k=>'<div class="strain-pick" data-cmpb="'+k.id+'"><b>👑 '+esc(k.strainName)+' #'+k.phenoNum+'</b> — Overall '+k.overall+'</div>').join('')+'</div>'+
-    '<button class="btn btn-small" id="cmp-x">CANCEL</button>');
+  const m=modal('<div class="ge-modal-head">'+icon('scroll','ge-ic-md')+'<h3>COMPARE WITH...</h3></div><div class="ge-modal-body"><div class="ge-stack">'+
+    others.map(k=>'<button class="ge-btn ge-btn-ghost ge-btn-block ge-btn-sm" data-cmpb="'+k.id+'"><b>'+icon('crown','ge-ic-sm')+' '+esc(k.strainName)+' #'+k.phenoNum+'</b> — Overall '+k.overall+'</button>').join('')+'</div></div>'+
+    '<div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="cmp-x">CANCEL</button></div>');
   m.querySelector('#cmp-x').onclick=()=>closeModal(m);
   m.querySelectorAll('[data-cmpb]').forEach(el=>el.onclick=()=>{ closeModal(m); compareKeepers(idA,el.dataset.cmpb); });
 }
+
 /* ---- mothers & clones ---- */
 function promoteMother(keeperId){
   const k=S.keepers.find(x=>x.id===keeperId); if(!k) return;
-  if(S.mothers.length>=S.motherCapacity){ toast('🌿 Mother room full! Upgrade capacity in EMPIRE.'); return; }
+  if(S.mothers.length>=S.motherCapacity){ toast(icon('leaf','ge-ic-md')+' Mother room full! Upgrade capacity in EMPIRE.'); return; }
   if(S.mothers.some(mm=>mm.keeperId===keeperId)){ toast('Already a mother plant.'); return; }
   S.mothers.push({id:'m'+Date.now(),keeperId:k.id,strainId:k.strainId,strainName:k.strainName,
     phenoNum:k.phenoNum,genetics:JSON.parse(JSON.stringify(k.genetics)),traits:k.traits.slice(),
@@ -2731,15 +2931,16 @@ function promoteMother(keeperId){
     runs:0,bestQ:0,bestY:0,qualities:[],yields:[],awards:[]});
   S.stats.mothersCreated++;
   addP0('preservation',3); addP0('family',1); gainXP(100);
-  toast('🌿 '+esc(k.strainName)+' #'+k.phenoNum+' is now a MOTHER PLANT');
+  toast(icon('leaf','ge-ic-md')+' '+esc(k.strainName)+' #'+k.phenoNum+' is now a MOTHER PLANT');
   save(); updateHUD(); checkMissions(); checkAchievements();
   if(current==='keepers') RENDER.keepers();
 }
+
 function takeClone(motherId){
   const mo=S.mothers.find(m=>m.id===motherId); if(!mo) return;
   const slots=FACILITIES[S.facility].slots;
-  if(S.plants.length>=slots){ toast('❌ No free grow slots. Expand your facility!'); return; }
-  if(S.cash<25){ toast('❌ Cloning supplies cost $25.'); return; }
+  if(S.plants.length>=slots){ toast(icon('x','ge-ic-md')+' No free grow slots. Expand your facility!'); return; }
+  if(S.cash<25){ toast(icon('x','ge-ic-md')+' Cloning supplies cost $25.'); return; }
   S.cash-=25;
   const p={ id:S.nextPlantId++, strainId:mo.strainId, day:0, health:100, water:70, nutrition:60,
     stress:0, trained:false, minHealth:100, problems:[], growthBoost:0 };
@@ -2757,17 +2958,19 @@ function takeClone(motherId){
   mo.clonesTaken++; S.stats.clonesTaken++; S.stats.plantsStarted++;
   const kk=S.keepers.find(x=>x.id===mo.keeperId); if(kk) kk.clonesGrown++;
   addP0('cultivation',1); gainXP(10);
-  toast('🧬 Clone taken: '+esc(mo.strainName)+' #'+mo.phenoNum+' — identical genetics preserved.');
+  toast(icon('dna','ge-ic-md')+' Clone taken: '+esc(mo.strainName)+' #'+mo.phenoNum+' — identical genetics preserved.');
   save(); updateHUD(); checkMissions();
   if(current==='keepers') RENDER.keepers(); else refreshGrowUI();
 }
+
 function removeMother(motherId){
   const mo=S.mothers.find(m=>m.id===motherId); if(!mo) return;
   confirmModal('Retire mother?','Retire '+mo.strainName+' #'+mo.phenoNum+'? Existing clones keep growing.',()=>{
     S.mothers=S.mothers.filter(m=>m.id!==motherId);
-    save(); toast('🌿 Mother retired.'); if(current==='keepers') RENDER.keepers();
+    save(); toast(icon('leaf','ge-ic-md')+' Mother retired.'); if(current==='keepers') RENDER.keepers();
   });
 }
+
 function removeKeeper(keeperId){
   const k=S.keepers.find(x=>x.id===keeperId); if(!k) return;
   confirmModal('Remove keeper?','Remove '+k.strainName+' #'+k.phenoNum+' from the vault?',()=>{
@@ -2778,16 +2981,17 @@ function removeKeeper(keeperId){
 /* ---- pheno hunts ---- */
 function startPhenoHunt(strainId){
   const st=getStrain(strainId); if(!st) return;
-  if(!isUnlocked(strainId)){ toast('\uD83D\uDD12 Genetics locked.'); return; }
-  const m=modal('<h3>'+icon('hunt','ic-lg')+' PHENO HUNT</h3><p>Strain: <b>'+esc(st.name)+'</b> <span class="muted">('+fmt$(st.seed)+'/seed)</span></p>'+
-   '<p class="muted">Each seed grows a unique phenotype. Hunt the keeper!</p>'+
-   '<div class="btn-row"><button class="btn btn-small" data-hc="5">5 SEEDS</button>'+
-   '<button class="btn btn-small" data-hc="10">10 SEEDS</button>'+
-   '<button class="btn btn-small" data-hc="20">20 SEEDS</button></div>'+
-   '<button class="btn btn-small" id="hunt-x">CANCEL</button>');
+  if(!isUnlocked(strainId)){ toast(icon('lock','ge-ic-md')+' Genetics locked.'); return; }
+  const m=modal('<div class="ge-modal-head">'+icon('hunt','ge-ic-md')+'<h3>PHENO HUNT</h3></div><div class="ge-modal-body"><p>Strain: <b>'+esc(st.name)+'</b> <span class="ge-muted">('+fmt$(st.seed)+'/seed)</span></p>'+
+   '<p class="ge-muted">Each seed grows a unique phenotype. Hunt the keeper!</p>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-ghost" data-hc="5">5 SEEDS</button>'+
+   '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-hc="10">10 SEEDS</button>'+
+   '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-hc="20">20 SEEDS</button></div></div>'+
+   '<div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="hunt-x">CANCEL</button></div>');
   m.querySelector('#hunt-x').onclick=()=>closeModal(m);
   m.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{ const c=+b.dataset.hc; closeModal(m); launchHunt(st,c); });
 }
+
 function launchHunt(st,count){
   const hunt={id:'h'+Date.now(),strainId:st.id,strainName:st.name,total:count,
     planted:0,harvested:0,keepersFound:0,bestScore:0,bestPheno:0,active:true,dayStarted:S.day};
@@ -2795,32 +2999,36 @@ function launchHunt(st,count){
   const slots=FACILITIES[S.facility].slots;
   let ok=0;
   while(ok<count&&S.plants.length<slots){ if(plantSeed(st.id)) ok++; else break; }
-  if(ok<count) toast('🧬 Hunt started: '+ok+'/'+count+' planted (slots/cash limited). Plant the rest from MY GROWS.');
-  else toast('🧬 PHENO HUNT: '+count+' x '+esc(st.name)+' planted! Find the keeper.');
+  if(ok<count) toast(icon('dna','ge-ic-md')+' Hunt started: '+ok+'/'+count+' planted (slots/cash limited). Plant the rest from MY GROWS.');
+  else toast(icon('dna','ge-ic-md')+' PHENO HUNT: '+count+' x '+esc(st.name)+' planted! Find the keeper.');
   save(); updateHUD();
   if(current==='genetics') RENDER.genetics(); if(current==='grows') RENDER.grows();
 }
+
 function completeHunt(hunt){
   hunt.active=false;
   S.stats.phenoHuntsDone++;
   if(hunt.total>=10) S.stats.huntsCompleted10++;
   addP0('knowledge',3); addP0('preservation',2); gainXP(200);
-  toast('🧬 PHENO HUNT COMPLETE: '+hunt.harvested+'/'+hunt.total+' harvested. Best: #'+hunt.bestPheno+' ('+hunt.bestScore+')');
+  toast(icon('dna','ge-ic-md')+' PHENO HUNT COMPLETE: '+hunt.harvested+'/'+hunt.total+' harvested. Best: #'+hunt.bestPheno+' ('+hunt.bestScore+')');
   save(); checkMissions(); checkAchievements();
 }
+
 /* ---- keeper vault screen ---- */
 let keeperTab='vault', keeperSort='overall', keeperFilter='all', keeperPage=0;
 const KEEPER_SORTS=[['overall','OVERALL'],['resinPot','RESIN'],['terpenePot','TERPENES'],['yieldPot','YIELD'],['potencyPot','POTENCY'],['newest','NEWEST'],['oldest','OLDEST']];
 RENDER.keepers=function(){
   const r=$('keepers-root');
-  let html=screenHead('keepers','KEEPER VAULT')+'<div class="tabs">'+
+  let html='<div class="ge-screen">'+screenHead('keepers','KEEPER VAULT')+'<div class="ge-tabs" role="tablist">'+
    [['vault','KEEPERS ('+S.keepers.length+'/'+S.keeperCapacity+')','keepers'],['mothers','MOTHERS ('+S.mothers.length+'/'+S.motherCapacity+')','mothers']]
-   .map(t=>'<button class="tab'+(keeperTab===t[0]?' active':'')+'" data-ktab="'+t[0]+'">'+icon(t[2],'b-ico')+t[1]+'</button>').join('')+'</div>'+(S.keepers.length?npcBlurb('archive'):'');
+   .map(t=>'<button class="ge-tab'+(keeperTab===t[0]?' is-active':'')+'" data-ktab="'+t[0]+'" role="tab" aria-selected="'+(keeperTab===t[0])+'">'+icon(t[2],'ge-ic-sm')+t[1]+'</button>').join('')+'</div>'+(S.keepers.length?npcBlurb('archive'):'');
   html+='<div class="vault-shelf">'+(keeperTab==='vault'?keepersVaultHtml():mothersHtml())+'</div>';
+  html+='</div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-ktab]').forEach(t=>t.onclick=()=>{ keeperTab=t.dataset.ktab; keeperPage=0; RENDER.keepers(); });
   wireKeepers(r);
 };
+
 function keeperSortVal(k){
   switch(keeperSort){
     case 'resinPot': return k.genetics.resinPot;
@@ -2833,76 +3041,81 @@ function keeperSortVal(k){
   }
 }
 function keepersVaultHtml(){
-  let html='<div class="card cap-card"><h3>'+icon('keepers','ic-lg')+'VAULT CAPACITY</h3>'+
-   '<div class="kv"><span>'+icon('keepers','kv-ico')+'Slots used</span><b>'+S.keepers.length+' / '+S.keeperCapacity+'</b></div>';
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('keepers','ge-ic-md')+'<h3>VAULT CAPACITY</h3></div>'+
+   '<div class="ge-datarow"><span>'+icon('keepers','ge-ic-sm')+'Slots used</span><b class="ge-num">'+S.keepers.length+' / '+S.keeperCapacity+'</b></div>';
   const lvl=S.keeperCapLevel, next=lvl+1;
   if(next<KEEPER_CAPS.length){
     const cost=KEEPER_CAP_COSTS[next], gate=keeperCapGate(next);
-    html+='<div class="kv"><span>'+icon('plus','kv-ico')+'Next: '+KEEPER_CAPS[next]+' slots</span><b>'+fmt$(cost)+'</b></div>'+
-     (gate?'<p class="lock-note">'+icon('lock','kv-ico')+' '+esc(gate)+'</p>':'<button class="btn btn-small btn-gold" id="cap-up">'+icon('plus','b-ico')+'UPGRADE VAULT</button>');
-  } else html+='<p class="muted">'+icon('check','kv-ico')+' Vault maxed at '+S.keeperCapacity+' slots.</p>';
+    html+='<div class="ge-datarow"><span>'+icon('plus','ge-ic-sm')+'Next: '+KEEPER_CAPS[next]+' slots</span><b class="ge-num">'+fmt$(cost)+'</b></div>'+
+     (gate?'<p class="ge-caption">'+icon('lock','ge-ic-sm')+' '+esc(gate)+'</p>':'<button class="ge-btn ge-btn-gold" id="cap-up">'+icon('plus','ge-ic-sm')+'UPGRADE VAULT</button>');
+  } else html+='<p class="ge-caption">'+icon('check','ge-ic-sm')+' Vault maxed at '+S.keeperCapacity+' slots.</p>';
   html+='</div>';
   if(!S.keepers.length){
-    return html+'<div class="card"><p class="muted">'+icon('keepers','kv-ico')+' No keepers yet. Harvest plants, review the phenotype report, and KEEP the exceptional ones.</p></div>';
+    return html+'<div class="ge-card ge-empty"><div>'+icon('keepers','ge-ic-xl')+'</div><h3>NO KEEPERS YET</h3><p>Harvest plants, review the phenotype report, and keep the exceptional ones.</p></div>';
   }
   const strains=[...new Set(S.keepers.map(k=>k.strainId))];
-  html+='<div class="card"><div class="btn-row">'+
-   '<select id="ksort">'+KEEPER_SORTS.map(s=>'<option value="'+s[0]+'"'+(keeperSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select>'+
-   '<select id="kfilter"><option value="all">ALL STRAINS</option>'+strains.map(id=>{const st=getStrain(id);return '<option value="'+id+'"'+(keeperFilter===id?' selected':'')+'>'+esc(st?st.name:id)+'</option>';}).join('')+'</select></div></div>';
+  html+='<div class="ge-card ge-card-flat"><div class="ge-filter-row">'+
+   '<select id="ksort" class="ge-select" aria-label="Sort keepers">'+KEEPER_SORTS.map(s=>'<option value="'+s[0]+'"'+(keeperSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select>'+
+   '<select id="kfilter" class="ge-select" aria-label="Filter keepers"><option value="all">ALL STRAINS</option>'+strains.map(id=>{const st=getStrain(id);return '<option value="'+id+'"'+(keeperFilter===id?' selected':'')+'>'+esc(st?st.name:id)+'</option>';}).join('')+'</select></div></div>';
   let list=S.keepers.filter(k=>keeperFilter==='all'||k.strainId===keeperFilter);
   list=list.slice().sort((a,b)=>keeperSortVal(b)-keeperSortVal(a));
   const perPage=12, pages=Math.max(1,Math.ceil(list.length/perPage));
   keeperPage=clamp(keeperPage,0,pages-1);
   const page=list.slice(keeperPage*perPage,keeperPage*perPage+perPage);
   page.forEach(k=>{
-    html+='<div class="card keeper-card r-'+k.rarity+'"><div class="keeper-hero">'+flowerSVG(k.strainId+'#'+k.phenoNum,'keeper-flower')+'</div>'+
-     '<h3>'+(k.rarity==='legendary'?icon('crown-gold','b-ico'):icon('keepers','b-ico'))+esc(k.strainName)+' #'+k.phenoNum+'</h3>'+
-     '<p>'+rarityBadge(k)+(k.legendaryTrait?' <span class="badge r-legendary">'+icon('crown-gold','b-ico')+esc(k.legendaryTrait)+'</span>':'')+'</p>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+'Overall</span><b>'+k.overall+'</b></div>'+
-     '<div class="kv"><span>'+icon('harvest','kv-ico')+'Best harvest</span><b>Q'+k.bestQuality+' • '+k.bestYield+' oz</b></div>'+
-     '<div class="kv"><span>'+icon('clone','kv-ico')+'Clones grown</span><b>'+k.clonesGrown+'</b></div>'+
-     statBar('Resin',k.genetics.resinPot)+statBar('Terpenes',k.genetics.terpenePot)+
-     statBar('Yield',k.genetics.yieldPot)+statBar('Potency',k.genetics.potencyPot)+
-     (k.traits.length?'<div class="tags">'+k.traits.slice(0,6).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>':'')+
-     '<div class="btn-row"><button class="btn btn-small btn-green" data-mother="'+k.id+'">'+icon('mothers','b-ico')+'MOTHER</button>'+
-     '<button class="btn btn-small" data-cmp="'+k.id+'">'+icon('scroll','b-ico')+'COMPARE</button>'+
-     '<button class="btn btn-small btn-danger" data-delk="'+k.id+'">'+icon('x','b-ico')+'</button></div></div>';
+    const bars=[['Resin',k.genetics.resinPot],['Terpenes',k.genetics.terpenePot],['Yield',k.genetics.yieldPot],['Potency',k.genetics.potencyPot]];
+    html+='<div class="ge-card ge-spec-card keeper-card r-'+k.rarity+'"><div class="ge-spec-art">'+flowerSVG(k.strainId+'#'+k.phenoNum,'keeper-flower')+'</div>'+
+     '<div class="ge-spec-main">'+
+     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+(k.rarity==='legendary'?icon('crown-gold','ge-ic-sm'):icon('keepers','ge-ic-sm'))+esc(k.strainName)+' <span class="ge-num">#'+k.phenoNum+'</span></h3></div>'+
+     '<div class="ge-spec-badges">'+rarityBadge(k)+(k.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(k.legendaryTrait)+'</span>':'')+'</div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Overall</span><b class="ge-num">'+k.overall+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('harvest','ge-ic-sm')+'Best harvest</span><b class="ge-num">Q'+k.bestQuality+' • '+k.bestYield+' oz</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('clone','ge-ic-sm')+'Clones grown</span><b class="ge-num">'+k.clonesGrown+'</b></div>'+
+     bars.map(b=>'<div class="ge-progress-meta"><span>'+b[0]+'</span><b>'+Math.round(num(b[1],0))+'</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+clamp(Math.round(num(b[1],0)),0,100)+'%"></i></div>').join('')+
+     (k.traits.length?'<div class="ge-tags">'+k.traits.slice(0,6).map(t=>'<span class="ge-pill ge-pill-neutral">'+esc(t)+'</span>').join('')+'</div>':'')+
+     '<div class="btn-row ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" data-mother="'+k.id+'">'+icon('mothers','ge-ic-sm')+'MOTHER</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-cmp="'+k.id+'">'+icon('scroll','ge-ic-sm')+'COMPARE</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-danger ge-iconbtn" data-delk="'+k.id+'" aria-label="Remove keeper">'+icon('x','ge-ic-sm')+'</button></div></div></div>';
   });
-  if(pages>1) html+='<div class="btn-row"><button class="btn btn-small" id="kprev"'+(keeperPage===0?' disabled':'')+'>‹ PREV</button>'+
-   '<button class="btn btn-small" disabled>'+(keeperPage+1)+'/'+pages+'</button>'+
-   '<button class="btn btn-small" id="knext"'+(keeperPage>=pages-1?' disabled':'')+'>NEXT ›</button></div>';
+  if(pages>1) html+='<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-ghost" id="kprev"'+(keeperPage===0?' disabled':'')+'>‹ PREV</button>'+
+   '<button class="ge-btn ge-btn-sm ge-btn-ghost" disabled>'+(keeperPage+1)+'/'+pages+'</button>'+
+   '<button class="ge-btn ge-btn-sm ge-btn-ghost" id="knext"'+(keeperPage>=pages-1?' disabled':'')+'>NEXT ›</button></div>';
   return html;
 }
+
 function mothersHtml(){
-  let html='<div class="card cap-card"><h3>'+icon('mothers','ic-lg')+'MOTHER ROOM</h3>'+
-   '<div class="kv"><span>'+icon('mothers','kv-ico')+'Mother slots</span><b>'+S.mothers.length+' / '+S.motherCapacity+'</b></div>'+
-   '<p class="muted">Mothers preserve keeper genetics forever. Clones grow the EXACT same phenotype — seed = new pheno, clone = preserved pheno.</p></div>';
-  if(!S.mothers.length) html+='<div class="card"><p class="muted">No mothers yet. Promote a keeper with MOTHER.</p></div>';
+  let html='<div class="ge-card"><div class="ge-card-head">'+icon('mothers','ge-ic-md')+'<h3>MOTHER ROOM</h3></div>'+
+   '<div class="ge-datarow"><span>'+icon('mothers','ge-ic-sm')+'Mother slots</span><b class="ge-num">'+S.mothers.length+' / '+S.motherCapacity+'</b></div>'+
+   '<p class="ge-caption ge-muted">Mothers preserve keeper genetics forever. Clones grow the EXACT same phenotype — seed = new pheno, clone = preserved pheno.</p></div>';
+  if(!S.mothers.length) html+='<div class="ge-card ge-empty"><div>'+icon('mothers','ge-ic-xl')+'</div><h3>NO MOTHERS YET</h3><p>Promote a keeper with MOTHER.</p></div>';
   S.mothers.forEach(mo=>{
     const avgQ=mo.qualities.length?Math.round(mo.qualities.reduce((a,b)=>a+b,0)/mo.qualities.length):0;
     const avgY=mo.yields.length?Math.round(mo.yields.reduce((a,b)=>a+b,0)/mo.yields.length*10)/10:0;
-    html+='<div class="card keeper-card mother-card r-'+mo.rarity+'"><div class="mother-hero">'+plantSVG(4,mo.strainId+'#'+mo.phenoNum,'mother-plant',{bushy:true,frost:1,dense:true})+'</div>'+
-     '<h3>'+icon('mothers','b-ico')+esc(mo.strainName)+' #'+mo.phenoNum+' <span class="badge green">MOTHER</span></h3>'+
-     '<p>'+rarityBadge({rarity:mo.rarity})+(mo.legendaryTrait?' <span class="badge r-legendary">'+icon('crown-gold','b-ico')+esc(mo.legendaryTrait)+'</span>':'')+'</p>'+
-     statBar('Resin',mo.genetics.resinPot)+statBar('Terpenes',mo.genetics.terpenePot)+statBar('Yield',mo.genetics.yieldPot)+
-     '<div class="kv"><span>'+icon('clone','kv-ico')+'Clones taken</span><b>'+mo.clonesTaken+'</b></div>'+
-     '<div class="kv"><span>'+icon('grow','kv-ico')+'Clone runs</span><b>'+mo.runs+'</b></div>'+
-     '<div class="kv"><span>'+icon('trophy','kv-ico')+'Best clone harvest</span><b>'+(mo.runs?'Q'+mo.bestQ+' • '+mo.bestY+' oz':'—')+'</b></div>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+'Avg clone</span><b>'+(mo.runs?'Q'+avgQ+' • '+avgY+' oz':'—')+'</b></div>'+
-     (mo.awards.length?'<div class="tags">'+mo.awards.slice(-4).map(a=>'<span class="tag gold">'+esc(a)+'</span>').join('')+'</div>':'')+
-     '<div class="btn-row"><button class="btn btn-small btn-primary" data-clone="'+mo.id+'">'+icon('clone','b-ico')+'TAKE CLONE ($25)</button>'+
-     '<button class="btn btn-small btn-danger" data-delm="'+mo.id+'">'+icon('x','b-ico')+'RETIRE</button></div></div>';
+    const bars=[['Resin',mo.genetics.resinPot],['Terpenes',mo.genetics.terpenePot],['Yield',mo.genetics.yieldPot]];
+    html+='<div class="ge-card ge-spec-card keeper-card mother-card r-'+mo.rarity+'"><div class="ge-spec-art">'+plantSVG(4,mo.strainId+'#'+mo.phenoNum,'mother-plant',{bushy:true,frost:1,dense:true})+'</div>'+
+     '<div class="ge-spec-main">'+
+     '<div class="ge-spec-top"><h3 class="ge-spec-name">'+icon('mothers','ge-ic-sm')+esc(mo.strainName)+' <span class="ge-num">#'+mo.phenoNum+'</span> <span class="ge-badge ge-badge-mother">MOTHER</span></h3></div>'+
+     '<div class="ge-spec-badges">'+rarityBadge({rarity:mo.rarity})+(mo.legendaryTrait?' <span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+esc(mo.legendaryTrait)+'</span>':'')+'</div>'+
+     bars.map(b=>'<div class="ge-progress-meta"><span>'+b[0]+'</span><b>'+Math.round(num(b[1],0))+'</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+clamp(Math.round(num(b[1],0)),0,100)+'%"></i></div>').join('')+
+     '<div class="ge-datarow"><span>'+icon('clone','ge-ic-sm')+'Clones taken</span><b class="ge-num">'+mo.clonesTaken+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('grow','ge-ic-sm')+'Clone runs</span><b class="ge-num">'+mo.runs+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('trophy','ge-ic-sm')+'Best clone harvest</span><b class="ge-num">'+(mo.runs?'Q'+mo.bestQ+' • '+mo.bestY+' oz':'—')+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+'Avg clone</span><b class="ge-num">'+(mo.runs?'Q'+avgQ+' • '+avgY+' oz':'—')+'</b></div>'+
+     (mo.awards.length?'<div class="ge-tags">'+mo.awards.slice(-4).map(a=>'<span class="ge-pill ge-pill-gold">'+esc(a)+'</span>').join('')+'</div>':'')+
+     '<div class="btn-row ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" data-clone="'+mo.id+'">'+icon('clone','ge-ic-sm')+'TAKE CLONE ($25)</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-danger" data-delm="'+mo.id+'">'+icon('x','ge-ic-sm')+'RETIRE</button></div></div></div>';
   });
   return html;
 }
+
 function wireKeepers(r){
   const cu=$('cap-up'); if(cu) cu.onclick=()=>{
     const next=S.keeperCapLevel+1, cost=KEEPER_CAP_COSTS[next], gate=keeperCapGate(next);
-    if(gate){ toast('🔒 '+esc(gate)); return; }
-    if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+    if(gate){ toast(icon('lock','ge-ic-md')+' '+esc(gate)); return; }
+    if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
     S.cash-=cost; S.keeperCapLevel=next; S.keeperCapacity=KEEPER_CAPS[next];
     S.stats.keeperCapUpgrades++; gainXP(100);
-    toast('👑 Vault expanded to '+S.keeperCapacity+' slots!');
+    toast(icon('crown','ge-ic-md')+' Vault expanded to '+S.keeperCapacity+' slots!');
     save(); updateHUD(); checkMissions(); RENDER.keepers();
   };
   const ks=$('ksort'); if(ks) ks.onchange=e=>{ keeperSort=e.target.value; keeperPage=0; RENDER.keepers(); };
@@ -2915,6 +3128,7 @@ function wireKeepers(r){
   r.querySelectorAll('[data-clone]').forEach(b=>b.onclick=()=>takeClone(b.dataset.clone));
   r.querySelectorAll('[data-delm]').forEach(b=>b.onclick=()=>removeMother(b.dataset.delm));
 }
+
 /* ============================================================
    SHOCKER OWNZ GROW EMPIRE — EXPANSION A: WORLD & ECONOMY
    Builder A ("World & Economy").
@@ -3031,8 +3245,9 @@ function WX_applyBoom(tag,days){
   allStrains().forEach(function(st){
     if(st.tags&&st.tags.indexOf(tag)>=0) S.wx.market[st.id]={demand:'high',mult:1.35,days:days};
   });
-  toast('📈 MARKET BOOM: '+esc(tag)+' strains in HIGH demand for '+days+' days!');
+  toast(WX_ic('chart','ge-ic-md')+' MARKET BOOM: '+esc(tag)+' strains in HIGH demand for '+days+' days!');
 }
+
 
 const WX_EVENT_DEFS=[
  /* ---- POWER OUTAGE (COMMON) ---- */
@@ -3043,9 +3258,9 @@ const WX_EVENT_DEFS=[
    onStart:function(){},
    choices:[
     {label:'EMERGENCY GENERATOR', sub:function(){ return 'Pay '+fmt$(WX_powerCost())+' — full power restored now'; },
-     run:function(){ var c=WX_powerCost(); if(S.cash<c){ toast('❌ Need '+fmt$(c)+'.'); return; } S.cash-=c; toast('⚡ Emergency power online. Crisis over.'); return 'end'; }},
+     run:function(){ var c=WX_powerCost(); if(S.cash<c){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; toast(WX_ic('lighting','ge-ic-md')+' Emergency power online. Crisis over.'); return 'end'; }},
     {label:'RIDE IT OUT', sub:'Keep the penalty until the grid returns',
-     run:function(){ toast('🕯️ Riding it out… env controls stay weakened.'); }}
+     run:function(){ toast('Riding it out… env controls stay weakened.'); }}
    ]},
  /* ---- PEST OUTBREAK (COMMON) ---- */
  { id:'wx-pests', rarity:'COMMON', weight:20, cd:10, dur:[4,5],
@@ -3063,11 +3278,11 @@ const WX_EVENT_DEFS=[
    },
    choices:[
     {label:'CALL EXTERMINATOR', sub:function(){ return 'Pay '+fmt$(WX_extermCost())+' — clears the whole facility'; },
-     run:function(){ var c=WX_extermCost(); if(S.cash<c){ toast('❌ Need '+fmt$(c)+'.'); return; } S.cash-=c; WX_clearPests(false); toast('🐞 Exterminator cleared the facility.'); return 'end'; }},
+     run:function(){ var c=WX_extermCost(); if(S.cash<c){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; WX_clearPests(false); toast(WX_ic('check','ge-ic-md')+' Exterminator cleared the facility.'); return 'end'; }},
     {label:'NEEM OIL TREATMENT', sub:'Pay $25 — clears pests, +stress to hit plants',
-     run:function(){ if(S.cash<25){ toast('❌ Need $25.'); return; } S.cash-=25; WX_clearPests(true); toast('🌿 Neem applied. Pests gone.'); return 'end'; }},
+     run:function(){ if(S.cash<25){ toast(WX_ic('x','ge-ic-md')+' Need $25.'); return; } S.cash-=25; WX_clearPests(true); toast(WX_ic('leaf','ge-ic-md')+' Neem applied. Pests gone.'); return 'end'; }},
     {label:'IGNORE IT', sub:'Pests spread to more plants each day',
-     run:function(ev){ ev.data.ignored=true; toast('⚠️ Ignored… the outbreak will spread.'); }}
+     run:function(ev){ ev.data.ignored=true; toast(WX_ic('warn','ge-ic-md')+' Ignored… the outbreak will spread.'); }}
    ]},
  /* ---- EQUIPMENT FAILURE (UNCOMMON) ---- */
  { id:'wx-equipfail', rarity:'UNCOMMON', weight:16, cd:12, dur:[3,4],
@@ -3077,9 +3292,9 @@ const WX_EVENT_DEFS=[
    onStart:function(ev){ ev.data.equip=pick(['lights','hvac','co2sys','irrigation','nutrients','drycure']); },
    choices:[
     {label:'REPAIR NOW', sub:function(ev){ return 'Pay '+fmt$(WX_equipFailCost(ev))+' — back online today'; },
-     run:function(ev){ var c=WX_equipFailCost(ev); if(S.cash<c){ toast('❌ Need '+fmt$(c)+'.'); return; } S.cash-=c; toast('🔧 '+esc(WX_equipName(ev.data.equip))+' repaired.'); return 'end'; }},
+     run:function(ev){ var c=WX_equipFailCost(ev); if(S.cash<c){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; toast(WX_ic('equipment','ge-ic-md')+' '+esc(WX_equipName(ev.data.equip))+' repaired.'); return 'end'; }},
     {label:'RUN DEGRADED', sub:'Keep growing with it offline until it recovers',
-     run:function(ev){ toast('⚠️ Running degraded — '+esc(WX_equipName(ev.data.equip))+' offline.'); }}
+     run:function(ev){ toast(WX_ic('warn','ge-ic-md')+' Running degraded — '+esc(WX_equipName(ev.data.equip))+' offline.'); }}
    ]},
  /* ---- HEAT WAVE (UNCOMMON) ---- */
  { id:'wx-heatwave', rarity:'UNCOMMON', weight:12, cd:14, dur:[3,4],
@@ -3089,11 +3304,11 @@ const WX_EVENT_DEFS=[
    onStart:function(){},
    choices:[
     {label:'EMERGENCY COOLING', sub:function(){ return 'Pay '+fmt$(WX_heatCost())+' — heat wave neutralized'; },
-     run:function(){ var c=WX_heatCost(); if(S.cash<c){ toast('❌ Need '+fmt$(c)+'.'); return; } S.cash-=c; toast('❄️ Portable ACs deployed. Heat beaten.'); return 'end'; }},
+     run:function(){ var c=WX_heatCost(); if(S.cash<c){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; toast(WX_ic('temp','ge-ic-md')+' Portable ACs deployed. Heat beaten.'); return 'end'; }},
     {label:'NIGHT VENTING', sub:'Free — halves the daily temperature climb',
-     run:function(ev){ ev.data.vent=true; toast('🌬️ Night venting scheduled.'); }},
+     run:function(ev){ ev.data.vent=true; toast(WX_ic('hvac','ge-ic-md')+' Night venting scheduled.'); }},
     {label:'RIDE IT OUT', sub:'Temperature climbs +4°F every day',
-     run:function(){ toast('🥵 Riding it out… watch those thermometers.'); }}
+     run:function(){ toast(WX_ic('temp','ge-ic-md')+' Riding it out… watch those thermometers.'); }}
    ]},
  /* ---- SUPPLIER SALE (UNCOMMON) ---- */
  { id:'wx-sale', rarity:'UNCOMMON', weight:14, cd:10, dur:[2,2],
@@ -3114,22 +3329,22 @@ const WX_EVENT_DEFS=[
        });
        if(!best){ toast('All equipment already maxed out.'); return; }
        var cost=Math.max(1,Math.round(bestCost*ev.data.disc));
-       if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+       if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
        S.cash-=cost; S.equipment[best.id]=num(S.equipment[best.id],1)+1;
        if(typeof gainXP==='function') gainXP(40);
-       toast('⬆️ '+esc(best.name)+' → Lv '+S.equipment[best.id]+' (sale: '+fmt$(cost)+')');
+       toast(WX_ic('arrow-right','ge-ic-md')+' '+esc(best.name)+' → Lv '+S.equipment[best.id]+' (sale: '+fmt$(cost)+')');
      }},
     {label:'GENETICS GRAB', sub:function(ev){ return 'Unlock a cash-locked strain at '+Math.round((1-ev.data.disc)*100)+'% off'; },
      run:function(ev){
        var cands=STRAINS.filter(function(st){ return st.lock&&st.lock.t==='cash'&&S.lockedStrains.indexOf(st.id)>=0; });
        if(!cands.length){ toast('No cash-locked genetics left to grab.'); return; }
        var st=cands[0], cost=Math.max(1,Math.round(st.seed*3*ev.data.disc));
-       if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+' for '+esc(st.name)+'.'); return; }
+       if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+' for '+esc(st.name)+'.'); return; }
        S.cash-=cost;
        if(typeof unlockStrain==='function') unlockStrain(st.id);
      }},
     {label:'JUST BROWSING', sub:'The sale stays live — shop at your own pace',
-     run:function(){ toast('🛒 Sale stays live for now. Check the depot.'); }}
+     run:function(){ toast(WX_ic('cart','ge-ic-md')+' Sale stays live for now. Check the depot.'); }}
    ]},
  /* ---- MARKET BOOM (RARE) ---- */
  { id:'wx-boom', rarity:'RARE', weight:8, cd:12, dur:[3,3],
@@ -3172,7 +3387,7 @@ const WX_EVENT_DEFS=[
      run:function(ev){
        var st=ev.data.offerId?getStrain(ev.data.offerId):null; if(!st) return 'end';
        var cost=st.seed*5;
-       if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+       if(S.cash<cost){ toast(WX_ic('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
        S.cash-=cost;
        if(typeof unlockStrain==='function') unlockStrain(st.id);
        if(typeof gainXP==='function') gainXP(50);
@@ -3190,7 +3405,7 @@ const WX_EVENT_DEFS=[
     {label:'ACCEPT INVITATION', sub:'+5 rep — head to the arena',
      run:function(){
        if(typeof gainRep==='function') gainRep(5);
-       toast('🏆 Invitation accepted! Make the empire proud.');
+       toast(WX_ic('trophy','ge-ic-md')+' Invitation accepted! Make the empire proud.');
        try{ if(typeof empireTab!=='undefined') empireTab='compete'; }catch(e){}
        if(typeof show==='function') show('empire');
        return 'end';
@@ -3211,13 +3426,14 @@ const WX_EVENT_DEFS=[
        S.keepers=S.keepers.filter(function(x){ return x.id!==k.id; });
        if(typeof addP0==='function') addP0('preservation',10);
        if(typeof gainRep==='function') gainRep(15);
-       toast('🕊️ Keeper "'+esc(k.strainName)+' #'+int(k.phenoNum,0)+'" preserved forever. +10 P0, +15 rep');
+       toast(WX_ic('project0','ge-ic-md')+' Keeper "'+esc(k.strainName)+' #'+int(k.phenoNum,0)+'" preserved forever. +10 P0, +15 rep');
        return 'end';
      }},
     {label:'PLEDGE A FUTURE KEEPER', sub:'+3 P0 — the vault remembers promises',
-     run:function(){ if(typeof addP0==='function') addP0('preservation',3); toast('🕊️ Your pledge is recorded. +3 P0'); return 'end'; }}
+     run:function(){ if(typeof addP0==='function') addP0('preservation',3); toast(WX_ic('project0','ge-ic-md')+' Your pledge is recorded. +3 P0'); return 'end'; }}
    ], dismissEnds:true}
 ];
+
 function WX_activeEvent(defId){
   if(typeof S==='undefined'||!S||!S.wx) return null;
   for(var i=0;i<S.wx.events.length;i++) if(S.wx.events[i].def===defId) return S.wx.events[i];
@@ -3271,8 +3487,9 @@ function WX_endEvent(uid,expired){
   var ev=null;
   w.events=w.events.filter(function(e){ if(e.uid===uid){ ev=e; return false; } return true; });
   if(w.pending&&w.pending.uid===uid) w.pending=null;
-  if(expired&&ev) toast('📡 Passed: '+esc(ev.title));
+  if(expired&&ev) toast('Event passed: '+esc(ev.title));
 }
+
 function WX_tickEvents(){
   var w=S.wx; if(!w) return;
   var keep=[];
@@ -3299,17 +3516,17 @@ function WX_showPendingEvent(){
   var def=null;
   for(i=0;i<WX_EVENT_DEFS.length;i++) if(WX_EVENT_DEFS[i].id===ev.def) def=WX_EVENT_DEFS[i];
   if(!def) return;
-  var html='<div class="wx-ev-modal"><span class="wx-rar wx-rar-'+def.rarity+'">'+def.rarity+' EVENT</span>'+
-   '<h3>'+esc(ev.title)+'</h3><p>'+esc(def.text(ev))+'</p>';
-  if(ev.daysLeft>0) html+='<p class="muted">Active for '+int(ev.daysLeft,0)+' more day(s). Manage it from the event banner.</p>';
-  html+='<div class="wx-choices" id="wx-ev-choices"></div>'+
-   '<button class="btn btn-small" id="wx-ev-later">'+(def.dismissEnds?'NOT NOW':'DECIDE LATER')+'</button></div>';
+  var html='<div class="ge-wx-ev"><span class="ge-pill '+WX_rarPill(def.rarity)+'">'+WX_ic('warn','ge-ic-sm')+def.rarity+' EVENT</span>'+
+   '<h3 class="ge-h2">'+esc(ev.title)+'</h3><p class="ge-body ge-muted">'+esc(def.text(ev))+'</p>';
+  if(ev.daysLeft>0) html+='<p class="ge-caption ge-muted">Active for '+int(ev.daysLeft,0)+' more day(s). Manage it from the event banner.</p>';
+  html+='<div class="ge-stack" id="wx-ev-choices"></div>'+
+   '<button class="ge-btn ge-btn-ghost ge-btn-block" id="wx-ev-later">'+(def.dismissEnds?'NOT NOW':'DECIDE LATER')+'</button></div>';
   var m=modal(html), box=m.querySelector('#wx-ev-choices');
   def.choices.forEach(function(ch){
     var b=document.createElement('button');
-    b.className='btn btn-small wx-choice';
+    b.className='ge-btn ge-btn-block ge-wx-choice';
     var sub=typeof ch.sub==='function'?ch.sub(ev):ch.sub;
-    b.innerHTML='<b>'+esc(ch.label)+'</b>'+(sub?'<span class="wx-sub">'+esc(sub)+'</span>':'');
+    b.innerHTML='<b>'+esc(ch.label)+'</b>'+(sub?'<span class="ge-wx-sub">'+esc(sub)+'</span>':'');
     b.onclick=function(){
       var res=null;
       try{ res=ch.run(ev); }catch(err){ res=null; }
@@ -3330,6 +3547,7 @@ function WX_showPendingEvent(){
     if(typeof refreshGrowUI==='function') refreshGrowUI();
   };
 }
+
 function WX_showEvent(uid){
   if(typeof S==='undefined'||!S||!S.wx) return;
   S.wx.pending={uid:uid};
@@ -3348,12 +3566,14 @@ function WX_bannerHTML(){
   return w.events.map(function(ev){
     var rar='COMMON';
     for(var i=0;i<WX_EVENT_DEFS.length;i++) if(WX_EVENT_DEFS[i].id===ev.def) rar=WX_EVENT_DEFS[i].rarity;
-    return '<div class="wx-ev-banner"><span class="wx-rar wx-rar-'+rar+'">'+rar+'</span>'+
-     '<span class="wx-ev-t">'+esc(ev.title)+' <span class="wx-ev-d">'+int(ev.daysLeft,0)+'d left</span></span>'+
-     '<button class="btn btn-small" onclick="WX_showEvent(\''+ev.uid+'\')">VIEW</button>'+
-     '<button class="btn btn-small" onclick="WX_dismissEvent(\''+ev.uid+'\')">DISMISS</button></div>';
+    return '<div class="ge-card ge-card-flat ge-wx-banner">'+
+     '<span class="ge-pill '+WX_rarPill(rar)+'">'+WX_ic('warn','ge-ic-sm')+rar+'</span>'+
+     '<div class="ge-wx-banner-t"><b>'+esc(ev.title)+'</b><span class="ge-caption ge-muted">'+int(ev.daysLeft,0)+'d left</span></div>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" onclick="WX_showEvent(\''+ev.uid+'\')">VIEW</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-ghost" onclick="WX_dismissEvent(\''+ev.uid+'\')">DISMISS</button></div></div>';
   }).join('');
 }
+
 /* ---- public cross-builder interfaces (events) ---- */
 function WX_envPenalty(){ return WX_activeEvent('wx-powerout')?15:0; }
 function WX_heatWave(){ return !!WX_activeEvent('wx-heatwave'); }
@@ -3409,8 +3629,9 @@ function WX_marketTick(){
     if(dem==='normal'){ if(w.market[st.id]){ delete w.market[st.id]; changed++; } }
     else { w.market[st.id]={demand:dem,mult:WX_DEMANDS[dem].mult,days:rndi(3,6)}; changed++; }
   });
-  if(changed>0&&S.day>5) toast('📊 Market shifted: '+changed+' strain(s) repriced.');
+  if(changed>0&&S.day>5) toast(WX_ic('chart','ge-ic-md')+' Market shifted: '+changed+' strain(s) repriced.');
 }
+
 function WX_marketMult(strainId){
   if(typeof S==='undefined'||!S||!S.wx||!S.wx.market) return 1.0;
   var e=S.wx.market[strainId];
@@ -3427,20 +3648,19 @@ function WX_marketPanel(){
   var ord={collector:0,high:1,low:2};
   rows.sort(function(a,b){ return (ord[a.demand]-ord[b.demand]); });
   rows=rows.slice(0,8);
-  var ic=typeof icon==='function'?icon('cash','ic-lg'):'';
-  var html='<div class="wx-market-panel"><h3>'+ic+'MARKET CONDITIONS</h3>';
-  if(!rows.length) html+='<p class="muted">Markets steady. Prices shift every few days.</p>';
+  var html='<div class="ge-card"><div class="ge-card-head"><h3>'+WX_ic('cash','ge-ic-md')+'MARKET CONDITIONS</h3></div>';
+  if(!rows.length) html+='<div class="ge-empty"><p class="ge-body ge-muted">Markets steady. Prices shift every few days.</p></div>';
   rows.forEach(function(r){
     var d=WX_DEMANDS[r.demand];
-    var trend=(r.demand==='high'||r.demand==='collector')?'wx-up':'wx-down';
-    html+='<div class="wx-mkt-row"><span class="wx-mkt-name">'+esc(r.name)+'</span>'+
-     '<span class="wx-dem '+d.cls+'">'+d.label+'</span>'+
-     '<span class="wx-trend '+trend+'">'+d.arrow+'</span>'+
-     '<b>×'+r.mult.toFixed(2)+'</b><span class="muted">'+r.days+'d</span></div>';
+    var pill=r.demand==='collector'?'ge-pill-gold':r.demand==='high'?'ge-pill-optimal':r.demand==='low'?'ge-pill-warning':'ge-pill-neutral';
+    html+='<div class="ge-datarow"><span>'+esc(r.name)+'</span>'+
+     '<span class="ge-pill '+pill+'">'+d.arrow+' '+d.label+'</span>'+
+     '<b class="ge-num">×'+r.mult.toFixed(2)+'</b><span class="ge-caption ge-muted">'+r.days+'d</span></div>';
   });
-  html+='<p class="wx-note">Sell high, hold low — demand shifts every few days.</p></div>';
+  html+='<p class="ge-caption ge-muted">Sell high, hold low — demand shifts every few days.</p></div>';
   return html;
 }
+
 /* ---- combined sell multiplier: buyer × market × location ---- */
 function WX_sellMult(strainId,item,buyerId){
   var m=WX_marketMult(strainId), loc=1, b=1;
@@ -3493,7 +3713,7 @@ function WX_tickContracts(){
   var before=w.contracts.length;
   w.offers=w.offers.filter(function(o){ return int(o.expiresDay,0)>=S.day; });
   w.contracts=w.contracts.filter(function(c){ return int(c.expiresDay,0)>=S.day; });
-  if(w.contracts.length<before) toast('📋 A contract expired unfulfilled.');
+  if(w.contracts.length<before) toast(WX_ic('scroll','ge-ic-md')+' A contract expired unfulfilled.');
   var hasHistory=num(S.stats.sales,0)>0||num(S.stats.lifetimeRevenue,0)>0;
   if(!hasHistory) return;
   if(w.offers.length>=3) return;
@@ -3501,8 +3721,9 @@ function WX_tickContracts(){
   for(i=0;i<n&&w.offers.length<3;i++){
     try{ w.offers.push(WX_makeOffer()); }catch(e){}
   }
-  if(n>0) toast('📋 New buyer contract offer'+(n>1?'s':'')+' — check the DISPENSARY.');
+  if(n>0) toast(WX_ic('scroll','ge-ic-md')+' New buyer contract offer'+(n>1?'s':'')+' — check the DISPENSARY.');
 }
+
 function WX_offerFill(o){
   var items=S.inventory.filter(function(it){
     if(it.type!=='flower') return false;
@@ -3523,14 +3744,15 @@ function WX_acceptOffer(id){
   WX_init();
   var w=S.wx, i=WX_findOffer(id);
   if(i<0) return;
-  if(w.contracts.length>=3){ toast('📋 Contract book full (3). Fulfill or wait for one to expire.'); return; }
+  if(w.contracts.length>=3){ toast(WX_ic('scroll','ge-ic-md')+' Contract book full (3). Fulfill or wait for one to expire.'); return; }
   var o=w.offers.splice(i,1)[0];
   w.contracts.push(o);
-  toast('📋 Contract accepted: '+esc(o.buyerName)+' — deliver '+o.qtyOz+' oz by day '+o.expiresDay+'.');
+  toast(WX_ic('scroll','ge-ic-md')+' Contract accepted: '+esc(o.buyerName)+' — deliver '+o.qtyOz+' oz by day '+o.expiresDay+'.');
   try{ save(); }catch(e){}
   if(typeof updateHUD==='function') updateHUD();
   if(typeof current!=='undefined'&&current==='dispensary'&&RENDER.dispensary) RENDER.dispensary();
 }
+
 function WX_rejectOffer(id){
   WX_init();
   var w=S.wx, i=WX_findOffer(id);
@@ -3546,7 +3768,7 @@ function WX_fulfillContract(id){
   for(i=0;i<w.contracts.length;i++) if(w.contracts[i].id===id) ci=i;
   if(ci<0) return;
   var c=w.contracts[ci], fill=WX_offerFill(c);
-  if(fill.total<c.qtyOz){ toast('❌ Not enough matching product ('+fill.total.toFixed(1)+'/'+c.qtyOz+' oz).'); return; }
+  if(fill.total<c.qtyOz){ toast(WX_ic('x','ge-ic-md')+' Not enough matching product ('+fill.total.toFixed(1)+'/'+c.qtyOz+' oz).'); return; }
   var need=c.qtyOz;
   fill.items.sort(function(a,b){ return num(a.quality,0)-num(b.quality,0); });
   for(i=0;i<fill.items.length&&need>0.001;i++){
@@ -3563,38 +3785,39 @@ function WX_fulfillContract(id){
   if(typeof gainXP==='function') gainXP(40);
   w.stats.contractsDone++; w.chDone++;
   w.contracts.splice(ci,1);
-  toast('📋 Contract fulfilled: +'+fmt$(c.rewardCash)+' +'+c.rewardRep+' rep');
+  toast(WX_ic('scroll','ge-ic-md')+' Contract fulfilled: +'+fmt$(c.rewardCash)+' +'+c.rewardRep+' rep');
   try{ save(); }catch(e){}
   if(typeof updateHUD==='function') updateHUD();
   if(typeof checkMissions==='function') checkMissions();
   if(typeof current!=='undefined'&&current==='dispensary'&&RENDER.dispensary) RENDER.dispensary();
 }
+
 function WX_contractsHTML(){
   WX_init();
   var w=S.wx;
-  var ic=typeof icon==='function'?icon('scroll','ic-lg'):'';
-  var html='<div class="wx-contracts"><h3>'+ic+'BUYER CONTRACTS</h3>';
+  var html='<div class="ge-card"><div class="ge-card-head"><h3>'+WX_ic('scroll','ge-ic-md')+'BUYER CONTRACTS</h3></div>';
   if(!w.offers.length&&!w.contracts.length)
-    html+='<p class="muted">No offers right now. Sell product at the dispensary and buyers will come to you with contracts.</p>';
+    html+='<div class="ge-empty">'+WX_ic('scroll','ge-ic-xl')+'<h3>No offers right now</h3><p>Sell product at the dispensary and buyers will come to you with contracts.</p></div>';
   w.offers.forEach(function(o){
-    html+='<div class="wx-offer"><div class="wx-offer-head"><b>'+esc(o.buyerName)+'</b><span class="muted">expires D'+int(o.expiresDay,0)+'</span></div>'+
-     '<div class="kv"><span>Wants</span><b>'+num(o.qtyOz,0)+' oz'+(o.strainId==='any'?' (any strain)':' — '+esc(o.strainName))+'</b></div>'+
-     '<div class="kv"><span>Min quality</span><b>Q'+int(o.minQuality,0)+'</b></div>'+
-     (o.minTrait?'<div class="kv"><span>Min '+esc(o.minTrait.k)+'</span><b>'+int(o.minTrait.v,0)+'</b></div>':'')+
-     '<div class="kv"><span>Reward</span><b class="wx-cash">'+fmt$(o.rewardCash)+' + '+int(o.rewardRep,0)+' rep</b></div>'+
-     '<div class="btn-row"><button class="btn btn-small btn-green" onclick="WX_acceptOffer('+o.id+')">ACCEPT</button>'+
-     '<button class="btn btn-small" onclick="WX_rejectOffer('+o.id+')">REJECT</button></div></div>';
+    html+='<div class="ge-card ge-card-flat ge-wx-offer"><div class="ge-spread"><b>'+esc(o.buyerName)+'</b><span class="ge-caption ge-muted">expires D'+int(o.expiresDay,0)+'</span></div>'+
+     '<div class="ge-datarow"><span>Wants</span><b>'+num(o.qtyOz,0)+' oz'+(o.strainId==='any'?' (any strain)':' — '+esc(o.strainName))+'</b></div>'+
+     '<div class="ge-datarow"><span>Min quality</span><b>Q'+int(o.minQuality,0)+'</b></div>'+
+     (o.minTrait?'<div class="ge-datarow"><span>Min '+esc(o.minTrait.k)+'</span><b>'+int(o.minTrait.v,0)+'</b></div>':'')+
+     '<div class="ge-datarow"><span>Reward</span><b class="ge-green ge-num">'+fmt$(o.rewardCash)+' + '+int(o.rewardRep,0)+' rep</b></div>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-primary" onclick="WX_acceptOffer('+o.id+')">ACCEPT</button>'+
+     '<button class="ge-btn ge-btn-sm ge-btn-ghost" onclick="WX_rejectOffer('+o.id+')">REJECT</button></div></div>';
   });
   w.contracts.forEach(function(c){
     var fill=WX_offerFill(c), ok=fill.total>=c.qtyOz;
-    html+='<div class="wx-offer wx-active"><div class="wx-offer-head"><b>'+esc(c.buyerName)+'</b><span class="muted">due D'+int(c.expiresDay,0)+'</span></div>'+
-     '<div class="kv"><span>Deliver</span><b>'+fill.total.toFixed(1)+'/'+num(c.qtyOz,0)+' oz'+(c.strainId==='any'?'':' — '+esc(c.strainName))+'</b></div>'+
-     '<div class="progress"><i style="width:'+clamp(fill.total/Math.max(0.01,c.qtyOz)*100,0,100)+'%"></i></div>'+
-     '<div class="btn-row"><button class="btn btn-small btn-gold" '+(ok?'onclick="WX_fulfillContract('+c.id+')"':'disabled')+'>'+(ok?'FULFILL — '+fmt$(c.rewardCash):'NOT ENOUGH STOCK')+'</button></div></div>';
+    html+='<div class="ge-card ge-card-flat ge-wx-offer"><div class="ge-spread"><b>'+esc(c.buyerName)+'</b><span class="ge-caption ge-muted">due D'+int(c.expiresDay,0)+'</span></div>'+
+     '<div class="ge-datarow"><span>Deliver</span><b class="ge-num">'+fill.total.toFixed(1)+'/'+num(c.qtyOz,0)+' oz'+(c.strainId==='any'?'':' — '+esc(c.strainName))+'</b></div>'+
+     '<div class="ge-progress'+(ok?' ge-progress-ok':'')+'"><i style="width:'+clamp(fill.total/Math.max(0.01,c.qtyOz)*100,0,100)+'%"></i></div>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-sm '+(ok?'ge-btn-primary':'')+'" '+(ok?'onclick="WX_fulfillContract('+c.id+')"':'disabled')+'>'+(ok?'FULFILL — '+fmt$(c.rewardCash):'NOT ENOUGH STOCK')+'</button></div></div>';
   });
   html+='</div>';
   return html;
 }
+
 
 /* ============================================================
    4. DAILY + WEEKLY CHALLENGES (game-day timers only)
@@ -3676,10 +3899,11 @@ function WX_tickChallenges(){
     var p=WX_chalProg(ch);
     if(p.cur>=p.target){
       ch.notified=true;
-      setTimeout((function(n){ return function(){ toast('🏆 Challenge complete: <b>'+esc(n)+'</b> — claim it in CHALLENGES'); }; })(ch.name),50);
+      setTimeout((function(n){ return function(){ toast(WX_ic('trophy','ge-ic-md')+' Challenge complete: <b>'+esc(n)+'</b> — claim it in CHALLENGES'); }; })(ch.name),50);
     }
   });
 }
+
 function WX_claimChal(which){
   WX_init();
   var w=S.wx, ch=w.chal[which];
@@ -3690,11 +3914,12 @@ function WX_claimChal(which){
   ch.claimed=true;
   w.chal.hist.unshift({name:ch.name,day:S.day,kind:which,reward:ch.reward||{}});
   if(w.chal.hist.length>30) w.chal.hist.length=30;
-  toast('🏆 Challenge claimed: <b>'+esc(ch.name)+'</b>');
+  toast(WX_ic('trophy','ge-ic-md')+' Challenge claimed: <b>'+esc(ch.name)+'</b>');
   try{ save(); }catch(e){}
   if(typeof updateHUD==='function') updateHUD();
   if(typeof current!=='undefined'&&current==='challenges'&&RENDER.challenges) RENDER.challenges();
 }
+
 function WX_chalBadge(){
   if(typeof S==='undefined'||!S||!S.wx||!S.wx.chal) return 0;
   var n=0;
@@ -3710,40 +3935,44 @@ function WX_chalCardHTML(which){
   var p=WX_chalProg(ch), done=p.cur>=p.target;
   var pct=clamp(Math.round(p.cur/Math.max(0.001,p.target)*100),0,100);
   var rw=ch.reward||{};
-  var rwTxt=[rw.cash?fmt$(rw.cash):'',rw.xp?'+'+rw.xp+' XP':'',rw.rep?'+'+rw.rep+' rep':'',rw.p0?'+'+rw.p0+' P0':'',rw.strain?'🧬 genetics':''].filter(Boolean).join(' • ');
+  var rwTxt=[rw.cash?fmt$(rw.cash):'',rw.xp?'+'+rw.xp+' XP':'',rw.rep?'+'+rw.rep+' rep':'',rw.p0?'+'+rw.p0+' P0':'',rw.strain?WX_ic('dna','ge-ic-sm')+' genetics':''].filter(Boolean).join(' • ');
   var left=which==='daily'?'Resets tomorrow':('Renews in '+Math.max(0,int(ch.bornDay,1)+7-S.day)+'d');
-  var ic=typeof icon==='function'?icon(which==='daily'?'day':'trophy','ic-lg'):'';
-  return '<div class="card wx-chal-card"><span class="wx-chal-kind">'+(which==='daily'?'DAILY':'WEEKLY')+'</span>'+
-   '<h3>'+ic+esc(ch.name)+'</h3><p class="muted">'+esc(ch.desc)+'</p>'+
-   '<div class="progress"><i style="width:'+pct+'%"></i></div>'+
-   '<div class="kv"><span>Progress</span><b>'+esc(WX_fmtProg(p))+'</b></div>'+
-   (rwTxt?'<p class="wx-reward-line">Reward: '+rwTxt+'</p>':'')+
-   '<div class="kv"><span class="muted">'+left+'</span>'+
-   (ch.claimed?'<b class="wx-claimed">CLAIMED</b>':
-     done?'<button class="btn btn-small btn-gold" data-wx-claim="'+which+'">CLAIM</button>':
-     '<span class="muted">In progress…</span>')+
+  return '<div class="ge-card ge-card-hot"><div class="ge-spread">'+
+   '<span class="ge-pill '+(which==='daily'?'ge-pill-neutral':'ge-pill-gold')+'">'+WX_ic(which==='daily'?'day':'trophy','ge-ic-sm')+(which==='daily'?'DAILY':'WEEKLY')+'</span>'+
+   '<span class="ge-caption ge-muted">'+left+'</span></div>'+
+   '<h3 class="ge-h2">'+esc(ch.name)+'</h3><p class="ge-body ge-muted">'+esc(ch.desc)+'</p>'+
+   '<div class="ge-progress-meta"><span>Progress</span><b class="ge-num">'+esc(WX_fmtProg(p))+'</b></div>'+
+   '<div class="ge-progress'+(done?' ge-progress-ok':'')+'"><i style="width:'+pct+'%"></i></div>'+
+   (rwTxt?'<p class="ge-caption ge-wx-reward">Reward: '+rwTxt+'</p>':'')+
+   '<div class="ge-wx-chal-foot">'+
+   (ch.claimed?'<span class="ge-pill ge-pill-optimal">'+WX_ic('check','ge-ic-sm')+'CLAIMED</span>':
+     done?'<button class="ge-btn ge-btn-sm ge-btn-gold" data-wx-claim="'+which+'">CLAIM REWARD</button>':
+     '<span class="ge-caption ge-muted">In progress…</span>')+
    '</div></div>';
 }
+
 RENDER.challenges=function(){
   var r=$('challenges-root');
   if(!r) return;
   WX_init();
   WX_ensureChals();
-  var ic=typeof icon==='function'?icon('trophy','sh-ico'):'';
-  var html='<div class="screenhead"><button class="backbtn" onclick="show(\'menu\')">'+(typeof icon==='function'?icon('x'):'✕')+'<span>MENU</span></button><h2>'+ic+'CHALLENGES</h2></div>';
+  var html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+(typeof icon==='function'?icon('x','ge-ic-md'):'')+'<span>MENU</span></button>'+
+   '<h2 class="ge-screenhead-title">'+WX_ic('trophy','ge-ic-lg')+'CHALLENGES</h2></div>';
   html+=WX_chalCardHTML('daily');
   html+=WX_chalCardHTML('weekly');
   var hist=S.wx.chal.hist||[];
-  html+='<div class="card"><h3>'+(typeof icon==='function'?icon('scroll','ic-lg'):'')+'COMPLETED</h3>';
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+WX_ic('scroll','ge-ic-md')+'COMPLETED</h3></div>';
   if(hist.length){
     html+=hist.slice(0,20).map(function(h){
-      return '<div class="kv"><span>'+esc(h.name)+' <span class="muted">D'+int(h.day,0)+'</span></span><b class="wx-claimed">CLAIMED</b></div>';
+      return '<div class="ge-datarow"><span>'+esc(h.name)+' <span class="ge-caption ge-muted">D'+int(h.day,0)+'</span></span><span class="ge-pill ge-pill-optimal">'+WX_ic('check','ge-ic-sm')+'CLAIMED</span></div>';
     }).join('');
-  } else html+='<p class="muted">No challenges claimed yet.</p>';
-  html+='</div>';
+  } else html+='<div class="ge-empty">'+WX_ic('trophy','ge-ic-xl')+'<h3>No challenges claimed yet</h3><p>Complete daily and weekly challenges to earn cash, XP and rep.</p></div>';
+  html+='</div></div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-wx-claim]').forEach(function(b){ b.onclick=function(){ WX_claimChal(b.dataset.wxClaim); }; });
 };
+
 
 /* ============================================================
    MASTER DAY TICK — integrator calls WX_tick() once per advanceDay()
@@ -3755,7 +3984,9 @@ function WX_tick(){
   try{ WX_marketTick(); }catch(e){}
   try{ WX_tickContracts(); }catch(e){}
   try{ WX_tickChallenges(); }catch(e){}
+  try{ WX_envSnapshotTick(); }catch(e){}
 }
+
 /* ============================================================
    SHOCKER OWNZ GROW EMPIRE — EXPANSION B: GENETICS DEPTH
    Builder B. Concatenated AFTER game.js. 'use strict' safe.
@@ -3996,28 +4227,30 @@ function GX_applyMutation(cross,mut){
 function GX_mutationCine(mut,cb){
   var done=false;
   function fin(){ if(done) return; done=true; if(typeof cb==='function') cb(); }
-  var inner='<div class="gx-cine gx-mutcine"><div class="gx-dna">'+dnaSVG('gx-dna-svg')+'</div>'+
-   '<div class="gx-cine-kicker">GENETIC ANOMALY DETECTED</div>'+
-   '<h2 class="gx-cine-title">'+esc((mut&&(mut.title||mut.kind))||'MUTATION')+'</h2>'+
-   '<p class="gx-cine-desc">'+esc((mut&&mut.desc)||'')+'</p>'+
-   ((mut&&mut.legendary)?'<div class="gx-cine-legend">✦ LEGENDARY EXPRESSION ✦</div>':'')+
-   '<p class="gx-cine-hint">TAP TO CONTINUE</p></div>';
+  var inner='<div class="ge-kid-stage ge-mut-stage"><div class="ge-kid-glow"></div><div class="ge-mut-dna">'+dnaSVG('gx-dna-svg')+'</div>'+
+   '<div class="ge-kid-kicker">GENETIC ANOMALY DETECTED</div>'+
+   '<h2 class="ge-display ge-kid-title">'+esc((mut&&(mut.title||mut.kind))||'MUTATION')+'</h2>'+
+   '<p class="ge-kid-desc">'+esc((mut&&mut.desc)||'')+'</p>'+
+   ((mut&&mut.legendary)?'<div class="ge-badge ge-badge-legendary ge-mut-legend">'+icon('star','ge-ic-sm')+' LEGENDARY EXPRESSION</div>':'')+
+   '<p class="ge-kid-hint">TAP TO CONTINUE</p></div>';
   var back=cineOverlay(inner,'gx-cineback',3600);
   back.addEventListener('click',fin);
   setTimeout(fin,3850);
 }
+
 /* short cross cinematic played before the original createCross runs */
 function GX_crossCine(cb){
   var done=false;
   function fin(){ if(done) return; done=true; if(typeof cb==='function') cb(); }
-  var inner='<div class="gx-cine gx-xcine"><div class="gx-dna">'+dnaSVG('gx-dna-svg')+'</div>'+
-   '<div class="gx-cine-kicker">BREEDING LAB</div>'+
-   '<h2 class="gx-cine-title">FUSING PARENT DNA</h2>'+
-   '<p class="gx-cine-desc">Pollen meets pistil — a new lineage begins.</p></div>';
+  var inner='<div class="ge-kid-stage"><div class="ge-kid-glow"></div><div class="ge-mut-dna">'+dnaSVG('gx-dna-svg')+'</div>'+
+   '<div class="ge-kid-kicker">BREEDING LAB</div>'+
+   '<h2 class="ge-display ge-kid-title">FUSING PARENT DNA</h2>'+
+   '<p class="ge-kid-desc">Pollen meets pistil — a new lineage begins.</p></div>';
   var back=cineOverlay(inner,'gx-cineback',1500);
   back.addEventListener('click',fin);
   setTimeout(fin,1700);
 }
+
 
 /* ---------------- visual genetics lab: prediction ---------------- */
 function GX_predictCross(aId,bId){
@@ -4050,33 +4283,36 @@ function GX_predictCross(aId,bId){
   return out;
 }
 function GX_starHTML(v){
-  var h='<span class="gx-stars" aria-label="'+v+' of 5 stars">';
+  var h='<span class="ge-stars" role="img" aria-label="'+v+' of 5 stars">';
   for(var i=1;i<=5;i++){
-    if(v>=i) h+='<span class="gx-star on">★</span>';
-    else if(v>=i-0.5) h+='<span class="gx-star half">★</span>';
-    else h+='<span class="gx-star">★</span>';
+    var cls='';
+    if(v>=i) cls='on';
+    else if(v>=i-0.5) cls='half';
+    h+='<i class="'+cls+'">'+icon('star','ge-ic-sm')+'</i>';
   }
   return h+'</span>';
 }
+
 function GX_predictionHTML(aId,bId){
   var pr=GX_predictCross(aId,bId);
   var A=null,B=null;
   try{ A=getStrain(aId); B=getStrain(bId); }catch(e){}
   if(!pr.ok||!A||!B) return '';
   var rows=[['yield','YIELD'],['potency','POTENCY'],['resin','RESIN'],['terpenes','TERPENES'],['vigor','VIGOR'],['stability','STABILITY']];
-  var h='<div class="card gx-predict"><h3>'+icon('dna','ic')+' GENETICS LAB — OFFSPRING FORECAST</h3>';
-  h+='<div class="gx-pparents"><div class="gx-ppar"><b>PARENT A</b><span>'+esc(A.name)+'</span><i>'+esc(GX_rarityLabel(GX_strainRarity(A.id)))+' · GEN '+int(A.gen,0)+'</i></div>';
-  h+='<div class="gx-x">×</div>';
-  h+='<div class="gx-ppar"><b>PARENT B</b><span>'+esc(B.name)+'</span><i>'+esc(GX_rarityLabel(GX_strainRarity(B.id)))+' · GEN '+int(B.gen,0)+'</i></div></div>';
-  h+='<div class="gx-starrow gx-starrow-head"><span>TRAIT</span><span>FORECAST</span></div>';
-  rows.forEach(function(r){ h+='<div class="gx-starrow"><span class="gx-slabel">'+r[1]+'</span>'+GX_starHTML(pr.stars[r[0]])+'</div>'; });
-  h+='<div class="kv"><span>Mutation chance</span><b class="gx-gold">'+pr.mutChance+'%</b></div>';
-  h+='<div class="kv"><span>Range spread</span><b>'+esc(pr.ranges)+'</b></div>';
-  h+='<div class="kv"><span>Lab accuracy</span><b>'+pr.accuracy+'%</b></div>';
-  h+='<div class="kv"><span>Undiscovered traits</span><b class="gx-dim">??? · ??? · ???</b></div>';
-  h+='<p class="gx-disclaimer">⚠ PREDICTION — GROW TO DISCOVER. Seeds must be grown to reveal true traits.</p></div>';
+  var h='<div class="ge-card gx-predict"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>GENETICS LAB — OFFSPRING FORECAST</h3></div>';
+  h+='<div class="ge-predict-parents"><div class="ge-predict-par"><b class="ge-label">PARENT A</b><span>'+esc(A.name)+'</span><i class="ge-caption">'+esc(GX_rarityLabel(GX_strainRarity(A.id)))+' · GEN '+int(A.gen,0)+'</i></div>';
+  h+='<div class="ge-predict-x">×</div>';
+  h+='<div class="ge-predict-par"><b class="ge-label">PARENT B</b><span>'+esc(B.name)+'</span><i class="ge-caption">'+esc(GX_rarityLabel(GX_strainRarity(B.id)))+' · GEN '+int(B.gen,0)+'</i></div></div>';
+  h+='<div class="ge-progress-meta"><span>TRAIT</span><b>FORECAST</b></div>';
+  rows.forEach(function(r){ h+='<div class="ge-progress-meta"><span>'+r[1]+'</span></div><div class="ge-predict-row">'+GX_starHTML(pr.stars[r[0]])+'</div>'; });
+  h+='<div class="ge-datarow"><span>Mutation chance</span><b class="ge-num ge-gold-text">'+pr.mutChance+'%</b></div>';
+  h+='<div class="ge-datarow"><span>Range spread</span><b>'+esc(pr.ranges)+'</b></div>';
+  h+='<div class="ge-datarow"><span>Lab accuracy</span><b class="ge-num">'+pr.accuracy+'%</b></div>';
+  h+='<div class="ge-datarow"><span>Undiscovered traits</span><b class="ge-muted">??? · ??? · ???</b></div>';
+  h+='<p class="ge-caption">'+icon('warn','ge-ic-sm')+' PREDICTION — GROW TO DISCOVER. Seeds must be grown to reveal true traits.</p></div>';
   return h;
 }
+
 /* Integrator calls this at the END of RENDER.breeding. Injects the prediction
    panel above the name-your-cross card and wraps #btn-cross: cinematic first,
    then the ORIGINAL createCross, then a mutation reveal if one rolled. */
@@ -4169,39 +4405,45 @@ function GX_gradeHarvest(h){
 function GX_gradeReportHTML(g){
   if(!g) return '';
   var cls='gx-grade-'+String(g.grade).toLowerCase().replace(/ /g,'');
-  var h='<div class="gx-grade '+cls+'">';
-  h+='<div class="gx-grade-banner">'+icon('trophy','ic')+' '+esc(g.grade)+'</div>';
-  h+='<div class="gx-grade-score"><span>GRADE SCORE</span><b>'+g.score+'</b></div>';
-  h+='<h4 class="gx-grade-sub">WHAT DROVE THE GRADE</h4><div class="gx-grade-parts">';
+  var h='<div class="ge-card gx-grade '+cls+'">';
+  h+='<div class="ge-card-head">'+icon('trophy','ge-ic-md')+'<h3>'+esc(g.grade)+'</h3></div>';
+  h+='<div class="ge-datarow"><span>GRADE SCORE</span><b class="ge-num">'+g.score+'</b></div>';
+  h+='<div class="ge-section-title">WHAT DROVE THE GRADE</div><div class="gx-grade-parts">';
   [['Genetics',g.parts.genetics],['Phenotype',g.parts.phenotype],['Environment',g.parts.environment],
    ['Grower Care',g.parts.care],['Equipment',g.parts.equipment],['Timing',g.parts.timing]].forEach(function(p){
-    h+=statBar(p[0],p[1]);
+    h+='<div class="ge-progress-meta"><span>'+p[0]+'</span><b>'+p[1]+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(p[1],0)),0,100)+'%"></i></div>';
   });
-  h+='</div><h4 class="gx-grade-sub">FINAL STATS</h4><div class="gx-grade-stats">';
+  h+='</div><div class="ge-section-title">FINAL STATS</div><div class="gx-grade-stats">';
   [['Yield (oz)',g.stats.yield],['Potency',g.stats.potency],['Resin',g.stats.resin],['Terpenes',g.stats.terpenes],
    ['Flavor',g.stats.flavor],['Aroma',g.stats.aroma],['Appearance',g.stats.appearance],['Density',g.stats.density],
    ['Growth Speed',g.stats.growthSpeed],['Stability',g.stats.stability]].forEach(function(s){
-    h+='<div class="kv"><span>'+s[0]+'</span><b>'+s[1]+'</b></div>';
+    h+='<div class="ge-datarow"><span>'+s[0]+'</span><b class="ge-num">'+s[1]+'</b></div>';
   });
-  h+='</div><p class="gx-disclaimer">Graded by the Genetics Lab — genetics set the ceiling, your grow set the result.</p></div>';
+  h+='</div><p class="ge-caption">Graded by the Genetics Lab — genetics set the ceiling, your grow set the result.</p></div>';
   return h;
 }
 
+
 /* ---------------- lineage tree ---------------- */
-function GX_nodeHTML(id,isCenter){
+function GX_nodeHTML(id,isCenter,x,y,delay){
   var st=null;
   try{ st=getStrain(id); }catch(e){}
   if(!st) return '';
   var rar=GX_strainRarity(id);
   var gen=(st.gen!==undefined&&st.gen!==null)?('GEN '+int(st.gen,0)):'BASE';
-  return '<button class="gx-node gx-rar-'+rar+(isCenter?' gx-center':'')+'" data-gx-lin="'+esc(id)+'">'+
-    '<b>'+esc(st.name)+'</b><span>'+esc(GX_rarityLabel(rar))+' · '+gen+'</span></button>';
+  var nm=esc(st.name); if(nm.length>20) nm=nm.slice(0,19)+'…';
+  return '<g transform="translate('+x+','+y+')"><g class="ge-lin-node'+(isCenter?' ge-lin-center':'')+' ge-lin-rar-'+rar+'" data-gx-lin="'+esc(id)+'" tabindex="0" role="button" aria-label="Lineage: '+esc(st.name)+'" style="animation-delay:'+delay+'ms">'+
+    '<rect class="ge-lin-box" width="150" height="48" rx="10"></rect>'+
+    '<text class="ge-lin-name" x="75" y="21" text-anchor="middle">'+nm+'</text>'+
+    '<text class="ge-lin-sub" x="75" y="37" text-anchor="middle">'+esc(GX_rarityLabel(rar))+' · '+gen+'</text>'+
+    '</g></g>';
 }
+
 function GX_lineageHTML(strainId){
   GX_init();
   var center=null;
   try{ center=getStrain(strainId); }catch(e){}
-  if(!center) return '<div class="gx-lintree"><p class="muted">Unknown strain.</p></div>';
+  if(!center) return '<div class="ge-linwrap"><p class="ge-muted">Unknown strain.</p></div>';
   var gens=[[strainId]];
   for(var d=0;d<4;d++){
     var next=[];
@@ -4216,41 +4458,74 @@ function GX_lineageHTML(strainId){
     gens.push(next);
   }
   var names=['THIS STRAIN','PARENTS','GRANDPARENTS','GREAT-GRANDPARENTS','FOUNDATION'];
-  var h='<div class="gx-lintree"><h3>'+icon('dna','ic')+' LINEAGE — '+esc(center.name)+'</h3>';
-  gens.forEach(function(ids,gi){
-    var label=names[Math.min(gi,names.length-1)];
-    h+='<div class="gx-gen"><button class="gx-genhead" data-gx-gen="'+gi+'">'+esc(label)+' ('+ids.length+') <span class="gx-caret">▾</span></button>'+
-      '<div class="gx-gennodes" data-gx-gennodes="'+gi+'">';
-    ids.forEach(function(id){ h+=GX_nodeHTML(id,id===strainId); });
-    h+='</div></div>';
+  var NW=150,NH=48,HG=16,VG=64,LBL=26;
+  var maxN=1; gens.forEach(function(g){ if(g.length>maxN) maxN=g.length; });
+  var W=maxN*(NW+HG)+HG, H=gens.length*(NH+VG)+LBL;
+  var pos={}, nodes='', lines='', labels='', di=0;
+  var rev=gens.slice().reverse(); /* oldest generation at top */
+  rev.forEach(function(ids,ri){
+    var y=LBL+ri*(NH+VG);
+    var rowW=ids.length*(NW+HG)-HG;
+    var x0=(W-rowW)/2;
+    ids.forEach(function(id,ci){
+      var x=x0+ci*(NW+HG);
+      pos[id]={x:x+NW/2,y:y};
+      nodes+=GX_nodeHTML(id,id===strainId,x,y,di*90);
+      di++;
+    });
   });
+  gens.forEach(function(ids,gi){
+    if(gi>=gens.length-1) return;
+    ids.forEach(function(id){
+      var L=S.gx.lineage[id]; if(!L) return;
+      var c=pos[id]; if(!c) return;
+      [L.a,L.b].forEach(function(pid,pi){
+        var p=pos[pid]; if(!p) return;
+        lines+='<line class="ge-lin-line" x1="'+c.x+'" y1="'+c.y+'" x2="'+p.x+'" y2="'+(p.y+NH)+'" style="animation-delay:'+(di*90+pi*140)+'ms"/>';
+      });
+    });
+  });
+  rev.forEach(function(ids,ri){
+    var label=names[Math.min(gens.length-1-ri,names.length-1)];
+    labels+='<text class="ge-lin-glabel" x="'+HG+'" y="'+(LBL+ri*(NH+VG)-8)+'">'+label+' ('+ids.length+')</text>';
+  });
+  var h='<div class="ge-linwrap"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>LINEAGE — '+esc(center.name)+'</h3></div>'+
+   '<div class="ge-lin-scroll"><svg class="ge-lin-svg" viewBox="0 0 '+W+' '+H+'" style="width:'+W+'px;height:'+H+'px" role="tree" aria-label="Lineage tree for '+esc(center.name)+'">'+
+   lines+labels+nodes+'</svg></div>';
   if(!S.gx.lineage[strainId])
-    h+='<p class="muted gx-foundation">🌱 Foundation genetics — no recorded parents. Breed it to start a lineage.</p>';
-  h+='<p class="gx-disclaimer">Tap any ancestor to center the tree on it.</p></div>';
+    h+='<p class="ge-caption ge-muted">'+icon('grow','ge-ic-sm')+' Foundation genetics — no recorded parents. Breed it to start a lineage.</p>';
+  h+='<p class="ge-caption ge-muted">Tap any ancestor to center the tree on it.</p></div>';
   return h;
 }
+
 function GX_wireLineage(box){
   if(!box) return;
+  box.querySelectorAll('[data-gx-lin]').forEach(function(nd){
+    nd.addEventListener('click',function(){
+      box.innerHTML=GX_lineageHTML(nd.getAttribute('data-gx-lin'));
+      GX_wireLineage(box);
+    });
+    nd.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nd.dispatchEvent(new Event('click')); }
+    });
+  });
+  /* legacy collapsible generation rows — guarded, kept for compatibility */
   box.querySelectorAll('[data-gx-gen]').forEach(function(hd){
     hd.onclick=function(){
       var nodes=box.querySelector('[data-gx-gennodes="'+hd.getAttribute('data-gx-gen')+'"]');
       if(nodes){ nodes.classList.toggle('gx-collapsed'); hd.classList.toggle('gx-closed'); }
     };
   });
-  box.querySelectorAll('[data-gx-lin]').forEach(function(nd){
-    nd.onclick=function(){
-      box.innerHTML=GX_lineageHTML(nd.getAttribute('data-gx-lin'));
-      GX_wireLineage(box);
-    };
-  });
 }
+
 function GX_lineageModal(strainId){
-  var m=modal('<div class="gx-linwrap"><div id="gx-lin-box">'+GX_lineageHTML(strainId)+'</div>'+
-    '<div class="btn-row"><button class="btn btn-small" id="gx-lin-close">CLOSE</button></div></div>');
+  var m=modal('<div class="ge-modal-head">'+icon('dna','ge-ic-md')+'<h3>LINEAGE TREE</h3></div><div class="ge-modal-body"><div id="gx-lin-box">'+GX_lineageHTML(strainId)+'</div></div>'+
+    '<div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="gx-lin-close">CLOSE</button></div>');
   GX_wireLineage(m.querySelector('#gx-lin-box'));
   m.querySelector('#gx-lin-close').onclick=function(){ closeModal(m); };
   return m;
 }
+
 /* Integrator calls this at the END of RENDER.genetics. Adds a working
    VIEW LINEAGE button + rarity badge to every strain card. */
 function GX_wireGenetics(root){
@@ -4374,7 +4649,7 @@ const EX_BUILDINGS=[
   levels:[{cost:0,bonus:200},{cost:1500,bonus:400},{cost:8000,bonus:800},{cost:40000,bonus:1600},{cost:150000,bonus:5000}]},
  {id:'geneticsLab',name:'GENETICS LAB',ico:'genetics',desc:'Sequence & study. Reveals more pheno traits, more mutations.',
   bonusText:'Revealed traits / mutation luck',bfmt:v=>v+' traits revealed',
-  levels:[{cost:0,bonus:1},{cost:3000,bonus:2},{cost:15000,bonus:3},{cost:75000,bonus:4},{cost:300000,bonus:5}]},
+  levels:[{cost:0,bonus:0},{cost:3000,bonus:2},{cost:15000,bonus:3},{cost:75000,bonus:4},{cost:300000,bonus:5}]},
  {id:'breedingLab',name:'BREEDING LAB',ico:'breeding',desc:'Precision pollination. Tighter, truer predictions.',
   bonusText:'Prediction accuracy',bfmt:v=>'+'+v+'% tighter',
   levels:[{cost:0,bonus:0},{cost:2500,bonus:15},{cost:12000,bonus:30},{cost:60000,bonus:45},{cost:250000,bonus:60}]},
@@ -4391,6 +4666,7 @@ const EX_BUILDINGS=[
   bonusText:'P0 trickle',bfmt:v=>'+'+v+' P0/day',
   levels:[{cost:0,bonus:0},{cost:4000,bonus:1},{cost:20000,bonus:2},{cost:100000,bonus:3},{cost:400000,bonus:5}]}
 ];
+
 /* Cross-builder interface: other builders call EX_buildingLevel(id) guarded. */
 function EX_buildingLevel(id){
   if(!EX_ready()) return 1;
@@ -4408,37 +4684,40 @@ function EX_upgradeBuilding(id){
   if(!EX_init()) return;
   const b=EX_BUILDINGS.find(x=>x.id===id); if(!b) return;
   const lv=EX_buildingLevel(id);
-  if(lv>=5){ toast('⭐ '+esc(b.name)+' is already maxed out.'); return; }
+  if(lv>=5){ toast(icon('star','ge-ic-md')+' '+esc(b.name)+' is already maxed out.'); return; }
   const cost=b.levels[lv].cost;
-  if(num(S.cash,0)<cost){ toast('❌ Need '+fmt$(cost)+' to upgrade '+esc(b.name)+'.'); return; }
+  if(num(S.cash,0)<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+' to upgrade '+esc(b.name)+'.'); return; }
   S.cash-=cost; S.ex.buildings[id]=lv+1;
   gainXP(80); gainRep(5);
-  toast('🏢 '+esc(b.name)+' → <b>LEVEL '+(lv+1)+'</b><br><span class="muted">'+esc(b.bonusText)+': '+esc(b.bfmt(b.levels[lv].bonus))+'</span>');
+  toast(icon('empire','ge-ic-md')+' '+esc(b.name)+' → <b>LEVEL '+(lv+1)+'</b><br><span class="ge-muted">'+esc(b.bonusText)+': '+esc(b.bfmt(b.levels[lv].bonus))+'</span>');
   save(); updateHUD(); EX_checkAch();
   if(current==='empire') RENDER.empire();
 }
+
 function EX_buildingsHTML(){
-  let html='<div class="card ex-head"><h3>'+icon('empire','ic-lg')+'UPGRADEABLE BUILDINGS</h3>'+
-   '<p class="muted">Ten buildings, five levels each. Real bonuses that stack with everything else you own.</p></div>';
+  let html='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('empire','ge-ic-lg')+'UPGRADEABLE BUILDINGS</h3></div>'+
+   '<p class="ge-caption ge-muted">Ten buildings, five levels each. Real bonuses that stack with everything else you own.</p></div>';
   EX_BUILDINGS.forEach(b=>{
     const lv=EX_buildingLevel(b.id), maxed=lv>=5;
     const cur=b.levels[lv-1], nxt=maxed?null:b.levels[lv];
-    html+='<div class="card ex-bcard"><div class="ex-bthumb">'+icon(b.ico,'ic-xl')+'</div>'+
-     '<h3>'+esc(b.name)+' <span class="badge'+(lv>=5?' gold':'')+'">Lv '+lv+'/5</span></h3>'+
-     '<p class="muted">'+esc(b.desc)+'</p>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+esc(b.bonusText)+'</span><b>'+esc(b.bfmt(cur.bonus))+'</b></div>'+
-     '<div class="progress"><i style="width:'+(lv/5*100)+'%"></i></div>'+
-     (maxed?'<p class="ex-maxed">★ MAXED OUT</p>':
-       '<div class="kv"><span>'+icon('cash','kv-ico')+'Next: '+esc(b.bfmt(nxt.bonus))+'</span><b>'+fmt$(nxt.cost)+'</b></div>'+
-       '<button class="btn btn-small btn-gold ex-bigbtn" data-ex-upg="'+b.id+'">'+icon('plus','b-ico')+'UPGRADE — '+fmt$(nxt.cost)+'</button>')+
-     '</div>';
+    html+='<div class="ge-card ge-equip"><div class="ge-equip-ico">'+icon(b.ico,'ge-ic-xl')+'</div><div class="ge-equip-body">';
+    html+='<div class="ge-card-head"><h3>'+esc(b.name)+'</h3><span class="ge-pill '+(lv>=5?'ge-pill-gold':'ge-pill-neutral')+'">LV '+lv+'/5</span></div>';
+    html+='<p class="ge-caption ge-muted">'+esc(b.desc)+'</p>';
+    html+='<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+esc(b.bonusText)+'</span><b class="ge-num">'+esc(b.bfmt(cur.bonus))+'</b></div>';
+    html+='<div class="ge-progress"><i style="width:'+(lv/5*100)+'%"></i></div>';
+    html+=maxed?'<p class="ge-label ge-gold-text">'+icon('star','ge-ic-sm')+' MAXED OUT</p>'
+      :'<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Next: '+esc(b.bfmt(nxt.bonus))+'</span><b class="ge-num">'+fmt$(nxt.cost)+'</b></div>'+
+       '<button class="ge-btn ge-btn-primary ge-btn-block" data-ex-upg="'+b.id+'">'+icon('plus','ge-ic-md')+'UPGRADE — '+fmt$(nxt.cost)+'</button>';
+    html+='</div></div>';
   });
   return html;
 }
+
 function EX_empireTabsHTML(){
   const tabs=[['facilities','FACILITIES'],['equipment','EQUIPMENT'],['crew','CREW'],['compete','COMPETE'],['buildings','BUILDINGS'],['staff','STAFF']];
-  return '<div class="tabs">'+tabs.map(t=>'<button class="tab'+(empireTab===t[0]?' active':'')+'" data-extab="'+t[0]+'">'+t[1]+'</button>').join('')+'</div>';
+  return '<div class="tabs ge-tabs" role="tablist">'+tabs.map(t=>'<button class="tab ge-tab'+(empireTab===t[0]?' active is-active':'')+'" data-extab="'+t[0]+'" role="tab">'+t[1]+'</button>').join('')+'</div>';
 }
+
 /* Integrator calls EX_wireEmpire() at the END of RENDER.empire. */
 function EX_wireEmpire(root){
   if(!EX_init()) return;
@@ -4514,49 +4793,54 @@ function EX_genPool(){
 function EX_hireEmp(pid){
   if(!EX_init()) return;
   const c=S.ex.pool.find(x=>x.pid===pid); if(!c) return;
-  if(num(S.cash,0)<c.sign){ toast('❌ Signing '+esc(c.name)+' costs '+fmt$(c.sign)+'.'); return; }
+  if(num(S.cash,0)<c.sign){ toast(icon('x','ge-ic-md')+' Signing '+esc(c.name)+' costs '+fmt$(c.sign)+'.'); return; }
   S.cash-=c.sign;
   S.ex.employees.push({ id:'e'+Date.now()+rndi(100,999), name:c.name, role:c.role, rarity:c.rarity,
     lvl:1, xp:0, skill:c.skill, salary:c.salary, assigned:true });
   S.ex.pool=S.ex.pool.filter(x=>x.pid!==pid);
   const r=EX_roleById(c.role);
-  toast('🤝 Hired <b>'+esc(c.name)+'</b> ('+esc(r.name)+', '+EX_RARITY[c.rarity].name+')');
+  toast(icon('users','ge-ic-md')+' Hired <b>'+esc(c.name)+'</b> ('+esc(r.name)+', '+EX_RARITY[c.rarity].name+')');
   gainXP(60); save(); updateHUD();
   if(current==='empire') RENDER.empire();
 }
+
 function EX_fireEmp(id){
   if(!EX_init()) return;
   const e=S.ex.employees.find(x=>x.id===id); if(!e) return;
   confirmModal('Fire '+e.name+'?',esc(e.name)+' will leave the empire immediately. No severance, no hard feelings.',()=>{
     S.ex.employees=S.ex.employees.filter(x=>x.id!==id);
-    toast('👋 '+esc(e.name)+' was let go.');
+    toast(esc(e.name)+' was let go.');
     save(); updateHUD();
     if(current==='empire') RENDER.empire();
   });
 }
+
 function EX_trainEmp(id){
   if(!EX_init()) return;
   const e=S.ex.employees.find(x=>x.id===id); if(!e) return;
   const cost=150*int(e.lvl,1);
-  if(num(S.cash,0)<cost){ toast('❌ Training costs '+fmt$(cost)+'.'); return; }
+  if(num(S.cash,0)<cost){ toast(icon('x','ge-ic-md')+' Training costs '+fmt$(cost)+'.'); return; }
   S.cash-=cost; e.xp=num(e.xp,0)+60;
   EX_empLevelCheck(e,true);
   save(); updateHUD();
   if(current==='empire') RENDER.empire();
 }
+
 function EX_empLevelCheck(e,announce){
   let need=int(e.lvl,1)*120, ups=0;
   while(num(e.xp,0)>=need){ e.xp-=need; e.lvl++; e.skill=num(e.skill,0)+3; e.salary=Math.round(num(e.salary,0)*1.05); need=int(e.lvl,1)*120; ups++; }
-  if(ups&&announce) toast('⬆️ '+esc(e.name)+' → <b>Level '+e.lvl+'</b> (skill '+int(e.skill,0)+')');
+  if(ups&&announce) toast('<span class="ge-up">↑</span> '+esc(e.name)+' → <b>Level '+e.lvl+'</b> (skill '+int(e.skill,0)+')');
   return ups;
 }
+
 function EX_toggleAssign(id){
   if(!EX_init()) return;
   const e=S.ex.employees.find(x=>x.id===id); if(!e) return;
   e.assigned=!e.assigned;
-  toast((e.assigned?'✅ ':'⏸️ ')+esc(e.name)+(e.assigned?' back on duty.':' benched — no bonus, still on payroll.'));
+  toast((e.assigned?icon('check','ge-ic-md')+' ':'<span class="ge-pill ge-pill-neutral">BENCHED</span> ')+esc(e.name)+(e.assigned?' back on duty.':' — no bonus, still on payroll.'));
   save(); if(current==='empire') RENDER.empire();
 }
+
 /* Daily payroll. If cash runs short, lowest-paid quits first. */
 function EX_payrollTick(){
   if(!EX_ready()||!S.ex.employees.length) return;
@@ -4567,10 +4851,11 @@ function EX_payrollTick(){
     const q=sorted.shift();
     S.ex.employees=S.ex.employees.filter(e=>e.id!==q.id);
     total-=Math.round(num(q.salary,0));
-    setTimeout(()=>toast('💸 <b>'+esc(q.name)+'</b> quit — payroll came up short!'),50);
+    setTimeout(()=>toast(icon('cash','ge-ic-md')+' <b>'+esc(q.name)+'</b> quit — payroll came up short!'),50);
   }
   S.cash=Math.max(0,num(S.cash,0)-total);
 }
+
 /* Cross-builder interface: summed, capped bonus for a role (assigned staff only). */
 function EX_employeeBonus(role){
   if(!EX_ready()) return 0;
@@ -4589,38 +4874,42 @@ function EX_empCard(e){
   const r=EX_roleById(e.role), rar=EX_RARITY[e.rarity]||EX_RARITY.common;
   const need=int(e.lvl,1)*120, pct=clamp(num(e.xp,0)/need*100,0,100);
   const trainCost=150*int(e.lvl,1);
-  return '<div class="card ex-ecard'+(e.assigned?'':' ex-benched')+'">'+
-   '<div class="ex-ename">'+esc(e.name)+' <span class="ex-rarity '+rar.cls+'">'+rar.name+'</span></div>'+
-   '<p class="muted">'+esc(r.name)+' • Lv '+int(e.lvl,1)+' • Skill '+int(e.skill,0)+'</p>'+
-   '<div class="progress"><i style="width:'+pct+'%"></i></div>'+
-   '<div class="kv"><span>'+icon('cash','kv-ico')+'Salary</span><b>'+fmt$(e.salary)+'/day</b></div>'+
-   '<div class="btn-row">'+
-   '<button class="btn btn-small btn-gold" data-ex-train="'+e.id+'">TRAIN '+fmt$(trainCost)+'</button>'+
-   '<button class="btn btn-small" data-ex-assign="'+e.id+'">'+(e.assigned?'BENCH':'ASSIGN')+'</button>'+
-   '<button class="btn btn-small btn-danger" data-ex-fire="'+e.id+'">FIRE</button></div>'+
+  return '<div class="ge-card ge-ecard'+(e.assigned?'':' ge-benched')+'">'+
+   '<div class="ge-card-head"><h3>'+esc(e.name)+'</h3><span class="'+EM_rarCls(e.rarity)+'">'+rar.name+'</span></div>'+
+   '<p class="ge-caption ge-muted">'+esc(r.name)+' • Lv '+int(e.lvl,1)+' • Skill '+int(e.skill,0)+'</p>'+
+   '<div class="ge-progress-meta"><span>XP to next level</span><b class="ge-num">'+Math.round(num(e.xp,0))+' / '+need+'</b></div>'+
+   '<div class="ge-progress"><i style="width:'+pct+'%"></i></div>'+
+   '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Salary</span><b class="ge-num">'+fmt$(e.salary)+'/day</b></div>'+
+   (e.assigned?'':'<p class="ge-locknote">BENCHED — no bonus, still on payroll.</p>')+
+   '<div class="ge-btn-row">'+
+   '<button class="ge-btn ge-btn-primary" data-ex-train="'+e.id+'">TRAIN '+fmt$(trainCost)+'</button>'+
+   '<button class="ge-btn ge-btn-ghost" data-ex-assign="'+e.id+'">'+(e.assigned?'BENCH':'ASSIGN')+'</button>'+
+   '<button class="ge-btn ge-btn-danger" data-ex-fire="'+e.id+'">FIRE</button></div>'+
    (typeof TY_staffCardHTML==='function'?TY_staffCardHTML(e):'')+'</div>';
 }
+
 function EX_employeesHTML(){
   const daysLeft=Math.max(0,3-(int(S.day,1)-int(S.ex.pday,1)));
-  let html='<div class="card ex-head"><h3>'+icon('crew','ic-lg')+'STAFF</h3>'+
-   '<p class="muted">Named professionals — separate from your basic crew. Daily salaries, levelling, real bonuses. Only <b>assigned</b> staff grant bonuses.</p>'+
-   '<div class="kv"><span>'+icon('cash','kv-ico')+'Daily payroll</span><b>'+fmt$(EX_payrollTotal())+'</b></div></div>';
-  html+='<h3 class="display ex-sect">HIRING POOL</h3><p class="muted">Fresh candidates in '+daysLeft+' day'+(daysLeft===1?'':'s')+'.</p>';
-  if(!S.ex.pool.length) html+='<div class="card"><p class="muted">No candidates right now. Check back soon.</p></div>';
+  let html='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('crew','ge-ic-lg')+'STAFF</h3></div>'+
+   '<p class="ge-caption ge-muted">Named professionals — separate from your basic crew. Daily salaries, levelling, real bonuses. Only <b>assigned</b> staff grant bonuses.</p>'+
+   '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Daily payroll</span><b class="ge-num">'+fmt$(EX_payrollTotal())+'</b></div></div>';
+  html+='<div class="ge-section-title"><span>HIRING POOL</span><span class="ge-spread ge-caption ge-muted">Fresh candidates in '+daysLeft+' day'+(daysLeft===1?'':'s')+'</span></div>';
+  if(!S.ex.pool.length) html+='<div class="ge-card"><p class="ge-caption ge-muted">No candidates right now. Check back soon.</p></div>';
   S.ex.pool.forEach(c=>{
     const r=EX_roleById(c.role), rar=EX_RARITY[c.rarity]||EX_RARITY.common;
-    html+='<div class="card ex-eccard"><div class="ex-ename">'+esc(c.name)+' <span class="ex-rarity '+rar.cls+'">'+rar.name+'</span></div>'+
-     '<p class="muted">'+esc(r.name)+' — '+esc(r.desc)+'</p>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+'Skill</span><b>'+int(c.skill,0)+'</b></div>'+
-     '<div class="kv"><span>'+icon('cash','kv-ico')+'Salary</span><b>'+fmt$(c.salary)+'/day</b></div>'+
-     '<div class="kv"><span>'+icon('plus','kv-ico')+'Signing cost</span><b>'+fmt$(c.sign)+'</b></div>'+
-     '<button class="btn btn-small btn-green ex-bigbtn" data-ex-hirepool="'+c.pid+'">HIRE '+esc(c.name).toUpperCase()+'</button></div>';
+    html+='<div class="ge-card ge-ecard"><div class="ge-card-head"><h3>'+esc(c.name)+'</h3><span class="'+EM_rarCls(c.rarity)+'">'+rar.name+'</span></div>'+
+     '<p class="ge-caption ge-muted">'+esc(r.name)+' — '+esc(r.desc)+'</p>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'Skill</span><b class="ge-num">'+int(c.skill,0)+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Salary</span><b class="ge-num">'+fmt$(c.salary)+'/day</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('plus','ge-ic-md')+'Signing cost</span><b class="ge-num">'+fmt$(c.sign)+'</b></div>'+
+     '<button class="ge-btn ge-btn-primary ge-btn-block" data-ex-hirepool="'+c.pid+'">HIRE '+esc(c.name).toUpperCase()+'</button></div>';
   });
-  html+='<h3 class="display ex-sect">YOUR STAFF ('+S.ex.employees.length+')</h3>';
-  if(!S.ex.employees.length) html+='<div class="card"><p class="muted">No staff yet. Hire from the pool above.</p></div>';
+  html+='<div class="ge-section-title"><span>YOUR STAFF ('+S.ex.employees.length+')</span></div>';
+  if(!S.ex.employees.length) html+='<div class="ge-card"><p class="ge-caption ge-muted">No staff yet. Hire from the pool above.</p></div>';
   S.ex.employees.forEach(e=>{ html+=EX_empCard(e); });
   return html;
 }
+
 
 /* ================= LOCATIONS (territory) ================= */
 const EX_LOCATIONS=[
@@ -4657,34 +4946,37 @@ function EX_unlockLocation(id){
   if(!EX_init()) return;
   const l=EX_locById(id);
   if(S.ex.locations.unlocked.includes(id)){ toast('Already unlocked.'); return; }
-  if(!EX_locGateMet(l)){ toast('🔒 Gate not met for '+esc(l.name)+'.'); return; }
+  if(!EX_locGateMet(l)){ toast(icon('lock','ge-ic-md')+' Gate not met for '+esc(l.name)+'.'); return; }
   const cost=num((l.gate||{}).cash,0);
   S.cash=num(S.cash,0)-cost;
   S.ex.locations.unlocked.push(id);
   gainXP(150); gainRep(25);
-  toast('🗺️ Territory unlocked: <b>'+esc(l.name)+'</b>');
+  toast(icon('pin','ge-ic-md')+' Territory unlocked: <b>'+esc(l.name)+'</b>');
   save(); updateHUD();
   if(current==='locations') RENDER.locations();
 }
+
 function EX_travelTo(id){
   if(!EX_init()) return;
-  if(!S.ex.locations.unlocked.includes(id)){ toast('🔒 Unlock it first.'); return; }
+  if(!S.ex.locations.unlocked.includes(id)){ toast(icon('lock','ge-ic-md')+' Unlock it first.'); return; }
   if(S.ex.locations.current===id) return;
   const fee=150;
-  if(num(S.cash,0)<fee){ toast('❌ Travel costs '+fmt$(fee)+'.'); return; }
+  if(num(S.cash,0)<fee){ toast(icon('x','ge-ic-md')+' Travel costs '+fmt$(fee)+'.'); return; }
   S.cash-=fee; S.ex.locations.current=id;
-  toast('🚚 Moved operations to <b>'+esc(EX_locById(id).name)+'</b>');
+  toast(icon('truck','ge-ic-md')+' Moved operations to <b>'+esc(EX_locById(id).name)+'</b>');
   save(); updateHUD();
   if(current==='locations') RENDER.locations();
 }
+
 function EX_upkeepTick(){
   if(!EX_ready()) return;
   const loc=EX_locById(S.ex.locations.current), up=int(loc.upkeep,0);
   if(up<=0) return;
   if(num(S.cash,0)>=up){ S.cash-=up; return; }
   S.ex.locations.current='home';
-  setTimeout(()=>toast('🏚️ Could not afford '+esc(loc.name)+' upkeep ('+fmt$(up)+'/day) — fell back to <b>Home Turf</b>.'),50);
+  setTimeout(()=>toast(icon('facility','ge-ic-md')+' Could not afford '+esc(loc.name)+' upkeep ('+fmt$(up)+'/day) — fell back to <b>Home Turf</b>.'),50);
 }
+
 function EX_locGateText(l){
   const g=l.gate||{}, bits=[];
   if(int(g.rep,0)>0) bits.push(int(g.rep,0)+' rep');
@@ -4696,68 +4988,73 @@ RENDER.locations=function(){
   if(!EX_init()) return;
   const r=$('locations-root');
   const cur=EX_locById(S.ex.locations.current);
-  let html=screenHead('empire','TERRITORY')+
-   '<div class="card ex-head"><h3>'+icon('empire','ic-lg')+'CURRENT: '+esc(cur.name)+'</h3>'+
-   '<div class="kv"><span>'+icon('cash','kv-ico')+'Market prices</span><b>×'+cur.priceMult.toFixed(2)+'</b></div>'+
-   '<div class="kv"><span>'+icon('temp','kv-ico')+'Environment</span><b>'+(cur.envMod.temp>=0?'+':'')+cur.envMod.temp+'°F / '+(cur.envMod.humidity>=0?'+':'')+cur.envMod.humidity+'% RH</b></div>'+
-   '<div class="kv"><span>'+icon('warn','kv-ico')+'Daily upkeep</span><b>'+(cur.upkeep?fmt$(cur.upkeep):'Free')+'</b></div></div>';
+  let html='<div class="ge-screen">'+screenHead('empire','TERRITORY')+
+   '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('empire','ge-ic-lg')+'CURRENT: '+esc(cur.name)+'</h3></div>'+
+   '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Market prices</span><b class="ge-num">×'+cur.priceMult.toFixed(2)+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('temp','ge-ic-md')+'Environment</span><b class="ge-num">'+(cur.envMod.temp>=0?'+':'')+cur.envMod.temp+'°F / '+(cur.envMod.humidity>=0?'+':'')+cur.envMod.humidity+'% RH</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('warn','ge-ic-md')+'Daily upkeep</span><b class="ge-num">'+(cur.upkeep?fmt$(cur.upkeep):'Free')+'</b></div></div>';
   EX_LOCATIONS.forEach(l=>{
     const unlocked=S.ex.locations.unlocked.includes(l.id), isCur=S.ex.locations.current===l.id;
     const met=EX_locGateMet(l);
     const warn=unlocked&&l.upkeep>0&&num(S.cash,0)<l.upkeep*3;
-    html+='<div class="card ex-loc'+(isCur?' ex-cur':'')+'"><h3>'+(isCur?'📍 ':'')+esc(l.name)+'</h3>'+
-     '<p class="muted">'+esc(l.desc)+'</p>'+
-     '<div class="kv"><span>'+icon('cash','kv-ico')+'Prices</span><b>×'+l.priceMult.toFixed(2)+'</b></div>'+
-     '<div class="kv"><span>'+icon('star','kv-ico')+'Buyers value</span><b>'+l.prefs.map(esc).join(', ')+'</b></div>'+
-     '<div class="kv"><span>'+icon('trophy','kv-ico')+'Competition</span><b>×'+l.competition.toFixed(2)+'</b></div>'+
-     '<div class="kv"><span>'+icon('warn','kv-ico')+'Upkeep</span><b>'+(l.upkeep?fmt$(l.upkeep)+'/day':'Free')+'</b></div>'+
-     '<p class="muted">'+icon('scroll','kv-ico')+' '+esc(l.special)+'</p>'+
-     (warn?'<p class="ex-warnline">⚠️ Cash is low — miss upkeep and you fall back to Home Turf.</p>':'')+
-     (isCur?'<p class="ex-maxed">★ CURRENT TERRITORY</p>':
-      unlocked?'<button class="btn btn-small btn-green ex-bigbtn" data-ex-travel="'+l.id+'">TRAVEL HERE — '+fmt$(150)+'</button>':
-      met?'<button class="btn btn-small btn-gold ex-bigbtn" data-ex-unlockloc="'+l.id+'">UNLOCK — '+fmt$(num((l.gate||{}).cash,0))+'</button>':
-      '<p class="lock-note">'+icon('lock','kv-ico')+' Gate: '+esc(EX_locGateText(l))+'</p>')+
+    html+='<div class="ge-card ge-loc'+(isCur?' ge-card-hot':'')+'"><div class="ge-card-head"><h3>'+(isCur?icon('pin','ge-ic-md')+' ':'')+esc(l.name)+'</h3>'+
+     (isCur?'<span class="ge-pill ge-pill-optimal">CURRENT</span>':unlocked?'<span class="ge-pill ge-pill-neutral">UNLOCKED</span>':'<span class="ge-pill ge-pill-neutral">'+icon('lock','ge-ic-sm')+'LOCKED</span>')+'</div>'+
+     '<p class="ge-caption ge-muted">'+esc(l.desc)+'</p>'+
+     '<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Prices</span><b class="ge-num">×'+l.priceMult.toFixed(2)+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'Buyers value</span><b>'+l.prefs.map(esc).join(', ')+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('trophy','ge-ic-md')+'Competition</span><b class="ge-num">×'+l.competition.toFixed(2)+'</b></div>'+
+     '<div class="ge-datarow"><span>'+icon('warn','ge-ic-md')+'Upkeep</span><b class="ge-num">'+(l.upkeep?fmt$(l.upkeep)+'/day':'Free')+'</b></div>'+
+     '<p class="ge-caption">'+icon('scroll','ge-ic-md')+' '+esc(l.special)+'</p>'+
+     (warn?'<p class="ge-locknote">'+icon('warn','ge-ic-md')+' Cash is low — miss upkeep and you fall back to Home Turf.</p>':'')+
+     (isCur?'<p class="ge-label">CURRENT TERRITORY</p>'
+      :unlocked?'<button class="ge-btn ge-btn-primary ge-btn-block" data-ex-travel="'+l.id+'">TRAVEL HERE — '+fmt$(150)+'</button>'
+      :met?'<button class="ge-btn ge-btn-gold ge-btn-block" data-ex-unlockloc="'+l.id+'">UNLOCK — '+fmt$(num((l.gate||{}).cash,0))+'</button>'
+      :'<div class="ge-lockreq">'+icon('lock','ge-ic-md')+'<div><b>Gate: '+esc(EX_locGateText(l))+'</b></div></div>'+EM_gateProgress(l))+
      '</div>';
   });
+  html+='</div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-ex-travel]').forEach(b=>b.onclick=()=>EX_travelTo(b.dataset.exTravel));
   r.querySelectorAll('[data-ex-unlockloc]').forEach(b=>b.onclick=()=>EX_unlockLocation(b.dataset.exUnlockloc));
 };
 
+
 /* ================= ACHIEVEMENTS (Builder C) =================
    Checked in EX_checkAch() (runs inside EX_tick + after big events).
    reward: {cash,xp,rep,p0,p0track,title}                                   */
 const EX_ACHIEVEMENTS=[
- {id:'x-firstharvest',name:'🌱 First Harvest',desc:'Complete your first harvest.',
+ {id:'x-firstharvest',name:'First Harvest',desc:'Complete your first harvest.',
   prog:()=>[Math.min(int(S.stats.harvests,0),1),1],reward:{cash:100,xp:50}},
- {id:'x-greenthumb',name:'🌿 Green Thumb',desc:'Complete 10 harvests.',
+ {id:'x-greenthumb',name:'Green Thumb',desc:'Complete 10 harvests.',
   prog:()=>[Math.min(int(S.stats.harvests,0),10),10],reward:{cash:300,xp:150}},
- {id:'x-geneticfreak',name:'🧬 Genetic Freak',desc:'Uncover 3 ELITE phenotypes — true genetic freaks.',
+ {id:'x-geneticfreak',name:'Genetic Freak',desc:'Uncover 3 ELITE phenotypes — true genetic freaks.',
   prog:()=>[Math.min(int(S.stats.eliteFound,0),3),3],reward:{cash:600,xp:250,p0:4}},
- {id:'x-masterbreeder',name:'🧪 Master Breeder',desc:'Create 25 custom crosses.',
+ {id:'x-masterbreeder',name:'Master Breeder',desc:'Create 25 custom crosses.',
   prog:()=>[Math.min(int(S.stats.crosses,0),25),25],reward:{cash:1200,xp:500,p0:5}},
- {id:'x-perfectgrow',name:'💎 Perfect Grow',desc:'Harvest 90+ quality with plant health never below 95%.',
+ {id:'x-perfectgrow',name:'Perfect Grow',desc:'Harvest 90+ quality with plant health never below 95%.',
   prog:()=>[Math.min(int((S.ex.records||{}).perfectGrows,0),1),1],reward:{cash:800,xp:400,p0:4}},
- {id:'x-millionaire',name:'💰 Millionaire',desc:'Hold $1,000,000 cash.',
-  prog:()=>[num(S.cash,0)>=1000000?1:0,1],reward:{xp:1000,rep:50,title:'💰 Millionaire'}},
- {id:'x-strain100',name:'🌱 Hundred Strain Club',desc:'Own 100 custom-bred strains.',
+ {id:'x-millionaire',name:'Millionaire',desc:'Hold $1,000,000 cash.',
+  prog:()=>[num(S.cash,0)>=1000000?1:0,1],reward:{xp:1000,rep:50,title:'Millionaire'}},
+ {id:'x-strain100',name:'Hundred Strain Club',desc:'Own 100 custom-bred strains.',
   prog:()=>[Math.min(S.customStrains.length,100),100],reward:{cash:2500,xp:1500,p0:6}},
- {id:'x-empirebuilder',name:'🏢 Empire Builder',desc:'Max any building to Level 5.',
+ {id:'x-empirebuilder',name:'Empire Builder',desc:'Max any building to Level 5.',
   prog:()=>[EX_BUILDINGS.some(b=>EX_buildingLevel(b.id)>=5)?1:0,1],reward:{cash:2000,xp:600}},
- {id:'x-p0200',name:'🕊️ Project Zero Devotee',desc:'Earn 200 Project 0 points.',
+ {id:'x-p0200',name:'Project Zero Devotee',desc:'Earn 200 Project 0 points.',
   prog:()=>[Math.min(int(S.project0.points,0),200),200],reward:{xp:600,rep:40}},
- {id:'x-p0pillars',name:'🕊️ Pillars of Zero',desc:'Reach Level 2 in all 8 Project 0 tracks.',
+ {id:'x-p0pillars',name:'Pillars of Zero',desc:'Reach Level 2 in all 8 Project 0 tracks.',
   prog:()=>[P0_TRACKS.filter(tr=>p0Level(tr.id)>=2).length,8],reward:{xp:800,p0:6}}
 ];
+
 function EX_achRewardText(a){
   const r=a.reward||{}, bits=[];
   if(r.cash) bits.push(fmt$(r.cash));
   if(r.xp) bits.push('+'+int(r.xp,0)+' XP');
   if(r.rep) bits.push('+'+int(r.rep,0)+' rep');
   if(r.p0) bits.push('+'+int(r.p0,0)+' P0');
-  if(r.title) bits.push('title: '+r.title);
-  return bits.join(' • ')||'—';
+  if(r.title) bits.push('title: '+MS_stripEmoji(r.title));
+  return bits.join(' \u2022 ')||'\u2014';
 }
+
 function EX_checkAch(){
   if(!EX_init()) return;
   EX_ACHIEVEMENTS.forEach(a=>{
@@ -4773,10 +5070,11 @@ function EX_checkAch(){
       if(r.p0) addP0(r.p0track||'genetics',r.p0);
       if(r.title&&!S.titles.includes(r.title)) S.titles.push(r.title);
       save(); updateHUD();
-      setTimeout(()=>toast('🏅 <b>'+esc(a.name)+'</b><br><span class="muted">'+esc(a.desc)+'</span><br><span class="reward-line">'+esc(EX_achRewardText(a))+'</span>'),60);
+      setTimeout(()=>toast(icon('trophy','ge-ic-md')+' <b>'+esc((typeof MS_stripEmoji==='function'?MS_stripEmoji(a.name):a.name))+'</b><br><span class="ge-muted">'+esc(a.desc)+'</span><br><span class="ge-cer-wintext">'+esc(EX_achRewardText(a))+'</span>'),60);
     }
   });
 }
+
 /* Integrator calls EX_harvestNote(qq, p.minHealth) from harvestPlant (one line). */
 function EX_harvestNote(q,minHealth){
   if(!EX_ready()) return;
@@ -4787,28 +5085,36 @@ function EX_harvestNote(q,minHealth){
 RENDER.achievements=function(){
   if(!EX_init()) return;
   const r=$('achievements-root');
+  if(!r) return;
   const done=EX_ACHIEVEMENTS.filter(a=>S.ex.ach[a.id]).length;
   let html=screenHead('trophy','TROPHIES & ACHIEVEMENTS')+
-   '<div class="card ex-head"><h3>'+icon('trophy','ic-lg')+'EMPIRE ACHIEVEMENTS</h3>'+
-   '<div class="kv"><span>'+icon('check','kv-ico')+'Unlocked</span><b>'+done+'/'+EX_ACHIEVEMENTS.length+'</b></div>'+
-   '<div class="progress big"><i style="width:'+Math.round(done/EX_ACHIEVEMENTS.length*100)+'%"></i></div></div>';
+   '<div class="ge-screen"><div class="ge-card ge-card-hot ms-achhead">'+
+   '<div class="ge-card-head"><h3>'+icon('trophy','ge-ic-lg')+'EMPIRE ACHIEVEMENTS</h3>'+
+   '<span class="ge-pill ge-pill-gold ge-num">'+done+'/'+EX_ACHIEVEMENTS.length+'</span></div>'+
+   '<div class="ge-progress ge-progress-gold"><i style="width:'+Math.round(done/EX_ACHIEVEMENTS.length*100)+'%"></i></div>'+
+   '<div class="ge-progress-meta"><span>UNLOCKED</span><b class="ge-num">'+done+' OF '+EX_ACHIEVEMENTS.length+'</b></div></div>';
   EX_ACHIEVEMENTS.forEach(a=>{
     const claimed=!!S.ex.ach[a.id];
     let cur=0,target=1;
     try{ const p=a.prog(); cur=num(p[0],0); target=Math.max(1,num(p[1],1)); }catch(e){}
-    html+='<div class="card ex-ach'+(claimed?' ex-claimed':'')+'">'+
-     '<h3>'+(claimed?icon('check','b-ico'):'')+esc(a.name)+'</h3><p class="muted">'+esc(a.desc)+'</p>'+
-     '<div class="progress"><i style="width:'+clamp(cur/target*100,0,100)+'%"></i></div>'+
-     '<div class="kv"><span>Progress</span><b>'+Math.min(cur,target)+'/'+target+'</b></div>'+
-     '<p class="reward-line">Reward: '+esc(EX_achRewardText(a))+'</p>'+
-     (claimed?'<p class="ex-maxed">★ CLAIMED — DAY '+int(S.ex.ach[a.id].day,1)+'</p>':'')+'</div>';
+    html+='<div class="ge-card ms-ach'+(claimed?' is-done':'')+'">'+
+     '<div class="ge-card-head"><h3 class="'+(MS_achGold(a.id)?'ms-gold':'')+'">'+icon(MS_achIcon(a.id),'ge-ic-lg')+esc(MS_stripEmoji(a.name))+'</h3>'+
+     (claimed?'<span class="ge-badge ge-badge-legendary">'+icon('star','ge-ic-sm')+'CLAIMED</span>':'')+'</div>'+
+     '<p class="ge-muted">'+esc(a.desc)+'</p>'+
+     '<div class="ge-progress-meta"><span>PROGRESS</span><b class="ge-num">'+Math.min(cur,target)+'/'+target+'</b></div>'+
+     '<div class="ge-progress'+(claimed?' ge-progress-gold':'')+'"><i style="width:'+clamp(cur/target*100,0,100)+'%"></i></div>'+
+     '<p class="ms-reward">'+icon('trophy','ge-ic-sm')+'<span>REWARD \u2014 '+esc(EX_achRewardText(a))+'</span></p>'+
+     (claimed?'<p class="ge-caption ge-gold-text">'+icon('star','ge-ic-sm')+' CLAIMED \u2014 DAY '+int(S.ex.ach[a.id].day,1)+'</p>':'')+'</div>';
   });
-  html+='<div class="card"><h3>'+icon('trophy','ic-lg')+'COMPETITION TROPHIES ('+S.ex.trophies.length+')</h3>'+
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-lg')+'COMPETITION TROPHIES</h3>'+
+   '<span class="ge-pill ge-pill-neutral ge-num">'+S.ex.trophies.length+'</span></div>'+
    (S.ex.trophies.length?S.ex.trophies.slice().reverse().slice(0,12).map(t=>
-     '<div class="kv"><span>'+(t.place===1?'🥇':t.place===2?'🥈':'🥉')+' '+esc(t.compName||t.compId)+'</span><b>'+esc(t.strainName||'')+' — Day '+int(t.day,1)+'</b></div>').join(''):
-    '<p class="muted">No trophies yet. Enter competitions from the EMPIRE screen.</p>')+'</div>';
+     '<div class="ge-datarow"><span>'+MS_placeBadge(t.place)+' '+esc(t.compName||t.compId)+'</span><b>'+esc(t.strainName||'')+' \u2014 Day '+int(t.day,1)+'</b></div>').join(''):
+    '<div class="ge-empty">'+icon('trophy','ge-ic-xl')+'<h3>No trophies yet</h3><p>Enter competitions from the EMPIRE screen.</p></div>')+'</div>';
+  html+='</div>';
   r.innerHTML=html;
 };
+
 
 /* ================= COMPETITION CEREMONY =================
    Replacement resolver for runCompetition. Integrator swaps the call in
@@ -4880,9 +5186,9 @@ function EX_compCeremony(t,item){
   const m=modal('<div id="ex-cer"></div>');
   const box=m.querySelector('#ex-cer');
   let stage=0, rewarded=false;
-  const medal=p=>p===1?'🥇':p===2?'🥈':p===3?'🥉':(p+'.');
-  const rowHtml=(e,i,unit,delay)=>'<div class="ex-place ex-p'+(i+1<=3?(i+1):'x')+(e.me?' ex-me':'')+'" style="animation-delay:'+delay+'s">'+
-    '<span>'+(i<3?medal(i+1):(i+1)+'.')+' '+esc(e.name)+(e.me&&e.sub?' — '+esc(e.sub):'')+'</span><b>'+e.score+' '+unit+'</b></div>';
+  const medal=p=>p===1?'<span class="ge-medal ge-medal-1">1ST</span>':p===2?'<span class="ge-medal ge-medal-2">2ND</span>':p===3?'<span class="ge-medal ge-medal-3">3RD</span>':(p+'.');
+  const rowHtml=(e,i,unit,delay)=>'<div class="ge-cer-row'+(i<3?' ge-cer-top':'')+(e.me?' ge-cer-me':'')+'" style="animation-delay:'+delay+'s">'+
+    '<span>'+(i<3?medal(i+1):(i+1)+'.')+' '+esc(e.name)+(e.me&&e.sub?' — '+esc(e.sub):'')+'</span><b class="ge-num">'+e.score+' '+unit+'</b></div>';
   function applyRewards(){
     if(rewarded) return; rewarded=true;
     const D=DIFFS[S.difficulty], mult=D.missionReward;
@@ -4902,7 +5208,7 @@ function EX_compCeremony(t,item){
       S.ex.trophies.push({strainId:item.strainId,strainName:item.strainName,phenoNum:num(item.phenoNum,0),
         compId:t.id,compName:t.name,catId:'overall',catName:'OVERALL CHAMPION',place:1,day:int(S.day,1)});
       EX_record('strainValue',EX_trophyBoost(item.strainId),item.strainName);
-      setTimeout(()=>toast('🏆 Competition WON!'),60);
+      setTimeout(()=>toast(icon('trophy','ge-ic-md')+' Competition WON!'),60);
       if(t.id==='breeder'&&Math.random()<0.5){ unlockStrain('crown-jewel'); }
     }else if(myOverall===2){ gainRep(20); gainXP(100); S.cash=num(S.cash,0)+Math.round(300*mult); }
     else if(myOverall===3){ gainRep(8); gainXP(60); }
@@ -4911,44 +5217,45 @@ function EX_compCeremony(t,item){
   }
   function draw(){
     if(stage===0){
-      box.innerHTML='<h3>'+icon('trophy','ic-lg')+esc(t.name).toUpperCase()+'</h3>'+
-       '<div class="ex-cer-hero"><div class="display ex-cer-title">JUDGING DAY</div>'+
+      box.innerHTML='<div class="ge-cer-head"><h3>'+icon('trophy','ge-ic-lg')+esc(t.name).toUpperCase()+'</h3></div>'+
+       '<div class="ge-cer-hero"><div class="ge-display ge-cer-title">JUDGING DAY</div>'+
        '<p>Your entry: <b>'+esc(item.strainName)+'</b> (Q'+int(item.quality,0)+')</p>'+
-       '<p class="muted">'+cats.length+' categories • '+rivals.length+' rival growers<br>Points: 🥇 5 • 🥈 3 • 🥉 1</p></div>'+
-       '<button class="btn btn-primary btn-big ex-bigbtn" id="ex-cer-next">BEGIN JUDGING</button>';
+       '<p class="ge-caption ge-muted">'+cats.length+' categories • '+rivals.length+' rival growers<br>Points: 1st 5 • 2nd 3 • 3rd 1</p></div>'+
+       '<button class="ge-btn ge-btn-primary ge-btn-block" id="ex-cer-next">BEGIN JUDGING</button>';
     }else if(stage<=cats.length){
       const r=catRes[stage-1];
       const top=r.ents.slice(0,3).map((e,i)=>rowHtml(e,i,r.unit,0.4+i*0.7)).join('');
-      const rest=r.ents.slice(3).map(e=>'<div class="ex-place ex-rest'+(e.me?' ex-me':'')+'"><span>• '+esc(e.name)+'</span><b>'+e.score+'</b></div>').join('');
+      const rest=r.ents.slice(3).map(e=>'<div class="ge-cer-row'+(e.me?' ge-cer-me':'')+'"><span>• '+esc(e.name)+'</span><b class="ge-num">'+e.score+'</b></div>').join('');
       const rp=r.myPlace===1?5:r.myPlace===2?3:r.myPlace===3?1:0;
-      box.innerHTML='<h3>'+icon('trophy','ic-lg')+esc(r.cat.name)+'</h3><div class="ex-places">'+top+rest+'</div>'+
-       '<p class="muted">You placed '+(r.myPlace<=3?medal(r.myPlace):'#'+r.myPlace)+' — +'+rp+' pts'+(r.myPlace===1?' — 🏆 category trophy!':'')+'</p>'+
-       '<button class="btn btn-primary btn-big ex-bigbtn" id="ex-cer-next">'+(stage===cats.length?'TALLY THE POINTS':'NEXT CATEGORY')+'</button>';
+      box.innerHTML='<div class="ge-cer-head"><h3>'+icon('trophy','ge-ic-lg')+esc(r.cat.name)+'</h3></div><div class="ge-cer-rows">'+top+rest+'</div>'+
+       '<p class="ge-caption ge-muted">You placed '+(r.myPlace<=3?medal(r.myPlace):'#'+r.myPlace)+' — +'+rp+' pts'+(r.myPlace===1?' — category trophy!':'')+'</p>'+
+       '<button class="ge-btn ge-btn-primary ge-btn-block" id="ex-cer-next">'+(stage===cats.length?'TALLY THE POINTS':'NEXT CATEGORY')+'</button>';
     }else if(stage===cats.length+1){
-      const rows=board.map((b,i)=>'<div class="ex-place ex-p'+(i+1<=3?(i+1):'x')+(b.me?' ex-me':'')+'"><span>'+(i<3?medal(i+1):(i+1)+'.')+' '+esc(b.name)+'</span><b>'+b.pts+' pts</b></div>').join('');
-      box.innerHTML='<h3>'+icon('crown-gold','ic-lg')+'OVERALL STANDINGS</h3><div class="ex-places">'+rows+'</div>'+
-       '<button class="btn btn-gold btn-big ex-bigbtn" id="ex-cer-next">CROWN THE CHAMPION</button>';
+      const rows=board.map((b,i)=>'<div class="ge-cer-row'+(i<3?' ge-cer-top':'')+(b.me?' ge-cer-me':'')+'"><span>'+(i<3?medal(i+1):(i+1)+'.')+' '+esc(b.name)+'</span><b class="ge-num">'+b.pts+' pts</b></div>').join('');
+      box.innerHTML='<div class="ge-cer-head"><h3>'+icon('crown-gold','ge-ic-lg')+'OVERALL STANDINGS</h3></div><div class="ge-cer-rows">'+rows+'</div>'+
+       '<button class="ge-btn ge-btn-gold ge-btn-block" id="ex-cer-next">CROWN THE CHAMPION</button>';
     }else{
       applyRewards();
       const top3=board.slice(0,3);
-      const rows=top3.map((b,i)=>'<div class="ex-place ex-p'+(i+1)+(b.me?' ex-me':'')+' ex-final" style="animation-delay:'+(0.5+i*0.9)+'s">'+
-        '<span>'+medal(i+1)+' '+esc(b.name)+'</span><b>'+b.pts+' pts</b></div>').join('');
+      const rows=top3.map((b,i)=>'<div class="ge-cer-row ge-cer-top'+(b.me?' ge-cer-me':'')+' ge-cer-final" style="animation-delay:'+(0.5+i*0.9)+'s">'+
+        '<span>'+medal(i+1)+' '+esc(b.name)+'</span><b class="ge-num">'+b.pts+' pts</b></div>').join('');
       let rw='';
       if(myOverall===1){
-        rw='<div class="callout record"><div class="callout-crown">'+crownSVG(true,'c-ico-svg')+'</div>'+
-         '<p class="reward-line">🏆 YOU WIN '+esc(t.name).toUpperCase()+'!<br>+'+fmt$(Math.round(800*DIFFS[S.difficulty].missionReward))+' • +60 rep • 🏆 trophy enshrined</p></div>';
+        rw='<div class="ge-cer-win"><div class="ge-cer-crown">'+crownSVG(true,'c-ico-svg')+'</div>'+
+         '<p class="ge-cer-wintext">'+icon('trophy','ge-ic-md')+' YOU WIN '+esc(t.name).toUpperCase()+'!<br>+'+fmt$(Math.round(800*DIFFS[S.difficulty].missionReward))+' • +60 rep • trophy enshrined</p></div>';
       }else{
-        rw='<p class="muted">Placed #'+myOverall+'. '+(myOverall<=3?'Podium finish — the crown is close.':'The judges want more. Breed harder, grow louder.')+'</p>';
+        rw='<p class="ge-caption ge-muted">Placed #'+myOverall+'. '+(myOverall<=3?'Podium finish — the crown is close.':'The judges want more. Breed harder, grow louder.')+'</p>';
       }
-      box.innerHTML='<div class="ex-cer-hero"><div class="display ex-cer-title">CHAMPION</div></div>'+
-       '<div class="ex-places">'+rows+'</div>'+rw+
-       '<button class="btn btn-big ex-bigbtn" id="ex-cer-close">COLLECT &amp; CLOSE</button>';
+      box.innerHTML='<div class="ge-cer-hero"><div class="ge-display ge-cer-title">CHAMPION</div></div>'+
+       '<div class="ge-cer-rows">'+rows+'</div>'+rw+
+       '<button class="ge-btn ge-btn-block" id="ex-cer-close">COLLECT &amp; CLOSE</button>';
     }
     const nx=box.querySelector('#ex-cer-next'); if(nx) nx.onclick=()=>{ stage++; draw(); };
     const cl=box.querySelector('#ex-cer-close'); if(cl) cl.onclick=()=>{ closeModal(m); if(current==='empire') RENDER.empire(); };
   }
   draw();
 }
+
 
 /* ================= PROJECT 0 LEGACY (prestige, optional, never forced) ================= */
 function EX_legacyReqs(){
@@ -4968,15 +5275,23 @@ function EX_legacyBonus(){
 }
 function EX_legacyHTML(){
   const req=EX_legacyReqs(), runNum=int(S.ex.legacy.runs,0);
-  const reqHtml=req.list.map(x=>'<div class="kv"><span>'+(x.met?icon('check','kv-ico'):icon('lock','kv-ico'))+esc(x.label)+'</span><b>'+(x.met?'MET':'—')+'</b></div>').join('');
-  return '<div class="card ex-legacy"><h3>'+icon('project0','ic-lg')+'PROJECT 0: LEGACY REBIRTH</h3>'+
-   '<p class="muted">End this empire. Begin a new run with permanent bonuses. <b>Optional — never forced.</b></p>'+
-   (runNum>0?'<div class="kv"><span>'+icon('star','kv-ico')+'Legacy runs</span><b>'+runNum+'</b></div>'+
-    '<div class="kv"><span>'+icon('check','kv-ico')+'Permanent bonus</span><b>+'+num(S.ex.legacy.bonus.qual,0)+'% quality • +'+num(S.ex.legacy.bonus.yield,0)+'% yield</b></div>':'')+
+  const reqHtml=req.list.map(x=>
+   '<div class="ge-datarow"><span>'+(x.met?icon('check','ge-ic-md'):icon('lock','ge-ic-md'))+esc(x.label)+'</span>'+
+   '<b>'+(x.met?'<span class="ge-green">MET</span>':'<span class="ge-faint">—</span>')+'</b></div>').join('');
+  return '<div class="ge-card ge-p0-legacy">'+
+   '<div class="ge-card-head"><h3>'+icon('project0','ge-ic-lg')+'PROJECT 0: LEGACY REBIRTH</h3></div>'+
+   '<p class="ge-body ge-muted">End this empire. Begin a new run with permanent bonuses. <b class="ge-gold-text">Optional — never forced.</b></p>'+
+   (runNum>0?
+    '<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'Legacy runs</span><b class="ge-num">'+runNum+'</b></div>'+
+    '<div class="ge-datarow"><span>'+icon('check','ge-ic-md')+'Permanent bonus</span><b class="ge-num">+'+num(S.ex.legacy.bonus.qual,0)+'% quality • +'+num(S.ex.legacy.bonus.yield,0)+'% yield</b></div>'
+    :'')+
    reqHtml+
-   (req.met?'<button class="btn btn-danger btn-big ex-bigbtn" data-ex-legacy="1">BEGIN LEGACY REBIRTH</button>'
-    :'<p class="lock-note">'+icon('lock','kv-ico')+' Meet every requirement to unlock rebirth.</p>')+'</div>';
+   (req.met?
+    '<div class="ge-btn-row"><button class="ge-btn ge-btn-danger ge-btn-block" data-ex-legacy="1">BEGIN LEGACY REBIRTH</button></div>'
+    :'<p class="ge-p0-locknote">'+icon('lock','ge-ic-md')+' Meet every requirement to unlock rebirth.</p>')+
+  '</div>';
 }
+
 /* Integrator calls EX_wireP0() at the END of RENDER.project0. */
 function EX_wireP0(root){
   if(!EX_init()) return;
@@ -4989,14 +5304,15 @@ function EX_wireP0(root){
 function EX_doLegacy(){
   if(!EX_init()) return;
   const req=EX_legacyReqs();
-  if(!req.met){ toast('🔒 Legacy requirements not met yet.'); return; }
+  if(!req.met){ toast(icon('lock','ge-ic-md')+' Legacy requirements not met yet.'); return; }
   const runNum=int(S.ex.legacy.runs,0)+1;
-  confirmModal('⚠ LEGACY REBIRTH — IRREVERSIBLE',
+  confirmModal(icon('warn','ge-ic-md')+' LEGACY REBIRTH — IRREVERSIBLE',
    'Run #'+runNum+'. KEPT: Project 0 points & tracks, all unlocked strains & custom crosses, keepers, achievements, trophies, pheno history, titles, records. '+
    'RESET: cash to '+fmt$(DIFFS[S.difficulty].cash)+' starter, day 1, plants, inventory, buildings to Lv 1, employees released, territory to Home Turf, facility/equipment/crew & missions reset. '+
    'FOREVER: +'+(8*runNum)+'% quality & +'+(5*runNum)+'% yield on every future run.',
    ()=>EX_applyLegacy(runNum));
 }
+
 function EX_applyLegacy(runNum){
   const diff=S.difficulty, D=DIFFS[diff];
   const keep={ project0:S.project0, lockedStrains:S.lockedStrains.slice(), customStrains:S.customStrains,
@@ -5013,8 +5329,9 @@ function EX_applyLegacy(runNum){
   S.ex.legacy={runs:runNum,bonus:{qual:8*runNum,yield:5*runNum}};
   EX_normalizeEx(); save(); updateHUD();
   show('home');
-  toast('🔥 <b>LEGACY RUN #'+runNum+' BEGINS</b><br><span class="muted">Permanent +'+(8*runNum)+'% quality • +'+(5*runNum)+'% yield</span>');
+  toast(icon('project0','ge-ic-md')+' <b>LEGACY RUN #'+runNum+' BEGINS</b><br><span class="ge-muted">Permanent +'+(8*runNum)+'% quality • +'+(5*runNum)+'% yield</span>');
 }
+
 
 /* ================= LEADERBOARDS (honest LOCAL) ================= */
 const EX_RECORD_DEFS=[
@@ -5052,9 +5369,10 @@ function EX_syncRecords(){
     let bestId=null,bestN=0;
     Object.keys(byStrain).forEach(id=>{ if(byStrain[id]>bestN){bestN=byStrain[id];bestId=id;} });
     const bt=boosted.find(t=>t.strainId===bestId);
-    EX_record('strainValue',1+0.05*bestN,(bt?bt.strainName:bestId)+' ('+bestN+'🏆)');
+    EX_record('strainValue',1+0.05*bestN,(bt?bt.strainName:bestId)+' ('+bestN+' wins)');
   }
 }
+
 /* Stub for a future backend. Honest: local only for now. */
 const EX_LeaderboardAPI={
   submitScore:function(){ return Promise.resolve({ok:false,local:true,note:'Online leaderboards are not connected yet — scores stay on this device.'}); },
@@ -5063,30 +5381,35 @@ const EX_LeaderboardAPI={
 RENDER.leaderboards=function(){
   if(!EX_init()) return;
   const r=$('leaderboards-root');
+  if(!r) return;
   let html=screenHead('trophy','HALL OF RECORDS')+
-   '<div class="card ex-head"><h3>'+icon('star','ic-lg')+'PERSONAL RECORDS</h3>'+
-   '<p class="muted">Your all-time bests. Online leaderboards are coming later — these live on this device only.</p></div>'+
-   '<div class="ex-recgrid">';
+   '<div class="ge-screen"><div class="ge-card ge-card-hot">'+
+   '<div class="ge-card-head"><h3>'+icon('trophy','ge-ic-lg')+'PERSONAL RECORDS</h3></div>'+
+   '<p class="ge-muted">Your all-time bests. Online leaderboards are coming later \u2014 these live on this device only.</p></div>'+
+   '<div class="ge-tiles ms-records">';
   EX_RECORD_DEFS.forEach(d=>{
     const rec=S.ex.records[d.cat];
-    html+='<div class="card ex-rec"><span class="ex-reclabel">'+esc(d.label)+'</span>'+
-     '<b class="ex-recval">'+(rec?esc(d.fmt(rec.val)):'—')+'</b>'+
-     (rec?'<span class="muted">Day '+int(rec.day,1)+'</span>':'<span class="muted">not set</span>')+'</div>';
+    html+='<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+(rec?esc(d.fmt(rec.val)):'\u2014')+'</div>'+
+     '<div class="ge-metric-label">'+esc(d.label)+'</div>'+
+     '<div class="ge-metric-sub">'+(rec?'Day '+int(rec.day,1):'not set')+'</div></div>';
   });
   html+='</div>';
-  html+='<div class="card ex-legend"><h3>'+icon('crown-gold','ic-lg')+'LOCAL LEGEND</h3>'+
-   '<p><b>YOU</b> — the undisputed legend of this device.</p>'+
-   '<div class="kv"><span>'+icon('level','kv-ico')+'Level</span><b>'+int(S.level,1)+'</b></div>'+
-   '<div class="kv"><span>'+icon('day','kv-ico')+'Days survived</span><b>'+int(S.day,1)+'</b></div>'+
-   '<div class="kv"><span>'+icon('trophy','kv-ico')+'Competitions won</span><b>'+int(S.stats.compsWon,0)+'</b></div>'+
-   '<div class="kv"><span>'+icon('genetics','kv-ico')+'Custom strains bred</span><b>'+S.customStrains.length+'</b></div>'+
-   (S.titles.length?'<div class="tags">'+S.titles.map(t=>'<span class="tag gold">'+esc(t)+'</span>').join('')+'</div>':'')+'</div>';
-  html+='<div class="card"><h3>'+icon('trophy','ic-lg')+'TROPHY CASE ('+S.ex.trophies.length+')</h3>'+
+  html+='<div class="ge-card ge-card-hot"><div class="ge-card-head"><h3>'+icon('crown-gold','ge-ic-lg')+'LOCAL LEGEND</h3></div>'+
+   '<p><b>YOU</b> \u2014 the undisputed legend of this device.</p>'+
+   '<div class="ge-datarow"><span>'+icon('level','ge-ic-sm')+'Level</span><b class="ge-num">'+int(S.level,1)+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('day','ge-ic-sm')+'Days survived</span><b class="ge-num">'+int(S.day,1)+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('trophy','ge-ic-sm')+'Competitions won</span><b class="ge-num">'+int(S.stats.compsWon,0)+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('genetics','ge-ic-sm')+'Custom strains bred</span><b class="ge-num">'+S.customStrains.length+'</b></div>'+
+   (S.titles.length?'<div class="ms-titles">'+S.titles.map(t=>'<span class="ge-badge ge-badge-legendary">'+icon('trophy','ge-ic-sm')+esc(MS_stripEmoji(t))+'</span>').join('')+'</div>':'')+'</div>';
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('trophy','ge-ic-lg')+'TROPHY CASE</h3>'+
+   '<span class="ge-pill ge-pill-neutral ge-num">'+S.ex.trophies.length+'</span></div>'+
    (S.ex.trophies.length?S.ex.trophies.slice().reverse().map(t=>
-     '<div class="kv"><span>'+(t.place===1?'🥇':t.place===2?'🥈':'🥉')+' '+esc(t.compName||t.compId)+(t.catName&&t.catId!=='overall'?' — '+esc(t.catName):'')+'</span><b>'+esc(t.strainName||'')+'</b></div>').join(''):
-    '<p class="muted">No trophies yet. Win a competition to start the case.</p>')+'</div>';
+     '<div class="ge-datarow"><span>'+MS_placeBadge(t.place)+' '+esc(t.compName||t.compId)+(t.catName&&t.catId!=='overall'?' \u2014 '+esc(t.catName):'')+'</span><b>'+esc(t.strainName||'')+'</b></div>').join(''):
+    '<div class="ge-empty">'+icon('trophy','ge-ic-xl')+'<h3>No trophies yet</h3><p>Win a competition to start the case.</p></div>')+'</div>';
+  html+='</div>';
   r.innerHTML=html;
 };
+
 
 /* ================= HOME DASHBOARD ================= */
 function EX_nextUnlock(){
@@ -5114,73 +5437,72 @@ function EX_nextUnlock(){
 function EX_homeActions(){
   const acts=[];
   const needy=S.plants.filter(p=>p.health<50||p.water<20||p.nutrition<15).length;
-  if(needy>0) acts.push({sev:'warn',t:'🚨 '+needy+' plant'+(needy===1?' needs':'s need')+' attention',s:'Health, water or food critical.',go:'grow',tab:null});
+  if(needy>0) acts.push({sev:'warn',ico:'warn',t:needy+' plant'+(needy===1?' needs':'s need')+' attention',s:'Health, water or food critical.',go:'grow',tab:null});
   let ready=0;
   S.plants.forEach(p=>{ try{ if(stageOf(p)>=5) ready++; }catch(e){} });
-  if(ready>0) acts.push({sev:'good',t:'🌾 '+ready+' plant'+(ready===1?'':'s')+' ready to harvest',s:'Don\'t let them sit.',go:'grows',tab:null});
+  if(ready>0) acts.push({sev:'good',ico:'harvest',t:ready+' plant'+(ready===1?'':'s')+' ready to harvest',s:'Don\'t let them sit.',go:'grows',tab:null});
   const poolDue=Math.max(0,3-(int(S.day,1)-int(S.ex.pday,1)));
-  if(poolDue===0&&S.ex.pool.length) acts.push({sev:'info',t:'👥 Fresh staff candidates waiting',s:'New hiring pool is in.',go:'empire',tab:'staff'});
+  if(poolDue===0&&S.ex.pool.length) acts.push({sev:'info',ico:'users',t:'Fresh staff candidates waiting',s:'New hiring pool is in.',go:'empire',tab:'staff'});
   let wxNote='';
   try{
     if(typeof WX_activeEventMod==='function'){ const ev=WX_activeEventMod('current'); if(ev) wxNote=String(ev.title||ev.name||ev); }
   }catch(e){}
-  if(wxNote) acts.push({sev:'warn',t:'🌪️ Active event: '+wxNote,s:'Check the grow room.',go:'grow',tab:null});
+  if(wxNote) acts.push({sev:'warn',ico:'warn',t:'Active event: '+wxNote,s:'Check the grow room.',go:'grow',tab:null});
   try{
-    if(typeof WX_marketMult==='function'){ const mm=num(WX_marketMult('all'),1); if(mm>1.05) acts.push({sev:'good',t:'📈 Market boom ×'+mm.toFixed(2),s:'Sell while prices are hot.',go:'dispensary',tab:null}); }
+    if(typeof WX_marketMult==='function'){ const mm=num(WX_marketMult('all'),1); if(mm>1.05) acts.push({sev:'good',ico:'chart',t:'Market boom x'+mm.toFixed(2),s:'Sell while prices are hot.',go:'dispensary',tab:null}); }
   }catch(e){}
   const pay=EX_payrollTotal();
-  if(pay>0) acts.push({sev:'info',t:'💼 Payroll: '+fmt$(pay)+'/day ('+S.ex.employees.length+' staff)',s:'Keep cash flowing.',go:'empire',tab:'staff'});
+  if(pay>0) acts.push({sev:'info',ico:'crew',t:'Payroll: '+fmt$(pay)+'/day ('+S.ex.employees.length+' staff)',s:'Keep cash flowing.',go:'empire',tab:'staff'});
   const nm=nextMission();
-  if(nm) acts.push({sev:'info',t:'🎯 Next mission: '+nm.name,s:nm.desc,go:'missions',tab:null});
+  if(nm) acts.push({sev:'info',ico:'missions',t:'Next mission: '+nm.name,s:nm.desc,go:'missions',tab:null});
   const un=EX_nextUnlock();
-  acts.push({sev:'info',t:'🔓 Next unlock: '+un.text,s:'Your fastest power spike.',go:un.go,tab:un.tab});
-  if(!acts.length) acts.push({sev:'good',t:'🌱 Plant a seed',s:'The empire starts in the soil.',go:'grow',tab:null});
+  acts.push({sev:'info',ico:'check',t:'Next unlock: '+un.text,s:'Your fastest power spike.',go:un.go,tab:un.tab});
+  if(!acts.length) acts.push({sev:'good',ico:'grow',t:'Plant a seed',s:'The empire starts in the soil.',go:'grow',tab:null});
   return acts.slice(0,6);
 }
+
 RENDER.home=function(){
   if(!EX_init()) return;
   const r=$('home-root');
   const lvl=Math.max(1,int(S.level,1)), xp=num(S.xp,0), xpN=xpNeed(lvl);
   const hunts=S.phenoHunts.filter(h=>h.active).length;
   const recentCrosses=S.customStrains.slice(-3).reverse();
-  let html='<div class="ex-dashhero"><div class="display ex-dashtitle">SHOCKER OWNZ</div>'+
-   '<div class="ex-dassub">EMPIRE DASHBOARD — DAY '+int(S.day,1)+'</div></div>'+
-   '<div class="ex-chips">'+
-   '<div class="ex-chip"><span>DAY</span><b>'+int(S.day,1)+'</b></div>'+
-   '<div class="ex-chip"><span>CASH</span><b>'+fmt$(S.cash)+'</b></div>'+
-   '<div class="ex-chip"><span>REP</span><b>'+int(S.reputation,0)+'</b></div>'+
-   '<div class="ex-chip"><span>LEVEL</span><b>'+lvl+'</b></div></div>'+
-   '<div class="card"><div class="kv"><span>'+icon('xp','kv-ico')+'XP to next level</span><b>'+int(xp,0)+'/'+xpN+'</b></div>'+
-   '<div class="progress"><i style="width:'+clamp(xp/xpN*100,0,100)+'%"></i></div></div>';
+  let html=HM_identityHead();
+  html+='<div class="ge-card ge-home-xp"><div class="ge-progress-meta"><span>'+icon('xp','ge-ic-md')+'LEVEL '+lvl+' &mdash; '+Math.max(0,xpN-xp)+' XP TO NEXT</span><b class="ge-num">'+int(xp,0)+'/'+xpN+'</b></div>'+
+   '<div class="ge-progress"><i style="width:'+clamp(xp/xpN*100,0,100)+'%"></i></div></div>';
   try{ html+=TY_dashCommand(); }catch(e){}
-  html+='<h3 class="display ex-sect">WHAT SHOULD I DO NEXT?</h3>';
+  html+='<div class="ge-section-title">WHAT SHOULD I DO NEXT?</div><div class="ge-home-actions">';
   EX_homeActions().forEach(a=>{
-    html+='<button class="card ex-action ex-'+a.sev+'" data-ex-go="'+a.go+'"'+(a.tab?' data-ex-tab="'+a.tab+'"':'')+'>'+
-     '<b>'+esc(a.t)+'</b><span class="muted">'+esc(a.s)+'</span></button>';
+    html+='<button class="ge-card ge-card-tap ge-home-action ge-anim-rise" data-ex-go="'+a.go+'"'+(a.tab?' data-ex-tab="'+a.tab+'"':'')+'>'+
+     '<span class="ge-home-action-ico ge-home-sev-'+a.sev+'">'+icon(a.ico||'star','ge-ic-md')+'</span>'+
+     '<span class="ge-home-action-tx"><b>'+esc(a.t)+'</b><span class="ge-muted ge-caption">'+esc(a.s)+'</span></span>'+
+     icon('arrow-right','ge-ic-sm')+'</button>';
   });
+  html+='</div>';
+  html+='<div class="ge-section-title">EMPIRE AT A GLANCE</div><div class="ge-home-glance">'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="grow"><span class="ge-metric-value ge-num">'+S.plants.length+'</span><span class="ge-metric-label">GROWING</span></button>'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="genetics"><span class="ge-metric-value ge-num">'+hunts+'</span><span class="ge-metric-label">PHENO HUNTS</span></button>'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="breeding"><span class="ge-metric-value ge-num">'+S.customStrains.length+'</span><span class="ge-metric-label">CUSTOM STRAINS</span></button>'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="empire" data-ex-tab="staff"><span class="ge-metric-value ge-num">'+S.ex.employees.length+'</span><span class="ge-metric-label">STAFF</span></button>'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="leaderboards"><span class="ge-metric-value ge-num">'+S.ex.trophies.length+'</span><span class="ge-metric-label">TROPHIES</span></button>'+
+   '<button class="ge-metric-tile ge-card-tap" data-ex-go="locations"><span class="ge-metric-value ge-truncate">'+esc(EX_locById(S.ex.locations.current).name.split(' ')[0])+'</span><span class="ge-metric-label">TERRITORY</span></button></div>';
   try{ html+=TY_dashNewsFeed(); }catch(e){}
-  html+='<h3 class="display ex-sect">EMPIRE AT A GLANCE</h3><div class="ex-glance">'+
-   '<button class="card ex-g" data-ex-go="grow"><b>'+S.plants.length+'</b><span>growing</span></button>'+
-   '<button class="card ex-g" data-ex-go="genetics"><b>'+hunts+'</b><span>pheno hunts</span></button>'+
-   '<button class="card ex-g" data-ex-go="breeding"><b>'+S.customStrains.length+'</b><span>custom strains</span></button>'+
-   '<button class="card ex-g" data-ex-go="empire" data-ex-tab="staff"><b>'+S.ex.employees.length+'</b><span>staff</span></button>'+
-   '<button class="card ex-g" data-ex-go="leaderboards"><b>'+S.ex.trophies.length+'</b><span>trophies</span></button>'+
-   '<button class="card ex-g" data-ex-go="locations"><b>'+esc(EX_locById(S.ex.locations.current).name.split(' ')[0])+'</b><span>territory</span></button></div>';
   if(recentCrosses.length){
-    html+='<div class="card"><h3>'+icon('breeding','ic-lg')+'RECENT CROSSES</h3>'+
-     recentCrosses.map(s=>'<div class="kv"><span>'+esc(s.name)+'</span><span class="badge gold">R'+Math.round(num(s.resin,0))+'</span></div>').join('')+'</div>';
+    html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('breeding','ge-ic-md')+'RECENT CROSSES</h3></div>'+
+     recentCrosses.map(s=>'<div class="ge-datarow"><span>'+esc(s.name)+'</span><span class="ge-badge ge-badge-legendary">R'+Math.round(num(s.resin,0))+'</span></div>').join('')+'</div>';
   }
-  html+='<div class="card"><div class="kv"><span>'+icon('missions','kv-ico')+'Missions</span><b>'+int(S.stats.missionsDone,0)+'/'+MISSIONS.length+'</b></div>'+
-   '<div class="kv"><span>'+icon('trophy','kv-ico')+'Achievements</span><b>'+EX_ACHIEVEMENTS.filter(a=>S.ex.ach[a.id]).length+'/'+EX_ACHIEVEMENTS.length+'</b></div>'+
-   '<div class="btn-row"><button class="btn btn-small" data-ex-go="achievements">TROPHIES</button>'+
-   '<button class="btn btn-small" data-ex-go="leaderboards">RECORDS</button>'+
-   '<button class="btn btn-small" data-ex-go="locations">TERRITORY</button></div></div>';
+  html+='<div class="ge-card"><div class="ge-datarow"><span>'+icon('missions','ge-ic-md')+'Missions</span><b class="ge-num">'+int(S.stats.missionsDone,0)+'/'+MISSIONS.length+'</b></div>'+
+   '<div class="ge-datarow"><span>'+icon('trophy','ge-ic-md')+'Achievements</span><b class="ge-num">'+EX_ACHIEVEMENTS.filter(a=>S.ex.ach[a.id]).length+'/'+EX_ACHIEVEMENTS.length+'</b></div>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="achievements">TROPHIES</button>'+
+   '<button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="leaderboards">RECORDS</button>'+
+   '<button class="ge-btn ge-btn-ghost ge-btn-sm" data-ex-go="locations">TERRITORY</button></div></div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-ex-go]').forEach(b=>b.onclick=()=>{
     if(b.dataset.exTab) empireTab=b.dataset.exTab;
     show(b.dataset.exGo);
   });
 };
+
 
 /* ================= DAILY TICK =================
    Integrator calls EX_tick() from advanceDay() (after day++ / missions). */
@@ -5278,9 +5600,11 @@ function TY_notify(text,cls,quiet){
   }catch(e){}
 }
 function TY_feedHTML(n){
-  const t=S.ty; if(!t||!t.feed.length) return '<p class="muted">No alerts yet. Make moves.</p>';
-  return t.feed.slice(0,n||8).map(f=>'<div class="ty-feedrow ty-'+f.cls+'"><span class="muted">D'+f.day+'</span><span>'+f.text+'</span></div>').join('');
+  const t=S.ty; if(!t||!t.feed.length) return '<p class="ge-body ge-muted">No alerts yet. Make moves.</p>';
+  const tone={good:'ge-dp-dot-good',warn:'ge-dp-dot-warn',bad:'ge-dp-dot-bad',info:''};
+  return t.feed.slice(0,n||8).map(f=>'<div class="ge-dp-feedrow"><span class="ge-dp-dot '+(tone[f.cls]||'')+'"></span><span class="ge-muted ge-num ge-caption">D'+f.day+'</span><span>'+f.text+'</span></div>').join('');
 }
+
 
 /* ---------------- deep reputation ---------------- */
 const TY_REP_CATS=[
@@ -5320,17 +5644,18 @@ function TY_playstyle(){
   return titles[best]||'MASTER GROWER';
 }
 function TY_repProfileHTML(){
-  let h='<div class="card"><h3>'+icon('rep','ic-lg')+'REPUTATION PROFILE</h3>';
-  h+='<div class="kv"><span>Overall</span><b>'+TY_repOverall()+'</b></div>';
-  h+='<div class="kv"><span>Playstyle</span><b class="badge gold">'+TY_playstyle()+'</b></div>';
+  let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('rep','ge-ic-md')+'REPUTATION PROFILE</h3></div>';
+  h+='<div class="ge-datarow"><span>Overall</span><b class="ge-num">'+TY_repOverall()+'</b></div>';
+  h+='<div class="ge-datarow"><span>Playstyle</span><span class="ge-badge ge-badge-gold">'+TY_playstyle()+'</span></div>';
   TY_REP_CATS.forEach(c=>{
     const v=Math.round(TY_repCat(c.id));
-    h+='<div class="kv" title="'+esc(c.desc)+'"><span>'+icon(c.ico,'kv-ico')+' '+c.name+'</span><b>'+v+'</b></div>'+
-       '<div class="progress"><i style="width:'+clamp(v/30,0,100)+'%"></i></div>';
+    h+='<div class="ge-progress-meta" title="'+esc(c.desc)+'"><span>'+DP_iconSafe(c.ico,'ge-ic-sm')+' '+c.name+'</span><b class="ge-num">'+v+'</b></div>'+
+       '<div class="ge-progress"><i style="width:'+clamp(v/30,0,100)+'%"></i></div>';
   });
-  h+='<p class="muted">Reputation moves customers, prices, applicants, contracts and unlocks.</p></div>';
+  h+='<p class="ge-body ge-muted">Reputation moves customers, prices, applicants, contracts and unlocks.</p></div>';
   return h;
 }
+
 
 /* ---------------- permanent perks / unlocks ---------------- */
 function TY_hasPerk(id){ try{ return !!S.ty.perks[id]; }catch(e){ return false; } }
@@ -5339,9 +5664,10 @@ function TY_grantPerk(id,label){
     if(!S.ty.perks) S.ty.perks={};
     if(S.ty.perks[id]) return;
     S.ty.perks[id]=1;
-    TY_notify('🔓 UNLOCKED: <b>'+esc(label)+'</b>','good');
+    TY_notify(icon('check','ge-ic-md')+' UNLOCKED: <b>'+esc(label)+'</b>','good');
   }catch(e){}
 }
+
 function TY_grantUnlock(id,missionName){
   const U={
     branding:['branding','BRANDING — +6% on all sale prices'],
@@ -5408,18 +5734,19 @@ function TY_checkRank(){
     const R=TY_RANKS[cur];
     TY_applyRankUnlock(cur);
     setTimeout(()=>{
-      modal('<div class="ty-rankup">'+crownSVG(true,'lvlup-crown')+
-       '<div class="display lvlup-title">RANK UP</div>'+
-       '<div class="lvlup-sub">'+esc(R.name)+'</div>'+
-       '<div class="card"><h3>UNLOCKED</h3>'+R.unlocks.map(u=>'<div class="kv"><span>'+icon('check','kv-ico')+'</span><span>'+esc(u)+'</span></div>').join('')+'</div>'+
-       '<button class="btn btn-primary btn-big" onclick="closeModal(this.closest(\'.modal-back\'))">OWN THE SHOW</button></div>');
+      modal('<div class="ge-dp-rankup">'+crownSVG(true,'ge-dp-rankcrown')+
+       '<div class="ge-display ge-dp-rankup-title">RANK UP</div>'+
+       '<div class="ge-h2 ge-dp-rankup-name">'+esc(R.name)+'</div>'+
+       '<div class="ge-card"><div class="ge-card-head"><h3>UNLOCKED</h3></div>'+R.unlocks.map(u=>'<div class="ge-datarow"><span>'+icon('check','ge-ic-sm')+'</span><span>'+esc(u)+'</span></div>').join('')+'</div>'+
+       '<button class="ge-btn ge-btn-primary ge-btn-block" onclick="closeModal(this.closest(\'.modal-back\'))">OWN THE SHOW</button></div>');
     },400);
-    TY_notify('👑 <b>RANK UP: '+esc(R.name)+'</b>','good');
+    TY_notify(icon('crown-gold','ge-ic-md')+' <b>RANK UP: '+esc(R.name)+'</b>','good');
     try{ if(typeof WX_addNews==='function'){} }catch(e){}
     TY_addNews('crown','<b>RANK UP:</b> the streets now know you as <b>'+esc(R.name)+'</b>.');
     gainXP(200+cur*60);
   }
 }
+
 function TY_applyRankUnlock(i){
   if(i>=3) TY_grantPerk('plugdisc','PLUG DISCOUNT');
   if(i>=4) TY_grantPerk('wholesale','WHOLESALE CONTRACTS');
@@ -5427,14 +5754,15 @@ function TY_applyRankUnlock(i){
 }
 function TY_rankHTML(){
   const cur=TY_rankIdx(), R=TY_RANKS[cur];
-  let h='<div class="card"><h3>'+icon('crown-gold','ic-lg')+'STREET RANK</h3>';
-  h+='<div class="ty-rankname display">'+crownSVG(true,'ty-rankcrown')+' '+esc(R.name)+'</div>';
+  let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('crown-gold','ge-ic-md')+'STREET RANK</h3></div>';
+  h+='<div class="ge-dp-rankname ge-display">'+crownSVG(true,'ge-dp-rankcrown')+' '+esc(R.name)+'</div>';
   if(cur<TY_RANKS.length-1){
-    h+='<div class="kv"><span>Next: '+esc(TY_RANKS[cur+1].name)+'</span><b class="muted">'+esc(TY_rankReqText(cur+1))+'</b></div>';
-  } else h+='<p class="muted">👑 You are the LEGEND. The empire is yours.</p>';
-  h+='<div class="ty-rankladder">'+TY_RANKS.map((r,i)=>'<div class="tier-chip'+(i===cur?' cur':i<cur?' owned':'')+'"><span>'+esc(r.name)+'</span></div>').join('')+'</div></div>';
+    h+='<div class="ge-datarow"><span>Next: '+esc(TY_RANKS[cur+1].name)+'</span><b class="ge-muted ge-caption">'+esc(TY_rankReqText(cur+1))+'</b></div>';
+  } else h+='<p class="ge-body ge-muted">'+icon('crown-gold','ge-ic-md')+' You are the LEGEND. The empire is yours.</p>';
+  h+='<div class="ge-dp-ladder">'+TY_RANKS.map((r,i)=>'<span class="ge-pill '+(i===cur?'ge-pill-gold':i<cur?'ge-pill-optimal':'ge-pill-neutral')+'">'+esc(r.name)+'</span>').join('')+'</div></div>';
   return h;
 }
+
 /* ---------------- LIVING MARKET ECONOMY ----------------
    Per-product-type demand + per-strain popularity, driven by real sim factors.
    Multiplies into WX_sellMult via TY_priceFactor. */
@@ -5512,7 +5840,7 @@ function TY_marketTick(){
     t.shortagePtype=pick(TY_PTYPES).id;
     TY_setTypeDem(t.shortagePtype,'high','Market shortage — shelves are empty.',5);
     TY_addNews('warn','<b>MARKET SHORTAGE:</b> '+esc(TY_PTYPES.find(p=>p.id===t.shortagePtype).name)+' shelves are bare. Prices spiking.');
-    TY_notify('📈 Market shortage: '+esc(TY_PTYPES.find(p=>p.id===t.shortagePtype).name),'warn');
+    TY_notify(icon('chart','ge-ic-md')+' Market shortage: '+esc(TY_PTYPES.find(p=>p.id===t.shortagePtype).name),'warn');
   } else if(t.shortagePtype&&Math.random()<0.25) t.shortagePtype=null;
   /* strain popularity drift */
   try{
@@ -5532,6 +5860,7 @@ function TY_marketTick(){
     });
   }catch(e){}
 }
+
 function TY_demandWhy(pt,dem){
   const W={
    high:['Connoisseurs are hunting top-shelf '+pt+'.','A viral review drove buyers to '+pt+'.','Wholesale buyers are stocking '+pt+'.'],
@@ -5573,12 +5902,12 @@ function TY_compTick(){
     const r=Math.random();
     if(r<0.3){ c.priceAdj=clamp(int(c.priceAdj,0)-rndi(3,8),-15,15);
       TY_addNews('warn','<b>'+esc(c.name)+'</b> slashed prices — pressure on your margins.');
-      TY_notify('⚔️ '+esc(c.name)+' started a price war','warn',true);
+      TY_notify(icon('compete','ge-ic-md')+' '+esc(c.name)+' started a price war','warn',true);
     } else if(r<0.55){ c.share=clamp(num(c.share,0)+rnd(1,3),2,30);
       TY_addNews('warn','<b>'+esc(c.name)+'</b> launched a new '+esc(c.spec.toLowerCase())+' product line.');
     } else if(r<0.7&&t.comps.filter(x=>x.active).length>2){ c.active=false;
       TY_addNews('cash','<b>'+esc(c.name)+'</b> closed a location — market share up for grabs.');
-      TY_notify('🏪 '+esc(c.name)+' closed a store. Move in.','good',true);
+      TY_notify(icon('storefront','ge-ic-md')+' '+esc(c.name)+' closed a store. Move in.','good',true);
     } else { c.quality=clamp(int(c.quality,70)+rndi(-2,3),55,95);
       TY_addNews('warn','<b>'+esc(c.name)+'</b> is pushing quality ('+c.quality+'). Stay sharp.');
     }
@@ -5587,6 +5916,7 @@ function TY_compTick(){
   t.comps.forEach(c=>{ if(!c.active&&Math.random()<0.05){ c.active=true; c.share=rndi(3,8);
     TY_addNews('warn','<b>'+esc(c.name)+'</b> reopened — competition is back.'); } });
 }
+
 
 /* ---------------- daily news ---------------- */
 function TY_addNews(ico,text){
@@ -5606,67 +5936,77 @@ function TY_newsTick(){
     const ch=rndi(-6,10);
     if(ch!==0){
       t.elecPrice=clamp(num(t.elecPrice,1)+ch/100,0.7,1.8);
-      stories.push({ico:'warn',text:'⚡ Electricity prices '+(ch>0?'rose':'fell')+' '+Math.abs(ch)+'% — your power bill '+(ch>0?'just got heavier.':'gets a break.')});
+      stories.push({ico:'warn',text:icon('lighting','ge-ic-md')+' Electricity prices '+(ch>0?'rose':'fell')+' '+Math.abs(ch)+'% — your power bill '+(ch>0?'just got heavier.':'gets a break.')});
     }
   }
   /* trending tags — real demand effect */
   if(Math.random()<0.3){
     const tags=['Frosty','Gassy','Fruit','Purple','Exotic','Skunky','Resin Monster'];
     t.trendTags=[pick(tags),pick(tags)];
-    stories.push({ico:'cash',text:'🌱 <b>'+esc(t.trendTags[0])+'</b> and <b>'+esc(t.trendTags[1])+'</b> strains are trending — demand rising.'});
+    stories.push({ico:'cash',text:icon('grow','ge-ic-md')+' <b>'+esc(t.trendTags[0])+'</b> and <b>'+esc(t.trendTags[1])+'</b> strains are trending — demand rising.'});
   }
   /* wholesale */
   if(Math.random()<0.2){
     const d=pick(['high','low']);
     TY_setTypeDem('wholesale',d,d==='high'?'Distributors are buying heavy.':'Wholesale buyers went quiet.',4);
-    stories.push({ico:'cash',text:'🏭 Wholesale demand '+d.toUpperCase()+'.'});
+    stories.push({ico:'cash',text:icon('facility','ge-ic-md')+' Wholesale demand '+d.toUpperCase()+'.'});
   }
   /* weekend */
   const dow=int(S.day,1)%7;
   t.weekendBoost=(dow===5||dow===6)?0.25:0;
-  if(t.weekendBoost>0) stories.push({ico:'cash',text:'🎉 High-demand weekend — retail is buzzing (+25% customer spending).'});
+  if(t.weekendBoost>0) stories.push({ico:'cash',text:icon('star','ge-ic-md')+' High-demand weekend — retail is buzzing (+25% customer spending).'});
   /* industry */
   if(Math.random()<0.12){
     const b=rndi(4,10);
     TY_gainRep('business',b);
-    stories.push({ico:'star',text:'🏆 Industry nod: your operation earned +'+b+' business rep.'});
+    stories.push({ico:'star',text:icon('trophy','ge-ic-md')+' Industry nod: your operation earned +'+b+' business rep.'});
   }
   stories.slice(0,4).forEach(s=>TY_addNews(s.ico,s.text));
 }
+
 function TY_newsHTML(n){
   const t=S.ty;
-  if(!t||!t.news.length) return '<p class="muted">No news yet. The streets are quiet… for now.</p>';
-  return t.news.slice(0,n||6).map(x=>'<div class="ty-feedrow"><span class="muted">D'+x.day+'</span><span>'+x.text+'</span></div>').join('');
+  if(!t||!t.news.length) return '<div class="ge-empty">'+icon('scroll','ge-ic-xl')+'<h3>QUIET STREETS</h3><p>No news yet. The streets are quiet… for now.</p></div>';
+  return t.news.slice(0,n||6).map(x=>'<div class="ge-dp-feedrow"><span class="ge-pill ge-pill-neutral ge-num">D'+x.day+'</span>'+DP_iconSafe(x.ico,'ge-ic-sm')+'<span>'+x.text+'</span></div>').join('');
 }
+
 
 /* ---------------- MARKET REPORT screen ---------------- */
 RENDER.market=function(){
   const r=$('market-root'); if(!r) return;
   const mv=TY_movers();
-  let html=screenHead('cash','MARKET REPORT');
-  html+='<div class="card"><div class="kv"><span>'+icon('day','kv-ico')+'Season</span><b>'+TY_SEASONS[int(S.ty.season,0)]+'</b></div>'+
-   '<div class="kv"><span>'+icon('warn','kv-ico')+'Electricity price</span><b>×'+num(S.ty.elecPrice,1).toFixed(2)+'</b></div>'+
-   '<div class="kv"><span>'+icon('empire','kv-ico')+'Your market share</span><b>'+int(S.ty.pShare,62)+'%</b></div></div>';
-  html+='<h3 class="display ex-sect">PRODUCT DEMAND</h3>';
+  let html=screenHead('chart','MARKET REPORT');
+  html+='<div class="ge-dp-metrics">'+
+   DP_metricTile('day',TY_SEASONS[int(S.ty.season,0)],'SEASON','market cycle')+
+   DP_metricTile('lighting','×'+num(S.ty.elecPrice,1).toFixed(2),'ELECTRICITY','rate multiplier')+
+   DP_metricTile('empire',int(S.ty.pShare,62)+'%','MARKET SHARE','your slice')+
+  '</div>';
+  html+=DP_sectionTitle('chart','PRODUCT DEMAND');
+  html+='<div class="ge-card ge-card-flat ge-dp-demand">';
   TY_PTYPES.forEach(p=>{
     const td=TY_typeDem(p.id);
-    const cls=td.demand==='high'?'wx-dem-high':td.demand==='low'?'wx-dem-low':td.demand==='collector'?'wx-dem-collector':'wx-dem-normal';
-    html+='<div class="wx-mkt-row"><span class="wx-mkt-name">'+icon(p.ico,'kv-ico')+' '+p.name+'</span>'+
-     '<span class="wx-dem '+cls+'">'+td.demand.toUpperCase()+'</span><b>×'+num(td.mult,1).toFixed(2)+'</b></div>'+
-     (td.why?'<p class="muted ty-why">'+esc(td.why)+'</p>':'');
+    html+='<div class="ge-dp-demrow"><span class="ge-dp-demname">'+DP_iconSafe(p.ico,'ge-ic-md')+' '+p.name+'</span>'+
+     DP_demPill(p.id)+'<b class="ge-num">×'+num(td.mult,1).toFixed(2)+'</b></div>'+
+     (td.why?'<p class="ge-caption ge-muted ge-dp-why">'+esc(td.why)+'</p>':'');
   });
-  html+='<h3 class="display ex-sect">STRAIN POPULARITY</h3><div class="card"><h3>🔥 TRENDING</h3>'+
-   mv.hot.map(s=>'<div class="kv"><span>'+esc(s.name)+'</span><b>'+s.pop+'/100</b></div>').join('')+'</div>';
-  html+='<div class="card"><h3>📉 COOLING OFF</h3>'+
-   mv.cold.map(s=>'<div class="kv"><span>'+esc(s.name)+'</span><b>'+s.pop+'/100</b></div>').join('')+'</div>';
-  html+='<h3 class="display ex-sect">COMPETITORS</h3>';
+  html+='</div>';
+  html+=DP_sectionTitle('temp','STRAIN POPULARITY');
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('temp','ge-ic-md')+'TRENDING</h3></div>'+
+   mv.hot.map(s=>'<div class="ge-progress-meta"><span>'+esc(s.name)+'</span><b class="ge-num">'+s.pop+'/100</b></div><div class="ge-progress ge-progress-thin ge-progress-ok"><i style="width:'+s.pop+'%"></i></div>').join('')+'</div>';
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('chart','ge-ic-md')+'COOLING OFF</h3></div>'+
+   mv.cold.map(s=>'<div class="ge-progress-meta"><span>'+esc(s.name)+'</span><b class="ge-num">'+s.pop+'/100</b></div><div class="ge-progress ge-progress-thin ge-progress-bad"><i style="width:'+s.pop+'%"></i></div>').join('')+'</div>';
+  html+=DP_sectionTitle('compete','COMPETITORS');
   (S.ty.comps||[]).forEach(c=>{
-    html+='<div class="card ty-comp'+(c.active?'':' dim')+'"><div class="kv"><span><b>'+esc(c.name)+'</b> <span class="muted">'+esc(c.size)+' • '+esc(c.loc)+'</span></span><b>'+(c.active?int(c.share,0)+'% share':'CLOSED')+'</b></div>'+
-     '<div class="kv"><span class="muted">Specialty: '+esc(c.spec)+' • Quality '+int(c.quality,0)+' • Prices '+(int(c.priceAdj,0)>=0?'+':'')+int(c.priceAdj,0)+'%</span></div></div>';
+    html+='<div class="ge-card ge-card-flat'+(c.active?'':' ge-dp-dim')+'"><div class="ge-card-head"><h3>'+esc(c.name)+'</h3>'+
+     (c.active?'<span class="ge-pill ge-pill-optimal">'+int(c.share,0)+'% SHARE</span>':'<span class="ge-pill ge-pill-critical">CLOSED</span>')+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+esc(c.size)+' • '+esc(c.loc)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">Specialty: '+esc(c.spec)+' • Quality '+int(c.quality,0)+' • Prices '+(int(c.priceAdj,0)>=0?'+':'')+int(c.priceAdj,0)+'%</div></div>';
   });
-  html+='<h3 class="display ex-sect">LATEST NEWS</h3><div class="card">'+TY_newsHTML(8)+'</div>';
+  html+=DP_sectionTitle('scroll','LATEST NEWS');
+  html+='<div class="ge-card ge-card-flat">'+TY_newsHTML(8)+'</div>';
   r.innerHTML=html;
 };
+
 /* ---------------- QUALITY TIERS ----------------
    Budget / Standard / Premium / Top Shelf / Elite / Project 0 Quality */
 function TY_tierOf(q){
@@ -5678,7 +6018,12 @@ function TY_tierOf(q){
   if(q>=55) return {id:'standard',name:'STANDARD',cls:'ty-q-std'};
   return {id:'budget',name:'BUDGET',cls:'ty-q-bud'};
 }
-function TY_tierBadge(q){ const t=TY_tierOf(q); return '<span class="badge '+t.cls+'">'+t.name+'</span>'; }
+function TY_tierBadge(q){
+  const t=TY_tierOf(q);
+  const map={'ty-q-p0':'ge-badge-legendary','ty-q-elite':'ge-badge-legendary','ty-q-top':'ge-badge-elite','ty-q-prem':'ge-badge-gold','ty-q-std':'ge-badge-common','ty-q-bud':'ge-badge-common'};
+  return '<span class="ge-badge '+(map[t.cls]||'ge-badge-common')+'">'+t.name+'</span>';
+}
+
 
 /* ---------------- PRODUCTION PIPELINE ----------------
    HARVESTED FLOWER → PROCESSING (days) → FINISHED PRODUCT → PACKAGING → INVENTORY → SALES
@@ -5699,22 +6044,22 @@ function TY_procCap(){ /* oz-equivalents per day */
 function TY_buildingLevelSafe(id){ try{ return (typeof EX_buildingLevel==='function')?EX_buildingLevel(id):1; }catch(e){ return 1; } }
 function TY_startProcess(invId,ptypeId){
   const pt=TY_PRODUCTS.find(p=>p.id===ptypeId); if(!pt) return;
-  if(pt.from==='keeper'&&!(S.keepers&&S.keepers.length)){ toast('❌ Need a keeper first.'); return; }
-  if(pt.from==='mother'&&!(S.mothers&&S.mothers.length)){ toast('❌ Need a mother plant first.'); return; }
+  if(pt.from==='keeper'&&!(S.keepers&&S.keepers.length)){ toast(icon('x','ge-ic-md')+' Need a keeper first.'); return; }
+  if(pt.from==='mother'&&!(S.mothers&&S.mothers.length)){ toast(icon('x','ge-ic-md')+' Need a mother plant first.'); return; }
   let src=null, ozIn=0, st=null;
   if(pt.from){
     st=pt.from==='keeper'?getStrain(S.keepers[0].strainId):getStrain(S.mothers[0].strainId);
     ozIn=2;
   } else {
-    const it=S.inventory.find(x=>x.id===invId); if(!it||it.type!=='flower'){ toast('❌ Need flower in inventory.'); return; }
-    if(it.amount<2){ toast('❌ Need at least 2 oz.'); return; }
+    const it=S.inventory.find(x=>x.id===invId); if(!it||it.type!=='flower'){ toast(icon('x','ge-ic-md')+' Need flower in inventory.'); return; }
+    if(it.amount<2){ toast(icon('x','ge-ic-md')+' Need at least 2 oz.'); return; }
     src=it; ozIn=2; st=getStrain(it.strainId);
   }
   const active=S.ty.proc.length;
   const cap=TY_procCap();
-  if(active>=Math.max(1,Math.floor(cap/2))){ toast('❌ Processing queue full — upgrade the lab.'); return; }
+  if(active>=Math.max(1,Math.floor(cap/2))){ toast(icon('x','ge-ic-md')+' Processing queue full — upgrade the lab.'); return; }
   const fee=Math.round(15*ozIn*(pt.days));
-  if(S.cash<fee){ toast('❌ Need '+fmt$(fee)+' processing fee.'); return; }
+  if(S.cash<fee){ toast(icon('x','ge-ic-md')+' Need '+fmt$(fee)+' processing fee.'); return; }
   S.cash-=fee; TY_exp('processing',fee);
   if(src){ src.amount=Math.round((src.amount-ozIn)*10)/10; if(src.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==src.id); }
   let days=pt.days;
@@ -5725,9 +6070,10 @@ function TY_startProcess(invId,ptypeId){
     ptype:pt.id,ozIn:ozIn,daysLeft:days,daysTotal:days,eff:clamp(eff,0.8,1.4),qBonus:qBonus,
     baseQ:src?num(src.quality,70):88,basePot:src?num(src.potency,70):85,baseTerp:src?num(src.terpenes,70):85,
     baseResin:src?num(src.resin,70):85,baseBag:src?num(src.bagAppeal,70):85,custom:st?!!st.custom:false});
-  TY_notify('⚗️ Processing started: '+esc(pt.name)+' ('+days+'d)','info',true);
+  TY_notify(icon('flask','ge-ic-md')+' Processing started: '+esc(pt.name)+' ('+days+'d)','info',true);
   save(); updateHUD(); if(current==='production') RENDER.production();
 }
+
 function TY_procTick(){
   const t=S.ty; if(!t||!t.proc.length) return;
   const done=[];
@@ -5747,17 +6093,19 @@ function TY_procTick(){
       custom:!!j.custom,valMult:pt.valMult,packaged:false});
     t.stats.products=int(t.stats.products,0)+1;
     TY_gainRep('business',2);
-    TY_notify('✅ <b>'+esc(pt.name)+'</b> ready: '+outAmt+' '+pt.outUnit+' of '+esc(j.strainName),'good');
+    TY_notify(icon('check','ge-ic-md')+' <b>'+esc(pt.name)+'</b> ready: '+outAmt+' '+pt.outUnit+' of '+esc(j.strainName),'good');
   });
 }
+
 function TY_packageProd(pid){
   const p=S.ty.prod.find(x=>x.id===pid); if(!p||p.packaged) return;
   const cost=Math.ceil(p.amount*1.5);
-  if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+' packaging.'); return; }
+  if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+' packaging.'); return; }
   S.cash-=cost; TY_exp('packaging',cost); p.packaged=true;
-  toast('📦 Packaged '+esc(p.pname)+'. Ready to sell.');
+  toast(icon('box','ge-ic-md')+' Packaged '+esc(p.pname)+'. Ready to sell.');
   save(); updateHUD(); if(current==='production') RENDER.production();
 }
+
 function TY_prodPrice(p){
   const D=typeof DIFFS!=='undefined'?DIFFS[S.difficulty]:{econMult:1};
   const base=p.quality*2.4+p.potency*0.9;
@@ -5766,24 +6114,26 @@ function TY_prodPrice(p){
 }
 function TY_prodBuyerModal(pid){
   const p=S.ty.prod.find(x=>x.id===pid); if(!p) return;
-  if(!p.packaged){ toast('📦 Package it first.'); return; }
+  if(!p.packaged){ toast(icon('box','ge-ic-md')+' Package it first.'); return; }
   const base=TY_prodPrice(p)*p.amount;
-  let html='<h3>'+icon('sell','ic-lg')+'SELL '+esc(p.pname).toUpperCase()+'</h3>'+
-   '<p class="muted">'+esc(p.strainName)+' • Q'+p.quality+' • '+p.amount+' '+p.unit+' • base '+fmt$(base)+'</p><div class="buyer-list">';
+  let html='<h3 class="ge-h2">'+icon('sell','ge-ic-lg')+'SELL '+esc(p.pname).toUpperCase()+'</h3>'+
+   '<p class="ge-body ge-muted">'+esc(p.strainName)+' • Q'+p.quality+' • '+p.amount+' '+p.unit+' • base '+fmt$(base)+'</p><div class="ge-dp-buyers">';
   BUYERS.forEach(by=>{
     const item={quality:p.quality,potency:p.potency,terpenes:p.terpenes,bagAppeal:p.bagAppeal,resin:p.resin,custom:p.custom,type:'flower',ptype:p.ptype};
     const wxm=(typeof WX_sellMult==='function')?WX_sellMult(p.strainId,item,by.id):1;
     const mult=by.mult(item)*wxm, offer=base*mult;
-    html+='<div class="buyer-card" data-buyer="'+by.id+'" role="button" tabindex="0">'+
-     '<div class="buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ic-xl'))+'</div>'+
-     '<div class="buyer-info"><b>'+esc(by.name)+'</b><span class="buyer-title">'+esc(by.title)+'</span>'+
-     '<span class="buyer-offer">OFFER <b>'+fmt$(offer)+'</b> <span class="muted">×'+mult.toFixed(2)+'</span></span></div></div>';
+    html+='<div class="ge-card ge-card-tap ge-dp-buyer" data-buyer="'+by.id+'" role="button" tabindex="0">'+
+     '<div class="ge-dp-buyer-face">'+(by.npc?npcPortrait(by.npc,'npc-sm'):icon('cash','ge-ic-xl'))+'</div>'+
+     '<div class="ge-plant-meta"><div class="ge-plant-name">'+esc(by.name)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+esc(by.title)+'</div>'+
+     '<div class="ge-dp-offer"><span class="ge-label">OFFER</span><b class="ge-num ge-green">'+fmt$(offer)+'</b><span class="ge-caption ge-muted">×'+mult.toFixed(2)+'</span></div></div></div>';
   });
-  html+='</div><button class="btn btn-small" id="pbm-x">'+icon('x','b-ico')+'CANCEL</button>';
+  html+='</div><button class="ge-btn ge-btn-ghost ge-btn-block" id="pbm-x">'+icon('x','ge-ic-md')+'CANCEL</button>';
   const m=modal(html);
   m.querySelector('#pbm-x').onclick=()=>closeModal(m);
   m.querySelectorAll('[data-buyer]').forEach(c=>c.onclick=()=>{ closeModal(m); TY_sellProduct(pid,c.dataset.buyer); });
 }
+
 function TY_sellProduct(pid,buyerId){
   const p=S.ty.prod.find(x=>x.id===pid); if(!p) return;
   const by=BUYERS.find(b=>b.id===buyerId)||BUYERS[0];
@@ -5796,68 +6146,73 @@ function TY_sellProduct(pid,buyerId){
   S.ty.topStrainRev=Math.max(num(S.ty.topStrainRev,0),0);
   if(total>S.ty.topStrainRev){ S.ty.topStrainRev=total; S.ty.topStrain=p.strainName; }
   S.ty.prod=S.ty.prod.filter(x=>x.id!==pid);
-  TY_notify('💰 Sold <b>'+esc(p.pname)+'</b> to '+esc(by.name)+' for <b>'+fmt$(total)+'</b>','good');
+  TY_notify(icon('cash','ge-ic-md')+' Sold <b>'+esc(p.pname)+'</b> to '+esc(by.name)+' for <b>'+fmt$(total)+'</b>','good');
   save(); updateHUD(); checkMissions();
   try{ if(typeof checkAchievements==='function') checkAchievements(); }catch(e){}
   if(current==='production') RENDER.production();
 }
+
 function TY_prodBanner(){
   const n=S.ty.proc.length+S.ty.prod.length;
   if(!n) return '';
-  return '<div class="card ty-prodbanner"><div class="kv"><span>'+icon('feed','kv-ico')+'Production</span><b>'+n+' batch'+(n===1?'':'es')+'</b></div>'+
-   '<button class="btn btn-small" onclick="show(\'production\')">OPEN PRODUCTION</button></div>';
+  return '<div class="ge-card ge-card-hot ge-dp-banner"><div class="ge-spread"><span>'+icon('flask','ge-ic-md')+' <b>PRODUCTION</b> <span class="ge-muted">— '+n+' batch'+(n===1?'':'es')+' active</span></span>'+
+   '<button class="ge-btn ge-btn-ghost" onclick="show(\'production\')">OPEN PRODUCTION</button></div></div>';
 }
+
 RENDER.production=function(){
   const r=$('production-root'); if(!r) return;
-  let html=screenHead('feed','PRODUCTION PIPELINE');
-  html+='<div class="card"><p class="muted">HARVESTED FLOWER → <b>PROCESSING</b> → FINISHED PRODUCT → <b>PACKAGING</b> → SALES. Capacity: <b>'+TY_procCap()+' oz/day</b>. Raw flower always sells as-is — this is for margins.</p></div>';
-  html+='<h3 class="display ex-sect">START A BATCH</h3>';
+  let html=screenHead('flask','PRODUCTION PIPELINE');
+  html+='<div class="ge-card ge-card-flat"><p class="ge-body ge-muted">HARVESTED FLOWER → <b>PROCESSING</b> → FINISHED PRODUCT → <b>PACKAGING</b> → SALES. Capacity: <b>'+TY_procCap()+' oz/day</b>. Raw flower always sells as-is — this is for margins.</p></div>';
+  html+='<div class="ge-dp-pipeline">'+['HARVESTED FLOWER','PROCESSING','FINISHED PRODUCT','PACKAGING','SALES'].map((s,i)=>'<span class="ge-pill '+(i%2?'ge-pill-optimal':'ge-pill-neutral')+'">'+s+'</span>').join('<span class="ge-dp-arrow" aria-hidden="true">→</span>')+'</div>';
+  html+=DP_sectionTitle('flask','START A BATCH');
   TY_PRODUCTS.forEach(pt=>{
     const need=pt.from==='keeper'?'keeper':pt.from==='mother'?'mother':'2 oz flower';
-    html+='<div class="card"><div class="kv"><span>'+icon(pt.ico,'kv-ico')+'<b>'+esc(pt.name)+'</b></span><b class="muted">'+pt.days+'d • '+esc(need)+'</b></div>'+
-     '<p class="muted">'+esc(pt.desc)+' Output ×'+pt.valMult+' value.</p>'+
-     '<button class="btn btn-small btn-gold" data-ty-proc="'+pt.id+'">START BATCH</button></div>';
+    html+='<div class="ge-card"><div class="ge-card-head"><h3>'+DP_iconSafe(pt.ico,'ge-ic-md')+' '+esc(pt.name)+'</h3><span class="ge-caption ge-muted ge-num">'+pt.days+'d • '+esc(need)+'</span></div>'+
+     '<p class="ge-body ge-muted">'+esc(pt.desc)+' Output ×'+pt.valMult+' value.</p>'+
+     '<button class="ge-btn ge-btn-gold" data-ty-proc="'+pt.id+'">START BATCH</button></div>';
   });
   if(S.ty.proc.length){
-    html+='<h3 class="display ex-sect">IN PROCESS ('+S.ty.proc.length+')</h3>';
+    html+=DP_sectionTitle('clock','IN PROCESS','<span class="ge-num">'+S.ty.proc.length+'</span>');
     S.ty.proc.forEach(j=>{
       const pt=TY_PRODUCTS.find(p=>p.id===j.ptype);
       const pct=Math.round((1-j.daysLeft/j.daysTotal)*100);
-      html+='<div class="card"><div class="kv"><span>'+icon('feed','kv-ico')+' '+esc(pt.name)+' — '+esc(j.strainName)+'</span><b>'+j.daysLeft+'d left</b></div>'+
-       '<div class="progress"><i style="width:'+pct+'%"></i></div></div>';
+      html+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('flask','ge-ic-md')+' '+esc(pt.name)+'<span class="ge-muted"> — '+esc(j.strainName)+'</span></h3><b class="ge-num">'+j.daysLeft+'d left</b></div>'+
+       '<div class="ge-progress"><i style="width:'+pct+'%"></i></div></div>';
     });
   }
   if(S.ty.prod.length){
-    html+='<h3 class="display ex-sect">FINISHED PRODUCT</h3>';
+    html+=DP_sectionTitle('box','FINISHED PRODUCT');
     S.ty.prod.forEach(p=>{
-      html+='<div class="card product-card"><h3>'+esc(p.pname)+' <span class="badge gold">Q'+p.quality+'</span></h3>'+
-       '<div class="kv"><span>'+esc(p.strainName)+'</span><b>'+p.amount+' '+p.unit+'</b></div>'+
-       '<div class="kv"><span>'+icon('cash','kv-ico')+'Est. value</span><b>'+fmt$(TY_prodPrice(p)*p.amount)+'</b></div>'+
-       '<div class="btn-row">'+(p.packaged?'<button class="btn btn-small btn-green" data-ty-sellp="'+p.id+'">'+icon('sell','b-ico')+'SELL</button>':'<button class="btn btn-small btn-gold" data-ty-pack="'+p.id+'">📦 PACKAGE</button>')+'</div></div>';
+      html+='<div class="ge-card ge-card-hot ge-dp-product"><div class="ge-card-head"><h3>'+esc(p.pname)+'</h3>'+DP_gradeBadge(p.quality)+'</div>'+
+       '<div class="ge-datarow"><span>'+esc(p.strainName)+'</span><b class="ge-num">'+p.amount+' '+p.unit+'</b></div>'+
+       '<div class="ge-datarow"><span>'+icon('cash','ge-ic-sm')+' Est. value</span><b class="ge-num ge-green">'+fmt$(TY_prodPrice(p)*p.amount)+'</b></div>'+
+       '<div class="ge-btn-row">'+(p.packaged?'<button class="ge-btn ge-btn-primary" data-ty-sellp="'+p.id+'">'+icon('sell','ge-ic-md')+'SELL</button>':'<button class="ge-btn ge-btn-gold" data-ty-pack="'+p.id+'">'+icon('box','ge-ic-md')+'PACKAGE</button>')+'</div></div>';
     });
   } else if(!S.ty.proc.length){
-    html+='<div class="card"><p class="muted">No batches yet. Harvest flower, then start a batch above.</p></div>';
+    html+='<div class="ge-empty">'+icon('flask','ge-ic-xl')+'<h3>NO BATCHES YET</h3><p>Harvest flower, then start a batch above.</p></div>';
   }
   r.innerHTML=html;
   r.querySelectorAll('[data-ty-proc]').forEach(b=>b.onclick=()=>TY_procPick(b.dataset.tyProc));
   r.querySelectorAll('[data-ty-pack]').forEach(b=>b.onclick=()=>TY_packageProd(+b.dataset.tyPack));
   r.querySelectorAll('[data-ty-sellp]').forEach(b=>b.onclick=()=>TY_prodBuyerModal(+b.dataset.tySellp));
 };
+
 function TY_procPick(ptypeId){
   const pt=TY_PRODUCTS.find(p=>p.id===ptypeId);
   if(pt.from){ TY_startProcess(null,ptypeId); return; }
   const items=S.inventory.filter(i=>i.type==='flower'&&i.amount>=2);
-  if(!items.length){ toast('❌ Need 2+ oz of flower.'); return; }
-  let html='<h3>'+icon('feed','ic-lg')+'SELECT FLOWER — '+esc(pt.name)+'</h3><div class="buyer-list">';
+  if(!items.length){ toast(icon('x','ge-ic-md')+' Need 2+ oz of flower.'); return; }
+  let html='<h3 class="ge-h2">'+icon('flask','ge-ic-lg')+'SELECT FLOWER — '+esc(pt.name)+'</h3><div class="ge-dp-buyers">';
   items.forEach(it=>{
-    html+='<div class="buyer-card" data-src="'+it.id+'" role="button" tabindex="0"><div class="buyer-info"><b>'+esc(it.strainName)+'</b>'+
-     '<span class="muted">Q'+it.quality+' • '+it.amount+' oz</span></div></div>';
+    html+='<div class="ge-card ge-card-tap ge-dp-buyer" data-src="'+it.id+'" role="button" tabindex="0"><div class="ge-plant-meta"><div class="ge-plant-name">'+esc(it.strainName)+' '+DP_gradeBadge(it.quality)+'</div>'+
+     '<div class="ge-plant-sub ge-muted">'+it.amount+' oz available</div></div></div>';
   });
-  html+='</div><button class="btn btn-small" id="pp-x">CANCEL</button>';
+  html+='</div><button class="ge-btn ge-btn-ghost ge-btn-block" id="pp-x">CANCEL</button>';
   const m=modal(html);
   m.querySelector('#pp-x').onclick=()=>closeModal(m);
   m.querySelectorAll('[data-src]').forEach(c=>c.onclick=()=>{ closeModal(m); TY_startProcess(+c.dataset.src,ptypeId); });
 }
+
 
 /* ---------------- WORKING DISPENSARY: customer sim ---------------- */
 const TY_CUST_TYPES=[
@@ -5938,26 +6293,31 @@ function TY_custTick(){
     TY_gainRep('service',Math.round(sales*0.4));
     if(satN&&sat/satN>=75) TY_gainRep('quality',2);
   }
-  if(short>served*0.4) TY_notify('📦 Inventory shortages lost you '+short+' customers today','warn',true);
+  if(short>served*0.4) TY_notify(icon('box','ge-ic-md')+' Inventory shortages lost you '+short+' customers today','warn',true);
 }
+
 function TY_custPanel(){
   const st=S.ty.cust.stats;
   const avgSat=st.satN?Math.round(st.sat/st.satN):0;
   const avgSale=st.sales?Math.round(st.rev/st.sales):0;
   const regs=Object.keys(S.ty.cust.regulars||{}).length;
-  let h='<div class="card"><h3>'+icon('crew','ic-lg')+'CUSTOMERS TODAY</h3>';
-  h+='<div class="kv"><span>Walked in</span><b>'+st.cust+'</b></div>'+
-   '<div class="kv"><span>Sales / revenue</span><b>'+st.sales+' • '+fmt$(Math.round(st.rev))+'</b></div>'+
-   '<div class="kv"><span>Satisfaction</span><b>'+avgSat+'%</b></div>'+
-   '<div class="kv"><span>Avg sale</span><b>'+fmt$(avgSale)+'</b></div>'+
-   '<div class="kv"><span>Regulars</span><b>'+regs+' strains loved</b></div>'+
-   '<div class="kv"><span>Lost / shortages</span><b>'+st.lost+' / '+st.short+'</b></div>';
+  let h=DP_sectionTitle('customers','WALK-IN TRAFFIC','<span class="ge-num">'+st.cust+'</span> ALL-TIME');
+  h+='<div class="ge-dp-metrics">'+
+   DP_metricTile('users',st.cust,'WALKED IN','foot traffic')+
+   DP_metricTile('cart',st.sales,'SALES',fmt$(Math.round(st.rev))+' revenue')+
+   DP_metricTile('star',avgSat+'%','SATISFACTION','avg score')+
+   DP_metricTile('cash',fmt$(avgSale),'AVG SALE','per transaction')+
+   DP_metricTile('users',regs,'REGULARS','strains loved')+
+   DP_metricTile('warn',st.lost+' / '+st.short,'LOST / SHORT','missed chances')+
+  '</div>';
   if(S.ty.dayLog.length){
-    h+='<h3>RECENT</h3>'+S.ty.dayLog.map(l=>'<div class="ty-feedrow ty-'+(l.good?'good':'warn')+'"><span>'+esc(l.t)+'</span></div>').join('');
+    h+='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('scroll','ge-ic-md')+'RECENT</h3></div>'+
+     S.ty.dayLog.map(l=>'<div class="ge-dp-feedrow"><span class="ge-dp-dot '+(l.good?'ge-dp-dot-good':'ge-dp-dot-warn')+'"></span><span>'+esc(l.t)+'</span></div>').join('')+'</div>';
   }
-  h+='<p class="muted">Staff budtenders, stock quality inventory, and keep favorites on shelves to build regulars.</p></div>';
+  h+='<p class="ge-body ge-muted">Staff budtenders, stock quality inventory, and keep favorites on shelves to build regulars.</p>';
   return h;
 }
+
 
 /* ---------------- REAL EXPENSES ---------------- */
 function TY_exp(cat,amt){
@@ -5999,16 +6359,17 @@ function TY_econTick(){
   else {
     S.cash=0;
     try{ S.ex.employees.forEach(e=>{ const x=t.empX[e.id]; if(x) x.morale=clamp(num(x.morale,70)-12,0,100); }); }catch(e){}
-    TY_notify('💸 Missed operating payments — crew morale dropped','bad',true);
+    TY_notify(icon('cash','ge-ic-md')+' Missed operating payments — crew morale dropped','bad',true);
   }
   f.hist.push({day:int(S.day,1),rev:Math.round(f.rev),exp:Math.round(f.exp),profit:Math.round(f.rev-f.exp),bd:bd});
   if(f.hist.length>60) f.hist.shift();
   f.rev=0; f.exp=0;
-  if(f.hist.length&&f.hist[f.hist.length-1].profit<-500) TY_notify('📉 Bleeding cash: '+fmt$(f.hist[f.hist.length-1].profit)+' yesterday','bad',true);
+  if(f.hist.length&&f.hist[f.hist.length-1].profit<-500) TY_notify(icon('chart','ge-ic-md')+' Bleeding cash: '+fmt$(f.hist[f.hist.length-1].profit)+' yesterday','bad',true);
 }
+
 function TY_finSpark(){
   const h=S.ty.fin.hist.slice(-20);
-  if(h.length<2) return '<p class="muted">Financial history builds as days pass.</p>';
+  if(h.length<2) return '<p class="ge-body ge-muted">Financial history builds as days pass.</p>';
   const vals=h.map(x=>x.profit), mx=Math.max(...vals,1), mn=Math.min(...vals,0);
   const W=260,H=54;
   const pts=vals.map((v,i)=>{
@@ -6017,21 +6378,24 @@ function TY_finSpark(){
     return x.toFixed(1)+','+y.toFixed(1);
   });
   const pos=vals[vals.length-1]>=0;
-  return '<svg class="ty-spark" viewBox="0 0 '+W+' '+H+'"><polyline points="'+pts.join(' ')+'" fill="none" stroke="'+(pos?'#e02020':'#8a8a8e')+'" stroke-width="2.5"/></svg>';
+  /* green = profit / red = loss (semantic) */
+  return '<svg class="ge-spark" viewBox="0 0 '+W+' '+H+'"><polyline points="'+pts.join(' ')+'" fill="none" style="stroke:'+(pos?'var(--ge-green)':'var(--ge-red)')+'" stroke-width="2.5"/></svg>';
 }
+
 function TY_finHTML(){
   const h=S.ty.fin.hist, last=h[h.length-1];
-  let s='<div class="card"><h3>'+icon('cash','ic-lg')+'DAILY LEDGER</h3>';
+  let s='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('cash','ge-ic-md')+'DAILY LEDGER</h3></div>';
   if(last){
     const p=last.profit;
-    s+='<div class="kv"><span>Revenue</span><b class="ty-gain">+'+fmt$(last.rev)+'</b></div>'+
-     '<div class="kv"><span>Expenses</span><b class="ty-loss">−'+fmt$(last.exp)+'</b></div>'+
-     '<div class="kv"><span>Profit</span><b class="'+(p>=0?'ty-gain':'ty-loss')+'">'+(p>=0?'+':'')+fmt$(p)+'</b></div>';
-    s+='<h3>BREAKDOWN</h3>'+last.bd.map(b=>'<div class="kv"><span class="muted">'+esc(b[0])+'</span><b>'+fmt$(b[1])+'</b></div>').join('');
-  } else s+='<p class="muted">Advance a day to open the books.</p>';
-  s+='<h3>PROFIT TREND</h3>'+TY_finSpark()+'</div>';
+    s+='<div class="ge-datarow"><span>Revenue</span><b class="ge-num ge-green">+'+fmt$(last.rev)+'</b></div>'+
+     '<div class="ge-datarow"><span>Expenses</span><b class="ge-num ge-red">−'+fmt$(last.exp)+'</b></div>'+
+     '<div class="ge-datarow"><span>Profit</span><b class="ge-num '+(p>=0?'ge-green':'ge-red')+'">'+(p>=0?'+':'')+fmt$(p)+'</b></div>';
+    s+=DP_sectionTitle('scroll','BREAKDOWN')+last.bd.map(b=>'<div class="ge-datarow"><span class="ge-muted">'+esc(b[0])+'</span><b class="ge-num">'+fmt$(b[1])+'</b></div>').join('');
+  } else s+='<div class="ge-empty">'+icon('cash','ge-ic-xl')+'<h3>BOOKS CLOSED</h3><p>Advance a day to open the books.</p></div>';
+  s+=DP_sectionTitle('chart','PROFIT TREND')+TY_finSpark()+'</div>';
   return s;
 }
+
 /* ---------------- DEEP GENETICS: 13-trait profile ---------------- */
 const TY_GTRAITS=[
  {id:'potency',name:'Potency'},{id:'yield',name:'Yield'},{id:'growthSpeed',name:'Growth Speed'},
@@ -6057,14 +6421,15 @@ function TY_genProfile(st){
 }
 function TY_genProfileHTML(st){
   const p=TY_genProfile(st); if(!p) return '';
-  let h='<div class="card"><h3>'+icon('genetics','ic-lg')+'GENETIC PROFILE</h3>';
+  let h='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('genetics','ge-ic-md')+'GENETIC PROFILE</h3></div>';
   TY_GTRAITS.forEach(t=>{
     const v=p[t.id];
-    h+='<div class="kv"><span>'+t.name+'</span><b>'+v+'</b></div><div class="progress"><i style="width:'+v+'%"></i></div>';
+    h+='<div class="ge-progress-meta"><span>'+t.name+'</span><b class="ge-num">'+v+'</b></div><div class="ge-progress"><i style="width:'+v+'%"></i></div>';
   });
   h+='</div>';
   return h;
 }
+
 
 /* ---------------- ADVANCED BREEDING: generations + stabilization + library ---------------- */
 function TY_genLabelOf(cross,A,B){
@@ -6110,21 +6475,23 @@ function TY_crossHook(cross,A,B){
     TY_gainRep('genetics',4);
     if(cross.mutation) TY_rareDiscovery(cross,cross.mutation);
     if(stab>=90){
-      TY_notify('🧬 <b>STABILIZED LINE:</b> '+esc(cross.name)+' holds at '+stab+'% stability','good');
+      TY_notify(icon('dna','ge-ic-md')+' <b>STABILIZED LINE:</b> '+esc(cross.name)+' holds at '+stab+'% stability','good');
       addP0('genetics',10); addP0('preservation',6);
       try{ if(typeof EX_checkAch==='function') EX_checkAch(); }catch(e){}
     }
   }catch(e){}
 }
+
 function TY_rareDiscovery(cross,mut){
   const kind=mut.kind||mut.id||'mutation';
   const leg=!!mut.legendary;
-  TY_notify((leg?'👑 <b>LEGENDARY EXPRESSION DISCOVERED:</b> ':'🧬 <b>Rare mutation:</b> ')+esc(String(kind))+' in '+esc(cross.name),leg?'good':'info');
-  TY_addNews('genetics',(leg?'👑 <b>LEGENDARY:</b> ':'🧬 ')+'A <b>'+esc(String(kind))+'</b> expression surfaced in '+esc(cross.name)+'.');
+  TY_notify((leg?icon('crown-gold','ge-ic-md')+' <b>LEGENDARY EXPRESSION DISCOVERED:</b> ':icon('dna','ge-ic-md')+' <b>Rare mutation:</b> ')+esc(String(kind))+' in '+esc(cross.name),leg?'good':'info');
+  TY_addNews('genetics',(leg?icon('crown-gold','ge-ic-md')+' <b>LEGENDARY:</b> ':icon('dna','ge-ic-md')+' ')+'A <b>'+esc(String(kind))+'</b> expression surfaced in '+esc(cross.name)+'.');
   try{ S.gx.mutLog.push({day:int(S.day,1),strain:cross.name,kind:String(kind),legendary:leg}); }catch(e){}
   TY_gainRep('genetics',leg?15:5);
   if(leg){ addP0('genetics',12); }
 }
+
 /* strain library: every discovered strain/cross/phenotype, documented */
 function TY_libNote(strainId,what){
   try{
@@ -6142,24 +6509,27 @@ function TY_harvestHook(st,quality,oz,p){
     TY_libNote(st.id,'doc');
     const L=S.ty.strainLib[st.id];
     if(L&&quality>L.best) L.best=Math.round(quality);
-    if(quality>=100){ S.ty.stats.perfectQ=int(S.ty.stats.perfectQ,0)+1; TY_notify('💎 <b>PERFECT QUALITY</b> — '+esc(st.name),'good'); }
+    if(quality>=100){ S.ty.stats.perfectQ=int(S.ty.stats.perfectQ,0)+1; TY_notify(icon('star','ge-ic-md')+' <b>PERFECT QUALITY</b> — '+esc(st.name),'good'); }
     TY_gainRep('quality',Math.round(quality/25));
     /* harvest timing + care feed the reliability rep */
     if(p&&num(p.minHealth,0)>=80) TY_gainRep('reliability',2);
   }catch(e){}
 }
+
 function TY_keeperHook(report){
   try{
     TY_libNote(report.strainId,'keeper');
     TY_gainRep('genetics',10);
-    TY_notify('👑 Keeper <b>'+esc(report.strainName)+' #'+report.phenoNum+'</b> preserved for Project 0','good',true);
+    TY_notify(icon('crown','ge-ic-md')+' Keeper <b>'+esc(report.strainName)+' #'+report.phenoNum+'</b> preserved for Project 0','good',true);
   }catch(e){}
 }
+
 function TY_lineageStabHTML(strainId){
   const s=TY_stabOf(strainId);
-  return '<div class="kv"><span>'+icon('genetics','kv-ico')+'Line stability</span><b>'+s+'%</b></div>'+
-   '<div class="progress"><i style="width:'+s+'%"></i></div>';
+  return '<div class="ge-progress-meta"><span>'+icon('genetics','ge-ic-sm')+' Line stability</span><b class="ge-num">'+s+'%</b></div>'+
+   '<div class="ge-progress"><i style="width:'+s+'%"></i></div>';
 }
+
 
 /* ---------------- EMPLOYEES AS CHARACTERS ---------------- */
 const TY_QUIRKS=[
@@ -6215,7 +6585,7 @@ function TY_staffTick(){
     const mChance=0.02+Math.max(0,TY_empMod('mistake'))/100*0.02;
     if(Math.random()<mChance){
       x.mistakes++;
-      TY_notify('⚠️ <b>'+esc(e.name)+'</b> made a mistake ('+esc(q?q.name:'')+'). Minor setback.','warn',true);
+      TY_notify(icon('warn','ge-ic-md')+' <b>'+esc(e.name)+'</b> made a mistake ('+esc(q?q.name:'')+'). Minor setback.','warn',true);
       if(S.plants.length){ const p=pick(S.plants); p.stress=clamp(num(p.stress,0)+6,0,100); }
     }
     /* raise requests on level-up */
@@ -6228,35 +6598,37 @@ function TY_staffTick(){
     if(int(e.lvl,1)>=5&&!x.promo){
       x.promo=true; e.salary=Math.round(num(e.salary,10)*1.15);
       x.morale=clamp(x.morale+20,0,100);
-      TY_notify('🎖️ <b>'+esc(e.name)+'</b> earned a promotion — Senior '+esc(e.role),'good');
+      TY_notify(icon('star','ge-ic-md')+' <b>'+esc(e.name)+'</b> earned a promotion — Senior '+esc(e.role),'good');
     }
     /* legendary staff */
     if(int(e.lvl,1)>=8&&num(x.loyalty,0)>=80&&!x.legendary){
       x.legendary=true;
       TY_grantPerk('leg_'+e.id,'LEGENDARY STAFF: '+e.name);
-      TY_notify('👑 <b>'+esc(e.name)+'</b> is now LEGENDARY staff — a lifer.','good');
-      TY_addNews('crown','👑 <b>'+esc(e.name)+'</b> became legendary staff. Nobody poaches them now.');
+      TY_notify(icon('crown-gold','ge-ic-md')+' <b>'+esc(e.name)+'</b> is now LEGENDARY staff — a lifer.','good');
+      TY_addNews('crown',icon('crown-gold','ge-ic-md')+' <b>'+esc(e.name)+'</b> became legendary staff. Nobody poaches them now.');
     }
     /* quit check */
     if(x.morale<20&&x.loyalty<30&&Math.random()<0.12){
       S.ex.employees=S.ex.employees.filter(y=>y.id!==e.id);
       delete t.empX[e.id];
-      TY_notify('🚪 <b>'+esc(e.name)+'</b> quit. Morale was in the gutter.','bad');
-      TY_addNews('warn','🚪 <b>'+esc(e.name)+'</b> walked out. The crew is shaken.');
+      TY_notify(icon('users','ge-ic-md')+' <b>'+esc(e.name)+'</b> quit. Morale was in the gutter.','bad');
+      TY_addNews('warn',icon('users','ge-ic-md')+' <b>'+esc(e.name)+'</b> walked out. The crew is shaken.');
     }
   });
 }
+
 function TY_raiseModal(e,amt){
   const x=TY_empX(e);
-  const m=modal('<h3>'+icon('crew','ic-lg')+'RAISE REQUEST</h3>'+
-   '<div class="card"><b>'+esc(e.name)+'</b> <span class="muted">lvl '+e.lvl+' '+esc(e.role)+'</span>'+
-   '<p>“I\'ve been putting in work. How about '+fmt$(amt)+'/day more?”</p>'+
-   '<div class="kv"><span>Morale</span><b>'+Math.round(x.morale)+'%</b></div></div>'+
-   '<div class="btn-row"><button class="btn btn-small btn-green" id="rz-y">APPROVE</button>'+
-   '<button class="btn btn-small" id="rz-n">REFUSE</button></div>');
-  m.querySelector('#rz-y').onclick=()=>{ e.salary+=amt; x.raises++; x.morale=clamp(x.morale+18,0,100); x.loyalty=clamp(x.loyalty+10,0,100); closeModal(m); toast('💰 Raise approved.'); save(); };
-  m.querySelector('#rz-n').onclick=()=>{ x.morale=clamp(x.morale-15,0,100); closeModal(m); toast('❌ Refused. They\'ll remember that.'); save(); };
+  const m=modal('<h3 class="ge-h2">'+icon('users','ge-ic-lg')+'RAISE REQUEST</h3>'+
+   '<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+esc(e.name)+'</h3><span class="ge-caption ge-muted">LVL '+e.lvl+' '+esc(e.role)+'</span></div>'+
+   '<p class="ge-body">“I\'ve been putting in work. How about '+fmt$(amt)+'/day more?”</p>'+
+   '<div class="ge-datarow"><span>Morale</span><b class="ge-num">'+Math.round(x.morale)+'%</b></div></div>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-primary" id="rz-y">APPROVE</button>'+
+   '<button class="ge-btn ge-btn-ghost" id="rz-n">REFUSE</button></div>');
+  m.querySelector('#rz-y').onclick=()=>{ e.salary+=amt; x.raises++; x.morale=clamp(x.morale+18,0,100); x.loyalty=clamp(x.loyalty+10,0,100); closeModal(m); toast(icon('cash','ge-ic-md')+' Raise approved.'); save(); };
+  m.querySelector('#rz-n').onclick=()=>{ x.morale=clamp(x.morale-15,0,100); closeModal(m); toast(icon('x','ge-ic-md')+' Refused. They\'ll remember that.'); save(); };
 }
+
 /* hook level-ups to flag raise requests (called from EX_empLevelCheck wrapper below) */
 function TY_empLeveled(e){
   try{
@@ -6267,14 +6639,16 @@ function TY_empLeveled(e){
 }
 function TY_staffCardHTML(e){
   const x=TY_empX(e), q=TY_quirk(x.quirk);
-  return '<div class="kv"><span>'+icon('crew','kv-ico')+'Personality</span><b>'+esc(q?q.name:'—')+'</b></div>'+
-   '<p class="muted">“'+esc(q?q.blurb:'')+'”</p>'+
-   '<div class="kv"><span>Morale</span><b>'+Math.round(x.morale)+'%</b></div>'+
-   '<div class="progress"><i style="width:'+clamp(x.morale,0,100)+'%"></i></div>'+
-   '<div class="kv"><span>Loyalty</span><b>'+Math.round(x.loyalty)+'%</b></div>'+
-   '<div class="progress"><i style="width:'+clamp(x.loyalty,0,100)+'%"></i></div>'+
-   (x.legendary?'<p class="badge gold">👑 LEGENDARY STAFF</p>':'')+(x.promo?'<p class="badge gold">🎖️ SENIOR</p>':'');
+  return '<div class="ge-datarow"><span>'+icon('users','ge-ic-sm')+' Personality</span><b>'+esc(q?q.name:'—')+'</b></div>'+
+   '<p class="ge-body ge-muted">“'+esc(q?q.blurb:'')+'”</p>'+
+   '<div class="ge-progress-meta"><span>Morale</span><b class="ge-num">'+Math.round(x.morale)+'%</b></div>'+
+   '<div class="ge-progress '+(x.morale>=60?'ge-progress-ok':x.morale>=35?'ge-progress-warn':'ge-progress-bad')+'"><i style="width:'+clamp(x.morale,0,100)+'%"></i></div>'+
+   '<div class="ge-progress-meta"><span>Loyalty</span><b class="ge-num">'+Math.round(x.loyalty)+'%</b></div>'+
+   '<div class="ge-progress '+(x.loyalty>=60?'ge-progress-ok':x.loyalty>=35?'ge-progress-warn':'ge-progress-bad')+'"><i style="width:'+clamp(x.loyalty,0,100)+'%"></i></div>'+
+   (x.legendary?'<p><span class="ge-badge ge-badge-legendary">'+icon('crown-gold','ge-ic-sm')+' LEGENDARY STAFF</span></p>':'')+
+   (x.promo?'<p><span class="ge-badge">SENIOR</span></p>':'');
 }
+
 
 /* ---------------- LOCATIONS: buildable facilities ---------------- */
 const TY_LOCFAC=[
@@ -6292,33 +6666,35 @@ function TY_buildLocFac(lid,fid){
   const cur=int(lf[fid],0);
   if(cur>=def.max){ toast('Already maxed.'); return; }
   const cost=Math.round(def.base*Math.pow(3.2,cur));
-  if(S.cash<cost){ toast('❌ Need '+fmt$(cost)+'.'); return; }
+  if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Need '+fmt$(cost)+'.'); return; }
   S.cash-=cost;
   lf[fid]=cur+1;
   TY_exp('expansion',cost);
-  TY_notify('🏢 Built <b>'+esc(def.name)+' Lv'+(cur+1)+'</b> in '+esc(TY_locName(lid)),'good');
+  TY_notify(icon('empire','ge-ic-md')+' Built <b>'+esc(def.name)+' Lv'+(cur+1)+'</b> in '+esc(TY_locName(lid)),'good');
   save(); updateHUD(); if(current==='locations') RENDER.locations();
 }
+
 function TY_locName(lid){
   try{ const l=(typeof EX_LOCATIONS!=='undefined'?EX_LOCATIONS:[]).find(x=>x.id===lid); return l?l.name:lid; }catch(e){ return lid; }
 }
 function TY_locFacHTML(){
-  let h='<h3 class="display ex-sect">TERRITORY FACILITIES</h3>';
+  let h=DP_sectionTitle('pin','TERRITORY FACILITIES');
   let locs=[];
   try{ locs=(S.ex.locations.unlocked||[]); }catch(e){}
   locs.forEach(lid=>{
     const lf=TY_locFac(lid);
-    h+='<div class="card"><h3>'+icon('empire','ic-lg')+esc(TY_locName(lid)).toUpperCase()+'</h3>';
+    h+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('empire','ge-ic-md')+esc(TY_locName(lid)).toUpperCase()+'</h3></div>';
     TY_LOCFAC.forEach(def=>{
       const cur=int(lf[def.id],0);
       const cost=cur>=def.max?'MAX':fmt$(Math.round(def.base*Math.pow(3.2,cur)));
-      h+='<div class="kv"><span>'+icon(def.ico,'kv-ico')+' '+def.name+' <span class="muted">Lv'+cur+'/'+def.max+'</span><br><span class="muted">'+esc(def.desc)+'</span></span>'+
-       (cur>=def.max?'<b class="badge gold">MAX</b>':'<button class="btn btn-small btn-gold" data-ty-locfac="'+lid+'|'+def.id+'">'+cost+'</button>')+'</div>';
+      h+='<div class="ge-datarow"><span>'+DP_iconSafe(def.ico,'ge-ic-sm')+' '+def.name+' <span class="ge-muted">Lv'+cur+'/'+def.max+'</span><br><span class="ge-muted ge-caption">'+esc(def.desc)+'</span></span>'+
+       (cur>=def.max?'<span class="ge-badge ge-badge-gold">MAX</span>':'<button class="ge-btn ge-btn-sm ge-btn-gold" data-ty-locfac="'+lid+'|'+def.id+'">'+cost+'</button>')+'</div>';
     });
     h+='</div>';
   });
   return h;
 }
+
 function TY_wireLocFac(root){
   root.querySelectorAll('[data-ty-locfac]').forEach(b=>b.onclick=()=>{
     const [lid,fid]=b.dataset.tyLocfac.split('|'); TY_buildLocFac(lid,fid);
@@ -6362,16 +6738,16 @@ function TY_rootTick(){
 function TY_envPanel(){
   try{
     const v=TY_envVals(), rq=clamp(num(S.ty.rootQ,80),0,100);
-    const vpdCls=v.vpd<0.4||v.vpd>1.6?'warn':'good';
-    const ppfdCls=v.ppfd>1050?'warn':'good';
-    return '<div class="tele-grid">'+
-     '<div class="tele-cell"><span class="tele-label">VPD</span><span class="tele-val '+vpdCls+'">'+v.vpd.toFixed(2)+'</span></div>'+
-     '<div class="tele-cell"><span class="tele-label">PPFD</span><span class="tele-val '+ppfdCls+'">'+v.ppfd+'</span></div>'+
-     '<div class="tele-cell"><span class="tele-label">ROOTS</span><span class="tele-val '+(rq<40?'warn':'good')+'">'+rq+'%</span></div>'+
-     '<div class="tele-cell"><span class="tele-label">AIRFLOW</span><span class="tele-val good">'+v.airflow+'</span></div></div>'+
-     '<p class="muted">VPD sweet spot 0.8–1.2 kPa. PPFD 600–1000. Keep water 30–80% for happy roots.</p>';
+    return '<div class="ge-dp-metrics">'+
+     DP_metricTile('vpd',v.vpd.toFixed(2),'VPD','sweet spot 0.8–1.2 kPa',(v.vpd<0.4||v.vpd>1.6)?'ge-amber':'ge-green')+
+     DP_metricTile('lighting',v.ppfd,'PPFD','target 600–1000',v.ppfd>1050?'ge-amber':'ge-green')+
+     DP_metricTile('drop',rq+'%','ROOT ZONE','keep water 30–80%',rq<40?'ge-amber':'ge-green')+
+     DP_metricTile('hvac',v.airflow,'AIRFLOW','ventilation','ge-green')+
+    '</div>'+
+    '<p class="ge-body ge-muted">VPD sweet spot 0.8–1.2 kPa. PPFD 600–1000. Keep water 30–80% for happy roots.</p>';
   }catch(e){ return ''; }
 }
+
 /* ---------------- 40+ NEW MISSIONS ---------------- */
 const TY_MISSIONS=[
  /* CULTIVATION */
@@ -6434,15 +6810,16 @@ TY_MISSIONS.forEach(m=>{ if(m.prep!==undefined) delete m.prep; if(m.desc2!==unde
 
 /* ---------------- more achievements ---------------- */
 const TY_ACHIEVEMENTS=[
- {id:'ty-geneticist',name:'🧬 GENETICIST',desc:'Document 50 unique strains.',prog:()=>[Math.min(TY_libCount(),50),50],reward:{cash:2000,xp:1000,p0:6,perk:['mutluck','MUTATION LUCK +5%']}},
- {id:'ty-millionlife',name:'💰 MILLIONAIRE (Lifetime)',desc:'Earn $1,000,000 total.',prog:()=>[num(S.stats.lifetimeRevenue,0)>=1000000?1:0,1],reward:{xp:1500,rep:50,perk:['vaulted','VAULTED — +$500/day passive']}},
- {id:'ty-perfect',name:'💎 PERFECTIONIST',desc:'Harvest at 100 quality.',prog:()=>[int(S.ty.stats.perfectQ,0)>=1?1:0,1],reward:{cash:3000,xp:1200,p0:8}},
- {id:'ty-empire5',name:'🏢 EMPIRE',desc:'Build facilities in 5 territories.',prog:()=>[(()=>{try{return Object.keys(S.ty.locFac).filter(k=>{const f=S.ty.locFac[k];return (f.grow+f.disp+f.proc+f.breed)>0;}).length>=5?1:0;}catch(e){return 0;}})(),1],reward:{cash:4000,xp:1500,rep:40}},
- {id:'ty-legend',name:'👑 LEGEND',desc:'Reach max street rank.',prog:()=>[TY_rankIdx()>=12?1:0,1],reward:{xp:3000,rep:100,p0:15,perk:['legendtax','LEGEND TAX — +10% all sales']}},
- {id:'ty-masterbreeder',name:'🧪 MASTER BREEDER',desc:'Stabilize an elite line (90%+).',prog:()=>[(()=>{try{return Object.values(S.ty.stab).some(v=>v>=90)?1:0;}catch(e){return 0;}})(),1],reward:{cash:2500,xp:1200,p0:10}},
- {id:'ty-keeper',name:'👑 KEEPER',desc:'Discover an exceptional phenotype.',prog:()=>[int(S.stats.keepersFound,0)>=1?1:0,1],reward:{cash:600,xp:300,p0:4}},
- {id:'ty-p0vault',name:'🕊️ PROJECT 0 VAULT',desc:'Earn 500 Project 0 points.',prog:()=>[Math.min(int(S.project0.points,0),500),500],reward:{xp:1500,p0:10,perk:['p0bless','P0 BLESSING — +5% P0 gains']}}
+ {id:'ty-geneticist',name:'GENETICIST',desc:'Document 50 unique strains.',prog:()=>[Math.min(TY_libCount(),50),50],reward:{cash:2000,xp:1000,p0:6,perk:['mutluck','MUTATION LUCK +5%']}},
+ {id:'ty-millionlife',name:'MILLIONAIRE (Lifetime)',desc:'Earn $1,000,000 total.',prog:()=>[num(S.stats.lifetimeRevenue,0)>=1000000?1:0,1],reward:{xp:1500,rep:50,perk:['vaulted','VAULTED — +$500/day passive']}},
+ {id:'ty-perfect',name:'PERFECTIONIST',desc:'Harvest at 100 quality.',prog:()=>[int(S.ty.stats.perfectQ,0)>=1?1:0,1],reward:{cash:3000,xp:1200,p0:8}},
+ {id:'ty-empire5',name:'EMPIRE',desc:'Build facilities in 5 territories.',prog:()=>[(()=>{try{return Object.keys(S.ty.locFac).filter(k=>{const f=S.ty.locFac[k];return (f.grow+f.disp+f.proc+f.breed)>0;}).length>=5?1:0;}catch(e){return 0;}})(),1],reward:{cash:4000,xp:1500,rep:40}},
+ {id:'ty-legend',name:'LEGEND',desc:'Reach max street rank.',prog:()=>[TY_rankIdx()>=12?1:0,1],reward:{xp:3000,rep:100,p0:15,perk:['legendtax','LEGEND TAX — +10% all sales']}},
+ {id:'ty-masterbreeder',name:'MASTER BREEDER',desc:'Stabilize an elite line (90%+).',prog:()=>[(()=>{try{return Object.values(S.ty.stab).some(v=>v>=90)?1:0;}catch(e){return 0;}})(),1],reward:{cash:2500,xp:1200,p0:10}},
+ {id:'ty-keeper',name:'KEEPER',desc:'Discover an exceptional phenotype.',prog:()=>[int(S.stats.keepersFound,0)>=1?1:0,1],reward:{cash:600,xp:300,p0:4}},
+ {id:'ty-p0vault',name:'PROJECT 0 VAULT',desc:'Earn 500 Project 0 points.',prog:()=>[Math.min(int(S.project0.points,0),500),500],reward:{xp:1500,p0:10,perk:['p0bless','P0 BLESSING — +5% P0 gains']}}
 ];
+
 /* p0bless + mutluck wrappers: applied at point of use */
 function TY_wrapPerks(){
   try{
@@ -6469,15 +6846,15 @@ const TY_EVENTS=[
    onStart:function(ev){ ev.data.eid=(TY_pickEmp()||{}).id||null; },
    choices:[
     {label:'GIVE RAISE', sub:function(ev){ const e=TY_empById(ev.data.eid); const c=e?Math.round(num(e.salary,10)*0.2):50; return 'Pay '+fmt$(c)+' — they stay, morale restored'; },
-     run:function(ev){ const e=TY_empById(ev.data.eid); if(!e) return 'end'; const c=Math.round(num(e.salary,10)*0.2); if(S.cash<c){ toast('❌ Need '+fmt$(c)+'.'); return; } S.cash-=c; e.salary+=c; const x=TY_empX(e); x.morale=90; x.loyalty=clamp(x.loyalty+15,0,100); toast('💰 Crisis averted.'); return 'end'; }},
-    {label:'LET THEM WALK', sub:'They quit today', run:function(ev){ const e=TY_empById(ev.data.eid); if(e){ S.ex.employees=S.ex.employees.filter(y=>y.id!==e.id); TY_notify('🚪 <b>'+esc(e.name)+'</b> quit.','bad'); } return 'end'; }}
+     run:function(ev){ const e=TY_empById(ev.data.eid); if(!e) return 'end'; const c=Math.round(num(e.salary,10)*0.2); if(S.cash<c){ toast(icon('x','ge-ic-md')+' Need '+fmt$(c)+'.'); return; } S.cash-=c; e.salary+=c; const x=TY_empX(e); x.morale=90; x.loyalty=clamp(x.loyalty+15,0,100); toast(icon('cash','ge-ic-md')+' Crisis averted.'); return 'end'; }},
+    {label:'LET THEM WALK', sub:'They quit today', run:function(ev){ const e=TY_empById(ev.data.eid); if(e){ S.ex.employees=S.ex.employees.filter(y=>y.id!==e.id); TY_notify(icon('users','ge-ic-md')+' <b>'+esc(e.name)+'</b> quit.','bad'); } return 'end'; }}
    ]},
  { id:'ty-empstar', rarity:'RARE', weight:8, cd:18, dur:[1,1],
    title:'EAGLE EYE', text:function(){ const e=TY_pickEmp(); return e?('<b>'+esc(e.name)+'</b> caught a problem early — before it cost you.'):'A staffer caught a problem early.'; },
    canRoll:function(){ return (S.ex.employees||[]).length>0&&S.plants.length>0; },
    onStart:function(ev){ ev.data.eid=(TY_pickEmp()||{}).id||null; },
    choices:[
-    {label:'REWARD THEM', sub:'$100 bonus — loyalty up', run:function(ev){ if(S.cash<100){ toast('❌ Need $100.'); return; } S.cash-=100; const e=TY_empById(ev.data.eid); if(e){ const x=TY_empX(e); x.loyalty=clamp(x.loyalty+12,0,100); x.morale=clamp(x.morale+10,0,100); } S.plants.forEach(p=>{ p.problems=(p.problems||[]).filter(x=>x!=='Pests'); }); toast('🏅 Problem cleared before it spread.'); return 'end'; }},
+    {label:'REWARD THEM', sub:'$100 bonus — loyalty up', run:function(ev){ if(S.cash<100){ toast(icon('x','ge-ic-md')+' Need $100.'); return; } S.cash-=100; const e=TY_empById(ev.data.eid); if(e){ const x=TY_empX(e); x.loyalty=clamp(x.loyalty+12,0,100); x.morale=clamp(x.morale+10,0,100); } S.plants.forEach(p=>{ p.problems=(p.problems||[]).filter(x=>x!=='Pests'); }); toast(icon('trophy','ge-ic-md')+' Problem cleared before it spread.'); return 'end'; }},
     {label:'NOD AND MOVE ON', sub:'No bonus, small morale dip', run:function(ev){ const e=TY_empById(ev.data.eid); if(e){ TY_empX(e).morale=clamp(TY_empX(e).morale-8,0,100); } return 'end'; }}
    ]},
  { id:'ty-bigorder', rarity:'RARE', weight:9, cd:16, dur:[4,5],
@@ -6485,18 +6862,18 @@ const TY_EVENTS=[
    canRoll:function(){ return true; },
    onStart:function(ev){ ev.data.qty=20; },
    choices:[
-    {label:'TAKE THE ORDER', sub:'Deliver from inventory before it expires', run:function(ev){ ev.data.taken=true; toast('📋 Order accepted — deliver 20 oz Q80+.'); }},
+    {label:'TAKE THE ORDER', sub:'Deliver from inventory before it expires', run:function(ev){ ev.data.taken=true; toast(icon('scroll','ge-ic-md')+' Order accepted — deliver 20 oz Q80+.'); }},
     {label:'PASS', sub:'Too much pressure', run:function(){ return 'end'; }}
    ]},
  { id:'ty-viral', rarity:'RARE', weight:7, cd:22, dur:[5,6],
    title:'VIRAL STRAIN', text:function(){ const s=TY_hotStrain(); return 'Social media is losing it over <b>'+esc(s.name)+'</b> — demand is exploding.'; },
    canRoll:function(){ return true; },
    onStart:function(ev){ const s=TY_hotStrain(); ev.data.sid=s.id; S.ty.strainPop[s.id]=100; },
-   choices:[ {label:'RIDE THE WAVE', sub:'+hype while it lasts', run:function(){ TY_notify('🔥 Riding the viral wave','good',true); }} ]},
+   choices:[ {label:'RIDE THE WAVE', sub:'+hype while it lasts', run:function(){ TY_notify(icon('temp','ge-ic-md')+' Riding the viral wave','good',true); }} ]},
  { id:'ty-pricewar', rarity:'UNCOMMON', weight:11, cd:18, dur:[3,4],
    title:'COMPETITOR PRICE WAR', text:function(){ return 'A competitor is dumping product. Your sale prices dip <b>−12%</b> until it blows over.'; },
    canRoll:function(){ return true; }, onStart:function(){ S.ty.priceWar=3; },
-   choices:[ {label:'HOLD THE LINE', sub:'Wait it out', run:function(){ toast('🛡️ Holding prices. It will pass.'); }} ]},
+   choices:[ {label:'HOLD THE LINE', sub:'Wait it out', run:function(){ toast(icon('shield','ge-ic-md')+' Holding prices. It will pass.'); }} ]},
  { id:'ty-award', rarity:'RARE', weight:6, cd:25, dur:[1,1],
    title:'INDUSTRY AWARD', text:function(){ return 'Your work got recognized — <b>+12 quality rep, +8 business rep</b>.'; },
    canRoll:function(){ return TY_repOverall()>=200; },
@@ -6507,8 +6884,8 @@ const TY_EVENTS=[
    canRoll:function(){ return int(S.ty.cust.stats.cust,0)>20; },
    onStart:function(){},
    choices:[
-    {label:'MAKE IT RIGHT', sub:'Pay $150 — review buried', run:function(){ if(S.cash<150){ toast('❌ Need $150.'); return; } S.cash-=150; TY_gainRep('service',6); toast('⭐ Review handled.'); return 'end'; }},
-    {label:'IGNORE', sub:'−10 service rep', run:function(){ TY_gainRep('service',-0); S.ty.rep.service=Math.max(0,S.ty.rep.service-10); toast('👎 The review sticks.'); }}
+    {label:'MAKE IT RIGHT', sub:'Pay $150 — review buried', run:function(){ if(S.cash<150){ toast(icon('x','ge-ic-md')+' Need $150.'); return; } S.cash-=150; TY_gainRep('service',6); toast(icon('star','ge-ic-md')+' Review handled.'); return 'end'; }},
+    {label:'IGNORE', sub:'−10 service rep', run:function(){ TY_gainRep('service',-0); S.ty.rep.service=Math.max(0,S.ty.rep.service-10); toast(icon('x','ge-ic-md')+' The review sticks.'); }}
    ]},
  { id:'ty-goodreview', rarity:'COMMON', weight:12, cd:14, dur:[1,1],
    title:'GLOWING REVIEW', text:function(){ return '“Best in the city.” A happy customer just put you on blast — in a good way.'; },
@@ -6518,18 +6895,19 @@ const TY_EVENTS=[
  { id:'ty-elecsurge', rarity:'UNCOMMON', weight:10, cd:16, dur:[5,6],
    title:'GRID SURGE PRICING', text:function(){ return 'The power company jacked rates <b>+25%</b> for a few days. Electricity will sting.'; },
    canRoll:function(){ return true; }, onStart:function(){ S.ty.elecPrice=clamp(num(S.ty.elecPrice,1)*1.25,0.7,1.8); },
-   choices:[ {label:'GRIT TEETH', sub:'Pay the surge', run:function(){ toast('⚡ Surge pricing active.'); }} ]},
+   choices:[ {label:'GRIT TEETH', sub:'Pay the surge', run:function(){ toast(icon('lighting','ge-ic-md')+' Surge pricing active.'); }} ]},
  { id:'ty-coldsnap', rarity:'UNCOMMON', weight:9, cd:16, dur:[3,4],
    title:'COLD SNAP', text:function(){ return 'Bitter cold outside — your HVAC is working overtime. Temp control is harder.'; },
    canRoll:function(){ return true; }, onStart:function(){},
-   choices:[ {label:'CRANK THE HEAT', sub:'Pay $120 — no penalty', run:function(){ if(S.cash<120){ toast('❌ Need $120.'); return; } S.cash-=120; TY_exp('electricity',120); toast('🔥 Heat cranked.'); return 'end'; }},
-             {label:'TOUGH IT OUT', sub:'−8 env score while it lasts', run:function(ev){ ev.data.tough=true; toast('🥶 Toughing it out…'); }} ]},
+   choices:[ {label:'CRANK THE HEAT', sub:'Pay $120 — no penalty', run:function(){ if(S.cash<120){ toast(icon('x','ge-ic-md')+' Need $120.'); return; } S.cash-=120; TY_exp('electricity',120); toast(icon('temp','ge-ic-md')+' Heat cranked.'); return 'end'; }},
+             {label:'TOUGH IT OUT', sub:'−8 env score while it lasts', run:function(ev){ ev.data.tough=true; toast(icon('temp','ge-ic-md')+' Toughing it out…'); }} ]},
  { id:'ty-pheno', rarity:'LEGENDARY', weight:3, cd:40, dur:[1,1],
    title:'EXCEPTIONAL PHENOTYPE', text:function(){ return 'A seed in your stash just showed impossible vigor. A <b>rare phenotype</b> wants to be grown.'; },
    canRoll:function(){ return S.plants.length<50; },
    onStart:function(ev){},
-   choices:[ {label:'PLANT IT', sub:'Free elite seedling', run:function(){ try{ const st=getStrain('queens-revenge-s1')||allStrains()[0]; if(st&&typeof plantSeed==='function'){ plantSeed(st.id); const p=S.plants[S.plants.length-1]; if(p&&p.pheno){ p.pheno.rarity='elite'; } TY_notify('🌱 Exceptional phenotype planted!','good'); } }catch(e){} return 'end'; }} ]}
+   choices:[ {label:'PLANT IT', sub:'Free elite seedling', run:function(){ try{ const st=getStrain('queens-revenge-s1')||allStrains()[0]; if(st&&typeof plantSeed==='function'){ plantSeed(st.id); const p=S.plants[S.plants.length-1]; if(p&&p.pheno){ p.pheno.rarity='elite'; } TY_notify(icon('grow','ge-ic-md')+' Exceptional phenotype planted!','good'); } }catch(e){} return 'end'; }} ]}
 ];
+
 function TY_pickEmp(){ try{ const l=(S.ex.employees||[]).filter(e=>e.assigned); return l.length?pick(l):null; }catch(e){ return null; } }
 function TY_empById(id){ try{ return (S.ex.employees||[]).find(e=>e.id===id)||null; }catch(e){ return null; } }
 function TY_hotStrain(){ try{ const l=allStrains(); return l.length?pick(l):{id:'x',name:'Mystery'}; }catch(e){ return {id:'x',name:'Mystery'}; } }
@@ -6547,30 +6925,32 @@ function TY_p0Tick(){
 function TY_dashCommand(){
   const last=S.ty.fin.hist[S.ty.fin.hist.length-1];
   const st=S.ty.cust.stats;
-  let h='<h3 class="display ex-sect">EMPIRE COMMAND</h3><div class="card">';
-  h+='<div class="kv"><span>'+icon('crown-gold','kv-ico')+'Rank</span><b>'+esc(TY_rankName())+'</b></div>';
+  let h='<div class="ge-section-title">EMPIRE COMMAND</div><div class="ge-card">';
+  h+='<div class="ge-datarow"><span>'+icon('crown-gold','ge-ic-md')+'Rank</span><b>'+esc(TY_rankName())+'</b></div>';
   if(last){
     const p=last.profit;
-    h+='<div class="kv"><span>'+icon('cash','kv-ico')+'Yesterday</span><b><span class="ty-gain">+'+fmt$(last.rev)+'</span> <span class="ty-loss">−'+fmt$(last.exp)+'</span> = <span class="'+(p>=0?'ty-gain':'ty-loss')+'">'+fmt$(p)+'</span></b></div>';
+    h+='<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Yesterday</span><b class="ge-num"><span class="ge-green">+'+fmt$(last.rev)+'</span> <span class="ge-red">&minus;'+fmt$(last.exp)+'</span> = <span class="'+(p>=0?'ge-green':'ge-red')+'">'+fmt$(p)+'</span></b></div>';
   }
-  h+='<div class="kv"><span>'+icon('crew','kv-ico')+'Customers</span><b>'+st.cust+' today • '+st.sales+' sales</b></div>';
-  h+='<div class="kv"><span>'+icon('empire','kv-ico')+'Staff</span><b>'+((S.ex.employees||[]).length)+' • payroll '+fmt$(TY_payrollSafe())+'/day</b></div>';
-  h+='<div class="kv"><span>'+icon('star','kv-ico')+'Top product</span><b>'+esc(S.ty.topStrain||'—')+'</b></div>';
-  h+='<div class="kv"><span>'+icon('genetics','kv-ico')+'Playstyle</span><b class="badge gold">'+TY_playstyle()+'</b></div>';
+  h+='<div class="ge-datarow"><span>'+icon('crew','ge-ic-md')+'Customers</span><b class="ge-num">'+st.cust+' today &middot; '+st.sales+' sales</b></div>';
+  h+='<div class="ge-datarow"><span>'+icon('empire','ge-ic-md')+'Staff</span><b class="ge-num">'+((S.ex.employees||[]).length)+' &middot; payroll '+fmt$(TY_payrollSafe())+'/day</b></div>';
+  h+='<div class="ge-datarow"><span>'+icon('star','ge-ic-md')+'Top product</span><b>'+esc(S.ty.topStrain||'—')+'</b></div>';
+  h+='<div class="ge-datarow"><span>'+icon('genetics','ge-ic-md')+'Playstyle</span><span class="ge-badge ge-badge-legendary">'+TY_playstyle()+'</span></div>';
   const nm=nextMission();
-  if(nm) h+='<div class="kv"><span>'+icon('missions','kv-ico')+'Mission</span><b>'+esc(nm.name)+'</b></div>';
-  h+='<div class="btn-row"><button class="btn btn-small" onclick="show(\'market\')">MARKET</button>'+
-   '<button class="btn btn-small" onclick="show(\'production\')">PRODUCTION</button></div>';
+  if(nm) h+='<div class="ge-datarow"><span>'+icon('missions','ge-ic-md')+'Mission</span><b>'+esc(nm.name)+'</b></div>';
+  h+='<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" onclick="show(\'market\')">MARKET</button>'+
+   '<button class="ge-btn ge-btn-ghost ge-btn-sm" onclick="show(\'production\')">PRODUCTION</button></div>';
   h+='</div>';
   return h;
 }
+
 function TY_payrollSafe(){ try{ return (typeof EX_payrollTotal==='function')?EX_payrollTotal():0; }catch(e){ return 0; } }
 function TY_dashNewsFeed(){
-  let h='<h3 class="display ex-sect">STREET NEWS</h3><div class="card">'+TY_newsHTML(3)+
-   '<div class="btn-row"><button class="btn btn-small" onclick="show(\'market\')">FULL REPORT</button></div></div>';
-  h+='<h3 class="display ex-sect">ALERTS</h3><div class="card">'+TY_feedHTML(6)+'</div>';
+  let h='<div class="ge-section-title">STREET NEWS</div><div class="ge-card">'+TY_newsHTML(3)+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost ge-btn-sm" onclick="show(\'market\')">FULL REPORT</button></div></div>';
+  h+='<div class="ge-section-title">ALERTS</div><div class="ge-card ge-home-alerts">'+TY_feedHTML(6)+'</div>';
   return h;
 }
+
 
 /* ---------------- master tick ---------------- */
 function TY_tick(){
@@ -6598,13 +6978,14 @@ function TY_tick(){
         S.cash+=9000; S.stats.lifetimeRevenue+=9000;
         TY_gainRep('reliability',15); TY_gainRep('business',8);
         ev.data.done=true;
-        TY_notify('📋 <b>Big order delivered:</b> +$9,000, +15 reliability','good');
+        TY_notify(icon('scroll','ge-ic-md')+' <b>Big order delivered:</b> +$9,000, +15 reliability','good');
       }
     }
   }catch(e){}
   /* price war decay */
-  try{ if(num(S.ty.priceWar,0)>0){ S.ty.priceWar--; if(S.ty.priceWar<=0) TY_notify('⚔️ Price war over — margins restored','info',true); } }catch(e){}
+  try{ if(num(S.ty.priceWar,0)>0){ S.ty.priceWar--; if(S.ty.priceWar<=0) TY_notify(icon('compete','ge-ic-md')+' Price war over — margins restored','info',true); } }catch(e){}
 }
+
 
 /* ---------------- init: screens, menu, content pushes ---------------- */
 function TY_init(){
@@ -6689,20 +7070,21 @@ function TY_passiveTick(){
 function TY_profileModal(strainId){
   const st=getStrain(strainId); if(!st) return;
   const L=(S.ty.strainLib||{})[strainId]||{firstDay:int(S.day,1),crosses:0,phenos:0,keepers:0,best:0,awards:0};
-  let html='<h3>'+icon('genetics','ic-lg')+esc(st.name).toUpperCase()+'</h3>';
+  let html='<h3 class="ge-h2">'+icon('genetics','ge-ic-lg')+esc(st.name).toUpperCase()+'</h3>';
   html+=TY_genProfileHTML(st);
-  html+='<div class="card"><h3>'+icon('scroll','ic-lg')+'STRAIN FILE</h3>'+
-   '<div class="kv"><span>Documented</span><b>Day '+L.firstDay+'</b></div>'+
-   '<div class="kv"><span>Crosses created</span><b>'+L.crosses+'</b></div>'+
-   '<div class="kv"><span>Phenotypes tested</span><b>'+L.phenos+'</b></div>'+
-   '<div class="kv"><span>Keepers found</span><b>'+L.keepers+'</b></div>'+
-   '<div class="kv"><span>Best score</span><b>'+L.best+'</b></div>'+
+  html+='<div class="ge-card"><div class="ge-card-head"><h3>'+icon('scroll','ge-ic-md')+'STRAIN FILE</h3></div>'+
+   '<div class="ge-datarow"><span>Documented</span><b class="ge-num">Day '+L.firstDay+'</b></div>'+
+   '<div class="ge-datarow"><span>Crosses created</span><b class="ge-num">'+L.crosses+'</b></div>'+
+   '<div class="ge-datarow"><span>Phenotypes tested</span><b class="ge-num">'+L.phenos+'</b></div>'+
+   '<div class="ge-datarow"><span>Keepers found</span><b class="ge-num">'+L.keepers+'</b></div>'+
+   '<div class="ge-datarow"><span>Best score</span><b class="ge-num">'+L.best+'</b></div>'+
    TY_lineageStabHTML(strainId)+
-   '<div class="kv"><span>Popularity</span><b>'+TY_strainPop(strainId)+'/100</b></div>'+
-   '<div class="kv"><span>Market price factor</span><b>×'+TY_priceFactor(strainId,{type:'flower',quality:80}).toFixed(2)+'</b></div></div>';
-  html+='<button class="btn btn-small" onclick="closeModal(this.closest(\'.modal-back\'))">CLOSE</button>';
+   '<div class="ge-datarow"><span>Popularity</span><b class="ge-num">'+TY_strainPop(strainId)+'/100</b></div>'+
+   '<div class="ge-datarow"><span>Market price factor</span><b class="ge-num">×'+TY_priceFactor(strainId,{type:'flower',quality:80}).toFixed(2)+'</b></div></div>';
+  html+='<button class="ge-btn ge-btn-ghost ge-btn-block" onclick="closeModal(this.closest(\'.modal-back\'))">CLOSE</button>';
   modal(html);
 }
+
 
 /* ---------------- render wrappers (non-destructive) ---------------- */
 function TY_wrapRenders(){
@@ -6822,13 +7204,23 @@ function GT_vaultStats(){
   ];
 }
 function GT_filterBar(){
-  const filters=[['all','ALL'],['indica','INDICA'],['sativa','SATIVA'],['hybrid','HYBRID'],['keepers','KEEPERS'],['crosses','MY CROSSES'],['p0','PROJECT 0']];
+  const all=allStrains();
+  const counts={all:all.length,seeds:0,keepers:0,mothers:0,breeding:0,p0:0};
+  try{
+    counts.seeds=all.filter(s=>!s.custom).length;
+    counts.breeding=all.filter(s=>s.custom).length;
+    counts.p0=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper'))).length;
+    counts.keepers=all.filter(s=>{ try{return (S.phenoHistory[s.id]&&int(S.phenoHistory[s.id].keepers,0)>0)||(S.keepers||[]).some(k=>k.strainId===s.id);}catch(e){return false;} }).length;
+    counts.mothers=all.filter(s=>{ try{return (S.mothers||[]).some(m=>m.strainId===s.id);}catch(e){return false;} }).length;
+  }catch(e){}
+  const filters=[['all','ALL','dna'],['seeds','SEEDS','grow'],['keepers','KEEPERS','crown'],['mothers','MOTHERS','mothers'],['breeding','BREEDING','breeding'],['p0','PROJECT 0','project0']];
   const sorts=[['name','Name'],['potency','Potency'],['yield','Yield'],['stability','Stability'],['rarity','Rarity'],['popularity','Popularity'],['demand','Market Demand'],['best','Best Score']];
-  return '<div class="card gt-filters"><div class="gt-frow">'+
-    filters.map(f=>'<button class="btn btn-small'+(genFilter===f[0]?' btn-primary':'')+'" data-gfilter="'+f[0]+'">'+f[1]+'</button>').join('')+
-    '</div><div class="gt-frow"><input type="text" id="gt-search" placeholder="SEARCH GENETICS" value="'+esc(genSearch)+'" maxlength="40">'+
-    '<select id="gt-sort">'+sorts.map(s=>'<option value="'+s[0]+'"'+(genSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select></div></div>';
+  return '<div class="ge-card ge-card-flat ge-filterbar"><div class="ge-tabs" role="tablist">'+
+    filters.map(f=>'<button class="ge-tab'+(genFilter===f[0]?' is-active':'')+'" data-gfilter="'+f[0]+'" role="tab" aria-selected="'+(genFilter===f[0])+'">'+icon(f[2],'ge-ic-sm')+f[1]+'<span class="ge-tab-count">'+counts[f[0]]+'</span></button>').join('')+
+    '</div><div class="ge-filter-row"><div class="ge-search-wrap">'+icon('search','ge-ic-md')+'<input type="text" id="gt-search" class="ge-search" placeholder="SEARCH THE ARCHIVE" value="'+esc(genSearch)+'" maxlength="40" aria-label="Search genetics"></div>'+
+    '<select id="gt-sort" class="ge-select" aria-label="Sort genetics">'+sorts.map(s=>'<option value="'+s[0]+'"'+(genSort===s[0]?' selected':'')+'>'+s[1]+'</option>').join('')+'</select></div></div>';
 }
+
 function GT_popularity(st){ try{ return (typeof TY_strainPop==='function')?TY_strainPop(st.id):50; }catch(e){ return 50; } }
 function GT_demand(st){
   const pop=GT_popularity(st);
@@ -6842,9 +7234,10 @@ function GT_bestScore(st){
 }
 function GT_filteredStrains(){
   let all=allStrains().slice();
-  if(genFilter==='indica'||genFilter==='sativa'||genFilter==='hybrid') all=all.filter(s=>(s.type||'hybrid')===genFilter);
+  if(genFilter==='seeds') all=all.filter(s=>!s.custom);
   else if(genFilter==='keepers') all=all.filter(s=>{ try{return (S.phenoHistory[s.id]&&int(S.phenoHistory[s.id].keepers,0)>0)||(S.keepers||[]).some(k=>k.strainId===s.id);}catch(e){return false;} });
-  else if(genFilter==='crosses') all=all.filter(s=>s.custom);
+  else if(genFilter==='mothers') all=all.filter(s=>{ try{return (S.mothers||[]).some(m=>m.strainId===s.id);}catch(e){return false;} });
+  else if(genFilter==='breeding') all=all.filter(s=>s.custom);
   else if(genFilter==='p0') all=all.filter(s=>s.id==='project-zero-og'||s.id==='crown-jewel'||(s.tags&&s.tags.includes('Keeper')));
   if(genSearch){ const q=genSearch.toLowerCase(); all=all.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.id||'').toLowerCase().includes(q)); }
   const rW={common:0,rare:1,elite:2,legendary:3};
@@ -6861,61 +7254,64 @@ function GT_filteredStrains(){
   });
   return all;
 }
+
 function GT_strainCard(st){
   const locked=!isUnlocked(st.id);
   const ph=S.phenoHistory[st.id];
-  const sg=(S.stats.strainGrown||{})[st.id];
-  const dem=GT_demand(st), pop=GT_popularity(st);
   const keepers=(S.keepers||[]).filter(k=>k.strainId===st.id).length;
+  const mothers=(S.mothers||[]).filter(m=>m.strainId===st.id).length;
   const rar=GT_rarity(st);
+  const bestScore=GT_bestScore(st);
+  const phenoNo=bestScore>0&&ph?'#'+int(ph.bestPheno,0):'UNTESTED';
   let lockHtml='';
   if(locked){
     const l=st.lock||{t:'rep',v:999};
-    lockHtml='<p class="lock-note">'+icon('lock','kv-ico')+' '+(l.t==='rep'?'Unlocks at '+l.v+' reputation':l.t==='cash'?'Buy for '+fmt$(st.seed*3):'Unlock via Project 0 mission')+'</p>';
-    if(l.t==='cash') lockHtml+='<button class="btn btn-small btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(st.seed*3)+'</button>';
+    lockHtml='<div class="ge-spec-lock"><p class="ge-caption">'+icon('lock','ge-ic-md')+' '+(l.t==='rep'?'Unlocks at '+l.v+' reputation':l.t==='cash'?'Buy for '+fmt$(st.seed*3):'Unlock via Project 0 mission')+'</p>';
+    if(l.t==='cash') lockHtml+='<button class="ge-btn ge-btn-gold" data-buygen="'+st.id+'">BUY GENETICS — '+fmt$(st.seed*3)+'</button>';
+    lockHtml+='</div>';
   }
-  const custom=st.custom?'<span class="badge gold">CUSTOM</span>':'';
-  const rarBadge='<span class="badge r-'+rar+'">'+rar.toUpperCase()+'</span>';
-  return '<div class="card strain-card gt-card" data-strain="'+st.id+'">'+
-    '<div class="strain-hero">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
-    '<h3>'+esc(st.name)+' '+custom+'</h3>'+
-    '<div class="gt-meta"><span class="tag">'+GT_typeLabel(st)+'</span>'+rarBadge+'<span class="tag">'+esc(GT_breeder(st))+'</span></div>'+
-    '<div class="tags">'+(st.tags||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+
-    statBar('Potency potential',st.pot)+statBar('Yield potential',st.yld)+
-    '<div class="statrow"><span class="slabel">Growth speed</span><span class="sval">'+clamp(Math.round(120-num(st.ft,60)),5,99)+'</span></div>'+
-    statBar('Terpenes',st.terp)+statBar('Stability',st.stab)+statBar('Vigor',st.vigor)+
-    statBar('Resin',st.resin)+statBar('Bag appeal',num(st.bagAppeal,st.pot))+
-    '<div class="statrow"><span class="slabel">Stress resistance</span><span class="sval">'+num(st.stressTol,num(st.stab,80))+'</span></div>'+
-    '<div class="kv"><span>Difficulty</span><b>'+GT_difficulty(st)+'</b></div>'+
-    '<div class="kv"><span>Popularity</span><b>'+Math.round(pop)+'/100</b></div>'+
-    '<div class="kv"><span>Market demand</span><b class="'+dem[1]+'">'+dem[0]+'</b></div>'+
-    '<div class="kv"><span>Phenotypes tested</span><b>'+(ph?int(ph.tested,0):0)+'</b></div>'+
-    '<div class="kv"><span>Keepers found</span><b>'+(keepers+(ph?int(ph.keepers,0):0))+'</b></div>'+
-    (GT_bestScore(st)>0?'<div class="kv"><span>Best pheno</span><b>#'+int(ph.bestPheno,0)+' ('+Math.round(ph.bestScore)+')</b></div>':'')+
-    (sg?'<div class="kv"><span>Times grown</span><b>'+int(sg.count,0)+'</b></div>':'')+
+  const lineage=st.lineage?esc(st.lineage):'Foundation genetics';
+  return '<div class="ge-card ge-card-tap ge-spec-card gt-card strain-card" data-strain="'+st.id+'">'+
+    '<div class="ge-spec-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+    '<div class="ge-spec-main">'+
+    '<div class="ge-spec-top"><h3 class="ge-spec-name">'+esc(st.name)+(st.custom?' <span class="ge-badge">CUSTOM</span>':'')+'</h3></div>'+
+    '<div class="ge-spec-badges">'+GT_rarityBadge(rar)+
+      (keepers>0?'<span class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'KEEPER ×'+keepers+'</span>':'')+
+      (mothers>0?'<span class="ge-badge ge-badge-mother">'+icon('mothers','ge-ic-sm')+'MOTHER</span>':'')+
+      '<span class="ge-badge ge-badge-common">PHENO '+phenoNo+'</span></div>'+
+    '<div class="ge-spec-pot"><span class="ge-label">POTENCY</span><span class="ge-data ge-spec-potv">'+Math.round(num(st.pot,0))+'%</span></div>'+
+    '<div class="ge-tags">'+GT_terpeneProfile(st).map(t=>'<span class="ge-pill ge-pill-neutral">'+icon('terp','ge-ic-sm')+esc(t)+'</span>').join('')+'</div>'+
+    '<div class="ge-spec-meters"><div class="ge-spec-meter"><span class="ge-label">YIELD</span>'+GT_starMeter(st.yld)+'</div>'+
+    '<div class="ge-spec-meter"><span class="ge-label">STABILITY</span>'+GT_starMeter(st.stab)+'</div></div>'+
+    '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span class="ge-truncate">'+lineage+'</span></div>'+
+    '<div class="ge-datarow"><span>Market demand</span><b>'+GT_demandPill(st)+'</b></div>'+
+    '<div class="ge-datarow"><span>Phenotypes tested</span><b class="ge-num">'+(ph?int(ph.tested,0):0)+'</b></div>'+
+    '<div class="ge-datarow"><span>Keepers found</span><b class="ge-num">'+keepers+'</b></div>'+
+    (bestScore>0?'<div class="ge-datarow"><span>Best pheno</span><b class="ge-num">#'+int(ph.bestPheno,0)+' ('+Math.round(bestScore)+')</b></div>':'')+
     lockHtml+
-    (locked?'':'<div class="btn-row"><button class="btn btn-small btn-primary" data-gdetail="'+st.id+'">'+icon('inspect','ic')+'DETAILS</button>'+
-    '<button class="btn btn-small btn-green" data-growseed="'+st.id+'">'+icon('grow','ic')+'GROW</button>'+
-    '<button class="btn btn-small" data-hunt="'+st.id+'">'+icon('hunt','ic')+'PHENO HUNT</button></div>')+
-    '</div>';
+    (locked?'':'<div class="ge-btn-row"><button class="ge-btn ge-btn-sm ge-btn-ghost" data-gdetail="'+st.id+'">'+icon('inspect','ge-ic-sm')+'PROFILE</button>'+
+    '<button class="ge-btn ge-btn-sm ge-btn-primary" data-growseed="'+st.id+'">'+icon('grow','ge-ic-sm')+'GROW</button>'+
+    '<button class="ge-btn ge-btn-sm ge-btn-ghost" data-hunt="'+st.id+'">'+icon('hunt','ge-ic-sm')+'HUNT</button></div>')+
+    '</div></div>';
 }
+
 /* ---- RENDER.genetics replacement ---- */
 RENDER.genetics=function(){
   const r=$('genetics-root'); if(!r) return;
-  let html=screenHead('genetics','GENETICS VAULT');
-  /* vault stats */
   const stats=GT_vaultStats();
-  html+='<div class="card gt-vault"><h3>'+icon('dna','ic-lg')+'GENETICS VAULT</h3><div class="gt-stats">'+
-    stats.map(s=>'<div class="gt-stat"><b>'+s.v+'</b><span>'+s.l+'</span></div>').join('')+'</div></div>';
+  let html='<div class="ge-screen">'+screenHead('genetics','GENETIC VAULT');
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>SECRET GENETIC ARCHIVE</h3></div>'+
+    '<div class="ge-tiles ge-tiles-4">'+stats.map(s=>'<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+s.v+'</div><div class="ge-metric-label">'+s.l+'</div></div>').join('')+'</div></div>';
   html+=GT_filterBar();
   const list=GT_filteredStrains();
   if(!list.length){
-    html+='<div class="card gt-empty"><h3>'+icon('dna','ic-lg')+'YOUR GENETICS VAULT IS EMPTY</h3>'+
-      '<p class="muted">Acquire genetics to begin building your collection.</p>'+
-      '<button class="btn btn-primary" id="gt-gomarket">'+icon('shop','ic')+'VISIT GENETICS MARKET</button></div>';
+    html+='<div class="ge-card ge-empty"><div>'+icon('dna','ge-ic-xl')+'</div><h3>THE ARCHIVE IS EMPTY</h3>'+
+      '<p>Acquire genetics to begin building your collection.</p>'+
+      '<button class="ge-btn ge-btn-primary" id="gt-gomarket">'+icon('shop','ge-ic-md')+'VISIT GENETICS MARKET</button></div>';
   } else {
-    html+='<div class="gt-grid">'+list.map(GT_strainCard).join('')+'</div>';
+    html+='<div class="ge-stack gt-grid">'+list.map(GT_strainCard).join('')+'</div>';
   }
+  html+='</div>';
   r.innerHTML=html;
   /* wire filter buttons */
   r.querySelectorAll('[data-gfilter]').forEach(b=>b.onclick=()=>{ genFilter=b.dataset.gfilter; RENDER.genetics(); });
@@ -6928,17 +7324,19 @@ RENDER.genetics=function(){
   GT_wireCards(r);
   try{ if(typeof GX_wireGenetics==='function') GX_wireGenetics(r); }catch(e){}
 };
+
 function GT_refreshGrid(){
   const r=$('genetics-root'); if(!r) return;
-  const grid=r.querySelector('.gt-grid'); const empty=r.querySelector('.gt-empty');
+  const grid=r.querySelector('.gt-grid'); const empty=r.querySelector('.ge-empty');
   const list=GT_filteredStrains();
   const html=list.length?list.map(GT_strainCard).join(''):
-    '<div class="card gt-empty"><h3>'+icon('dna','ic-lg')+'NO MATCHING GENETICS</h3><p class="muted">Try a different search or filter.</p></div>';
+    '<div class="ge-card ge-empty"><div>'+icon('dna','ge-ic-xl')+'</div><h3>NO MATCHING GENETICS</h3><p>Try a different search or filter.</p></div>';
   if(grid) grid.innerHTML=html;
-  else if(empty) empty.outerHTML='<div class="gt-grid">'+html+'</div>';
-  else r.insertAdjacentHTML('beforeend','<div class="gt-grid">'+html+'</div>');
+  else if(empty) empty.outerHTML='<div class="ge-stack gt-grid">'+html+'</div>';
+  else r.insertAdjacentHTML('beforeend','<div class="ge-stack gt-grid">'+html+'</div>');
   GT_wireCards(r);
 }
+
 function GT_wireCards(r){
   r.querySelectorAll('[data-gdetail]').forEach(b=>b.onclick=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); strainDetailId=b.dataset.gdetail; show('strain'); });
   r.querySelectorAll('.gt-card').forEach(c=>c.onclick=(e)=>{
@@ -6950,16 +7348,17 @@ function GT_wireCards(r){
     const st=getStrain(b.dataset.buygen);
     const gdisc=(typeof WX_discount==='function')?WX_discount('genetics'):1;
     const cost=Math.round(st.seed*3*gdisc);
-    if(S.cash<cost){ toast('❌ Not enough cash.'); return; }
+    if(S.cash<cost){ toast(icon('x','ge-ic-md')+' Not enough cash.'); return; }
     S.cash-=cost; unlockStrain(st.id); save(); updateHUD(); RENDER.genetics();
   });
   r.querySelectorAll('[data-growseed]').forEach(b=>b.onclick=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation();
-    if(plantSeed(b.dataset.growseed)) toast('🌱 Planted '+esc(getStrain(b.dataset.growseed).name));
+    if(plantSeed(b.dataset.growseed)) toast(icon('grow','ge-ic-md')+' Planted '+esc(getStrain(b.dataset.growseed).name));
     RENDER.genetics();
   });
   r.querySelectorAll('[data-hunt]').forEach(b=>b.onclick=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); startPhenoHunt(b.dataset.hunt); });
   r.querySelectorAll('[data-vkeepers]').forEach(b=>b.onclick=()=>{ keeperFilter=b.dataset.vkeepers; keeperPage=0; show('keepers'); });
 }
+
 /* ---- strain detail screen ---- */
 function GT_terpeneProfile(st){
   const tags=st.tags||[];
@@ -6974,77 +7373,115 @@ function GT_terpeneProfile(st){
 RENDER.strain=function(){
   const r=$('strain-root'); if(!r) return;
   const st=getStrain(strainDetailId);
-  if(!st){ r.innerHTML=screenHead('genetics','STRAIN NOT FOUND')+'<div class="card"><p class="muted">Select a strain from the Genetics Vault.</p><button class="btn btn-primary" onclick="show(\'genetics\')">BACK TO VAULT</button></div>'; return; }
+  if(!st){ r.innerHTML='<div class="ge-screen">'+screenHead('genetics','STRAIN NOT FOUND')+'<div class="ge-card ge-empty"><div>'+icon('dna','ge-ic-xl')+'</div><h3>STRAIN NOT FOUND</h3><p>Select a strain from the Genetic Vault.</p><button class="ge-btn ge-btn-primary" onclick="show(\'genetics\')">BACK TO VAULT</button></div></div>'; return; }
   const ph=S.phenoHistory[st.id];
   const keepers=(S.keepers||[]).filter(k=>k.strainId===st.id);
-  const dem=GT_demand(st), pop=GT_popularity(st);
+  const mothers=(S.mothers||[]).filter(m=>m.strainId===st.id);
+  const pop=GT_popularity(st);
   const best=GT_bestScore(st);
-  const lin=st.lineage?'<p class="muted">'+icon('dna','kv-ico')+' '+esc(st.lineage)+'</p>':'';
-  let html=screenHead('genetics',st.name.toUpperCase());
-  html+='<div class="card gt-detail-hero"><div class="strain-hero big">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
-    '<h2>'+esc(st.name)+'</h2><div class="gt-meta"><span class="tag">'+GT_typeLabel(st)+'</span>'+
-    '<span class="badge r-'+GT_rarity(st)+'">'+GT_rarity(st).toUpperCase()+'</span>'+
-    (st.custom?'<span class="badge gold">CUSTOM</span>':'')+'</div>'+lin+
-    '<div class="kv"><span>Breeder / Origin</span><b>'+esc(GT_breeder(st))+'</b></div>'+
-    '<div class="kv"><span>Generation</span><b>'+esc(st.generation||(st.custom?'F1':'Stable'))+'</b></div></div>';
-  html+='<div class="card"><h3>'+icon('dna','ic')+'GENETIC POTENTIAL</h3>'+
-    statBar('Potency',st.pot)+statBar('Yield',st.yld)+statBar('Terpenes',st.terp)+
-    statBar('Resin',st.resin)+statBar('Vigor',st.vigor)+statBar('Stability',st.stab)+
-    statBar('Bag appeal',num(st.bagAppeal,st.pot))+
-    '<div class="kv"><span>Growth speed</span><b>'+clamp(Math.round(120-num(st.ft,60)),5,99)+'</b></div>'+
-    '<div class="kv"><span>Flower time</span><b>'+st.ft+' days</b></div>'+
-    '<div class="kv"><span>Stress resistance</span><b>'+num(st.stressTol,num(st.stab,80))+'</b></div>'+
-    '<div class="kv"><span>Difficulty</span><b>'+GT_difficulty(st)+'</b></div></div>';
-  html+='<div class="card"><h3>'+icon('terp','ic')+'TERPENE PROFILE</h3><div class="tags">'+
-    GT_terpeneProfile(st).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div></div>';
-  html+='<div class="card"><h3>'+icon('hunt','ic')+'KNOWN PHENOTYPES: '+(ph?int(ph.tested,0):0)+'</h3>'+
-    '<div class="kv"><span>Keepers</span><b>'+keepers.length+'</b></div>'+
-    (best>0?'<div class="kv"><span>Best pheno</span><b>#'+int(ph.bestPheno,0)+' ('+Math.round(best)+')</b></div>':'')+
-    '<div class="kv"><span>Market popularity</span><b>'+dem[0]+' ('+Math.round(pop)+'/100)</b></div></div>';
   const locked=!isUnlocked(st.id);
-  html+='<div class="card"><h3>'+icon('star','ic')+'ACTIONS</h3><div class="btn-col">'+
-    (locked?'<p class="lock-note">'+icon('lock','kv-ico')+' Locked genetics.</p>':
-    '<button class="btn btn-green" id="sd-grow">'+icon('grow','ic')+'GROW THIS</button>'+
-    '<button class="btn" id="sd-hunt">'+icon('hunt','ic')+'START PHENO HUNT</button>'+
-    '<button class="btn" id="sd-phenos">'+icon('hunt','ic')+'VIEW PHENOTYPES</button>'+
-    '<button class="btn btn-gold" id="sd-keepers">'+icon('keepers','ic')+'VIEW KEEPERS ('+keepers.length+')</button>'+
-    '<button class="btn" id="sd-breed">'+icon('dna','ic')+'BREED</button>'+
-    '<button class="btn" id="sd-lineage">'+icon('scroll','ic')+'VIEW LINEAGE</button>')+
-    '<button class="btn" onclick="show(\'genetics\')">BACK TO VAULT</button></div></div>';
+  const lin=st.lineage?esc(st.lineage):'Foundation genetics';
+  const crosses=GT_crossesOf(st);
+  const sg=(S.stats.strainGrown||{})[st.id];
+  let html='<div class="ge-screen">'+screenHead('genetics',st.name.toUpperCase());
+  /* hero */
+  html+='<div class="ge-card ge-strain-hero"><div class="ge-strain-art">'+flowerSVG(strainSeed(st),'strain-flower')+'</div>'+
+    '<h2 class="ge-h1">'+esc(st.name)+'</h2>'+
+    '<div class="ge-spec-badges"><span class="ge-pill ge-pill-neutral">'+GT_typeLabel(st).toUpperCase()+'</span>'+GT_rarityBadge(GT_rarity(st))+(st.custom?'<span class="ge-badge">CUSTOM</span>':'')+'</div>'+
+    '<div class="ge-spec-lin">'+icon('dna','ge-ic-sm')+'<span>'+lin+'</span></div>'+
+    '<div class="ge-datarow"><span>Breeder / Origin</span><b>'+esc(GT_breeder(st))+'</b></div>'+
+    '<div class="ge-datarow"><span>Generation</span><b>'+esc(st.generation||(st.custom?'F1':'Stable'))+'</b></div>'+
+    '<div class="ge-datarow"><span>Project 0</span><b>'+GT_p0Status(st)+'</b></div></div>';
+  /* genetic potential */
+  const bars=[['Potency',st.pot],['Yield',st.yld],['Terpenes',st.terp],['Resin',st.resin],['Vigor',st.vigor],['Stability',st.stab],['Bag appeal',num(st.bagAppeal,st.pot)]];
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('dna','ge-ic-md')+'<h3>GENETIC POTENTIAL</h3></div>'+
+    bars.map(b=>'<div class="ge-progress-meta"><span>'+b[0]+'</span><b>'+Math.round(num(b[1],0))+'</b></div><div class="ge-progress"><i style="width:'+clamp(Math.round(num(b[1],0)),0,100)+'%"></i></div>').join('')+
+    '<div class="ge-divider"></div>'+
+    '<div class="ge-datarow"><span>Growth speed</span><b class="ge-num">'+clamp(Math.round(120-num(st.ft,60)),5,99)+'</b></div>'+
+    '<div class="ge-datarow"><span>Flower time</span><b class="ge-num">'+st.ft+' days</b></div>'+
+    '<div class="ge-datarow"><span>Stress resistance</span><b class="ge-num">'+num(st.stressTol,num(st.stab,80))+'</b></div>'+
+    '<div class="ge-datarow"><span>Difficulty</span><b>'+GT_difficulty(st)+'</b></div></div>';
+  /* terpene profile */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('terp','ge-ic-md')+'<h3>TERPENE PROFILE</h3></div><div class="ge-tags">'+
+    GT_terpeneProfile(st).map(t=>'<span class="ge-pill ge-pill-neutral">'+icon('terp','ge-ic-sm')+esc(t)+'</span>').join('')+'</div></div>';
+  /* phenotype history */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('hunt','ge-ic-md')+'<h3>PHENOTYPE HISTORY</h3><span class="ge-spread ge-num ge-muted">'+(ph?int(ph.tested,0):0)+' TESTED</span></div>'+
+    (ph?'<div class="ge-tiles">'+
+      '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+int(ph.tested,0)+'</div><div class="ge-metric-label">Tested</div></div>'+
+      '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+int(ph.harvested,0)+'</div><div class="ge-metric-label">Harvested</div></div>'+
+      '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+int(ph.keepers,0)+'</div><div class="ge-metric-label">Keepers</div></div>'+
+      '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+int(ph.legendary,0)+'</div><div class="ge-metric-label">Legendary</div></div></div>'+
+      (best>0?'<div class="ge-datarow"><span>Best pheno</span><b class="ge-num">#'+int(ph.bestPheno,0)+' ('+Math.round(best)+')</b></div>':'')+
+      '<div class="ge-datarow"><span>Elite expressions</span><b class="ge-num">'+int(ph.elite,0)+'</b></div>'
+    :'<p class="ge-muted">No phenotypes tested yet. Grow this strain to discover them.</p>')+'</div>';
+  /* harvest history (recorded data only) */
+  let bq=0,by=0; keepers.forEach(k=>{ bq=Math.max(bq,num(k.bestQuality,0)); by=Math.max(by,num(k.bestYield,0)); });
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('harvest','ge-ic-md')+'<h3>HARVEST HISTORY</h3></div>'+
+    (sg?'<div class="ge-datarow"><span>Times grown</span><b class="ge-num">'+int(sg.count,0)+'</b></div>':'<p class="ge-muted">Never grown yet.</p>')+
+    (bq>0?'<div class="ge-datarow"><span>Best keeper quality</span><b class="ge-num">Q'+Math.round(bq)+'</b></div><div class="ge-datarow"><span>Best keeper yield</span><b class="ge-num">'+by+' oz</b></div>':'')+
+    '<div class="ge-datarow"><span>Market popularity</span><b>'+GT_demandPill(st)+' <span class="ge-num ge-muted">'+Math.round(pop)+'/100</span></b></div></div>';
+  /* clones */
+  const clonesTaken=mothers.reduce((s,m)=>s+int(m.clonesTaken,0),0);
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('clone','ge-ic-md')+'<h3>CLONES</h3></div>'+
+    (mothers.length?'<div class="ge-datarow"><span>Mother plants</span><b class="ge-num">'+mothers.length+'</b></div><div class="ge-datarow"><span>Clones taken</span><b class="ge-num">'+clonesTaken+'</b></div>'
+    :'<p class="ge-muted">No mothers of this strain. Promote a keeper to preserve it forever.</p>')+'</div>';
+  /* breeding */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('breeding','ge-ic-md')+'<h3>BREEDING</h3></div>'+
+    (crosses.length?crosses.slice(0,3).map(c=>'<div class="ge-datarow"><span class="ge-truncate">'+esc(c.name)+'</span><b class="ge-num">R'+Math.round(num(c.resin,0))+'</b></div>').join('')+'<p class="ge-caption">'+crosses.length+' cross(es) descend from this strain.</p>':'<p class="ge-muted">No crosses from this strain yet.</p>')+
+    (locked?'':'<button class="ge-btn ge-btn-ghost ge-btn-block" id="sd-breed">'+icon('dna','ge-ic-md')+'BREED WITH THIS STRAIN</button>')+'</div>';
+  /* lineage */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('scroll','ge-ic-md')+'<h3>LINEAGE</h3></div>'+
+    '<p class="ge-body ge-muted">'+lin+'</p>'+
+    '<button class="ge-btn ge-btn-ghost ge-btn-block" id="sd-lineage">'+icon('dna','ge-ic-md')+'VIEW LINEAGE TREE</button></div>';
+  /* keepers of this strain */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('crown','ge-ic-md')+'<h3>KEEPERS</h3><span class="ge-spread ge-num ge-muted">'+keepers.length+'</span></div>'+
+    (keepers.length?keepers.slice(0,4).map(k=>'<div class="ge-datarow"><span>'+icon('crown','ge-ic-sm')+' #'+k.phenoNum+' '+GT_rarityBadge(k.rarity||'common')+'</span><b class="ge-num">'+Math.round(num(k.overall,0))+'</b></div>').join(''):'<p class="ge-muted">No keepers of this strain yet.</p>')+
+    (locked?'':'<button class="ge-btn ge-btn-gold ge-btn-block" id="sd-keepers">'+icon('keepers','ge-ic-md')+'VIEW KEEPERS ('+keepers.length+')</button>')+'</div>';
+  /* actions */
+  html+='<div class="ge-card"><div class="ge-card-head">'+icon('star','ge-ic-md')+'<h3>ACTIONS</h3></div><div class="ge-stack">'+
+    (locked?'<p class="ge-caption">'+icon('lock','ge-ic-md')+' Locked genetics.</p>':
+    '<button class="ge-btn ge-btn-primary" id="sd-grow">'+icon('grow','ge-ic-md')+'GROW THIS</button>'+
+    '<button class="ge-btn ge-btn-ghost" id="sd-hunt">'+icon('hunt','ge-ic-md')+'START PHENO HUNT</button>'+
+    '<button class="ge-btn ge-btn-ghost" id="sd-phenos">'+icon('hunt','ge-ic-md')+'VIEW PHENOTYPES</button>')+
+    '<button class="ge-btn ge-btn-ghost" onclick="show(\'genetics\')">BACK TO VAULT</button></div></div>';
+  html+='</div>';
   r.innerHTML=html;
   if(locked) return;
-  $('sd-grow').onclick=()=>{ if(plantSeed(st.id)){ toast('🌱 Planted '+esc(st.name)); show('grow'); } };
+  $('sd-grow').onclick=()=>{ if(plantSeed(st.id)){ toast(icon('grow','ge-ic-md')+' Planted '+esc(st.name)); show('grow'); } };
   $('sd-hunt').onclick=()=>startPhenoHunt(st.id);
   $('sd-phenos').onclick=()=>GT_phenoListModal(st);
   $('sd-keepers').onclick=()=>{ keeperFilter=st.id; keeperPage=0; show('keepers'); };
-  $('sd-breed').onclick=()=>{ try{ breedA=st.id; }catch(e){} show('breeding'); };
-  $('sd-lineage').onclick=()=>{
+  const sb=$('sd-breed'); if(sb) sb.onclick=()=>{ try{ breedA=st.id; }catch(e){} show('breeding'); };
+  const sl=$('sd-lineage'); if(sl) sl.onclick=()=>{
     if(typeof GX_lineageHTML==='function'){
-      const m=modal('<div class="gx-linwrap"><div id="gx-lin-box">'+GX_lineageHTML(st.id)+'</div>'+
-        '<button class="btn" id="gx-lin-x">CLOSE</button></div>');
+      const m=modal('<div class="ge-modal-head">'+icon('dna','ge-ic-md')+'<h3>LINEAGE TREE</h3></div><div class="ge-modal-body"><div id="gx-lin-box">'+GX_lineageHTML(st.id)+'</div></div><div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="gx-lin-x">CLOSE</button></div>');
+      GX_wireLineage(m.querySelector('#gx-lin-box'));
       m.querySelector('#gx-lin-x').onclick=()=>closeModal(m);
     } else toast('Lineage not available for base strains.');
   };
 };
+
 function GT_phenoListModal(st){
   const ph=S.phenoHistory[st.id];
   const keepers=(S.keepers||[]).filter(k=>k.strainId===st.id);
-  let html='<h3>'+icon('hunt','ic-lg')+'PHENOTYPES — '+esc(st.name)+'</h3>';
+  let html='<div class="ge-modal-head">'+icon('hunt','ge-ic-md')+'<h3>PHENOTYPES — '+esc(st.name)+'</h3></div><div class="ge-modal-body">';
   if(ph){
-    html+='<div class="kv"><span>Seeds tested</span><b>'+int(ph.tested,0)+'</b></div>'+
-      '<div class="kv"><span>Harvested</span><b>'+int(ph.harvested,0)+'</b></div>'+
-      '<div class="kv"><span>Keepers</span><b>'+int(ph.keepers,0)+'</b></div>'+
-      '<div class="kv"><span>Elite</span><b>'+int(ph.elite,0)+'</b></div>'+
-      '<div class="kv"><span>Legendary</span><b>'+int(ph.legendary,0)+'</b></div>'+
-      (num(ph.bestScore,0)>0?'<div class="kv"><span>Best</span><b>#'+int(ph.bestPheno,0)+' ('+Math.round(ph.bestScore)+')</b></div>':'');
-  } else html+='<p class="muted">No phenotypes tested yet. Grow this strain to discover them.</p>';
+    html+='<div class="ge-datarow"><span>Seeds tested</span><b class="ge-num">'+int(ph.tested,0)+'</b></div>'+
+      '<div class="ge-datarow"><span>Harvested</span><b class="ge-num">'+int(ph.harvested,0)+'</b></div>'+
+      '<div class="ge-datarow"><span>Keepers</span><b class="ge-num">'+int(ph.keepers,0)+'</b></div>'+
+      '<div class="ge-datarow"><span>Elite</span><b class="ge-num">'+int(ph.elite,0)+'</b></div>'+
+      '<div class="ge-datarow"><span>Legendary</span><b class="ge-num">'+int(ph.legendary,0)+'</b></div>'+
+      (num(ph.bestScore,0)>0?'<div class="ge-datarow"><span>Best</span><b class="ge-num">#'+int(ph.bestPheno,0)+' ('+Math.round(ph.bestScore)+')</b></div>':'');
+  } else html+='<p class="ge-muted">No phenotypes tested yet. Grow this strain to discover them.</p>';
   if(keepers.length){
-    html+='<h3>'+icon('keepers','ic')+'KEEPERS</h3>'+keepers.map(k=>
-      '<div class="kv"><span>👑 #'+k.phenoNum+' <span class="badge r-'+(k.rarity||'common')+'">'+String(k.rarity||'common').toUpperCase()+'</span></span><b>'+Math.round(num(k.overall,0))+'</b></div>').join('');
+    html+='<div class="ge-section-title">'+icon('crown','ge-ic-md')+'KEEPERS</div>'+keepers.map(k=>
+      '<div class="ge-datarow"><span>'+icon('crown','ge-ic-sm')+' #'+k.phenoNum+' '+GT_rarityBadge(k.rarity||'common')+'</span><b class="ge-num">'+Math.round(num(k.overall,0))+'</b></div>').join('');
   }
-  const m=modal(html+'<button class="btn" id="gt-pl-x">CLOSE</button>');
+  html+='</div><div class="ge-modal-foot"><button class="ge-btn ge-btn-ghost" id="gt-pl-x">CLOSE</button></div>';
+  const m=modal(html);
   m.querySelector('#gt-pl-x').onclick=()=>closeModal(m);
 }
+
 /* register the strain screen */
 (function(){
   try{
@@ -7192,27 +7629,29 @@ function AM_buy(id){
   var st=S.am[id];
   if(st.owned){ AM_toast('Already installed.'); return false; }
   if(!AM_rankMet(id)){
-    AM_toast('\uD83D\uDD12 Requires rank: <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b>. You are '+AM_esc(AM_rankName(AM_rankIdx()))+'.');
+    AM_toast(AM_icon('lock','ge-ic-md')+' Requires rank: <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b>. You are '+AM_esc(AM_rankName(AM_rankIdx()))+'.');
     return false;
   }
   if(AM_num(S.cash,0)<sys.cost){
-    AM_toast('\u274C Need '+AM_fmt(sys.cost)+' for '+AM_esc(sys.name)+'.');
+    AM_toast(AM_icon('x','ge-ic-md')+' Need '+AM_fmt(sys.cost)+' for '+AM_esc(sys.name)+'.');
     return false;
   }
   S.cash-=sys.cost;
   st.owned=true; st.on=true;
-  AM_toast('\u2705 '+AM_esc(sys.name)+' installed and ONLINE.');
+  AM_toast(AM_icon('check','ge-ic-md')+' '+AM_esc(sys.name)+' installed and ONLINE.');
   AM_save();
   return true;
 }
+
 function AM_toggle(id){
   var st=AM_sysState(id); if(!st) return false;
   if(!st.owned) return false;
   st.on=!st.on;
-  AM_toast((st.on?'\u25B6\uFE0F ':'\u23F8\uFE0F ')+AM_esc(AM_SYSTEMS[id].name)+(st.on?' online.':' offline.'));
+  AM_toast((st.on?AM_icon('check','ge-ic-md'):AM_icon('x','ge-ic-md'))+' '+AM_esc(AM_SYSTEMS[id].name)+(st.on?' online.':' offline.'));
   AM_save();
   return true;
 }
+
 
 /* ---------------- manager boost ------------------------------------------ */
 function AM_managerBoost(){
@@ -7421,29 +7860,29 @@ function AM_cardHTML(id){
   var st=AM_sysState(id)||{owned:false,on:false};
   var owned=!!st.owned, on=!!st.on;
   var gateMet=AM_rankMet(id);
-  var h='<div class="card am-card" data-am-card="'+id+'">';
-  h+='<div class="am-card-head"><span class="am-ico">'+AM_icon(sys.ico,'am-sys-ico')+'</span>';
-  h+='<div><div class="am-name">'+AM_esc(sys.name)+'</div>';
-  h+='<div class="am-status '+(owned?(on?'on':'off'):'locked')+'">'+(owned?(on?'● ONLINE':'○ OFFLINE'):'🔒 LOCKED')+'</div></div></div>';
-  h+='<p class="muted am-desc">'+AM_esc(sys.desc)+'</p>';
-  h+='<div class="am-stats">';
-  h+='<div class="kv"><span>Rank required</span><b>'+AM_esc(AM_rankName(sys.rankGate))+'</b></div>';
-  h+='<div class="kv"><span>Purchase</span><b>'+AM_fmt(sys.cost)+'</b></div>';
-  h+='<div class="kv"><span>Operating</span><b>'+AM_fmt(sys.dailyCost)+'/day</b></div>';
-  h+='<div class="kv"><span>Power draw</span><b>⚡'+sys.power+'</b></div>';
-  h+='<div class="kv"><span>Capacity</span><b>'+sys.capacity+(id==='processing'?' jobs':id==='restock'?' pkgs':id==='manager'?' plants':' plants')+'</b></div>';
-  h+='<div class="kv"><span>Efficiency</span><b>'+Math.round(sys.efficiency*100)+'%</b></div>';
-  h+='<div class="kv"><span>Reliability</span><b>'+Math.round(sys.reliability*100)+'%</b></div>';
+  var h='<div class="ge-card ge-am-card" data-am-card="'+id+'">';
+  h+='<div class="ge-am-head"><span class="ge-am-ico">'+AM_icon(sys.ico,'ge-ic-lg')+'</span>';
+  h+='<div><div class="ge-am-name">'+AM_esc(sys.name)+'</div>';
+  h+='<div class="ge-am-status">'+(owned?(on?PF_pill('optimal','check','ONLINE'):PF_pill('neutral','x','OFFLINE')):PF_pill('neutral','lock','LOCKED'))+'</div></div></div>';
+  h+='<p class="ge-caption ge-muted ge-am-desc">'+AM_esc(sys.desc)+'</p>';
+  h+='<div class="ge-am-stats">';
+  h+=PF_kv('Rank required','<b>'+AM_esc(AM_rankName(sys.rankGate))+'</b>');
+  h+=PF_kv('Purchase','<b class="ge-num">'+AM_fmt(sys.cost)+'</b>');
+  h+=PF_kv('Operating','<b class="ge-num">'+AM_fmt(sys.dailyCost)+'/day</b>');
+  h+=PF_kv('Power draw','<b>'+AM_icon('lighting','ge-ic-sm')+' '+sys.power+'</b>');
+  h+=PF_kv('Capacity','<b class="ge-num">'+sys.capacity+(id==='processing'?' jobs':id==='restock'?' pkgs':id==='manager'?' plants':' plants')+'</b>');
+  h+=PF_kv('Efficiency','<b class="ge-num">'+Math.round(sys.efficiency*100)+'%</b>');
+  h+=PF_kv('Reliability','<b class="ge-num">'+Math.round(sys.reliability*100)+'%</b>');
   h+='</div>';
 
   if(id==='climate'&&owned){
-    h+='<div class="am-controls"><label>Target °F <input type="number" class="am-input" data-am-temp min="60" max="90" step="1" value="'+AM_int(st.tempTarget,76)+'"></label>';
-    h+='<label>Target RH% <input type="number" class="am-input" data-am-rh min="30" max="80" step="1" value="'+AM_int(st.rhTarget,55)+'"></label></div>';
+    h+='<div class="ge-am-controls"><label class="ge-field"><span>Target °F</span><input type="number" class="ge-input" data-am-temp min="60" max="90" step="1" value="'+AM_int(st.tempTarget,76)+'"></label>';
+    h+='<label class="ge-field"><span>Target RH%</span><input type="number" class="ge-input" data-am-rh min="30" max="80" step="1" value="'+AM_int(st.rhTarget,55)+'"></label></div>';
   }
   if(id==='manager'&&owned){
     var emps=[];
     try{ emps=(S.ex&&Array.isArray(S.ex.employees))?S.ex.employees:[]; }catch(e){}
-    h+='<div class="am-controls"><label>Supervisor <select class="am-input" data-am-mgr><option value="">— none —</option>';
+    h+='<div class="ge-am-controls"><label class="ge-field"><span>Supervisor</span><select class="ge-input" data-am-mgr><option value="">— none —</option>';
     emps.forEach(function(e){
       var sel=String(st.empId)===String(e.id)?' selected':'';
       h+='<option value="'+AM_esc(e.id)+'"'+sel+'>'+AM_esc(e.name||'Employee')+' (skill '+AM_int(e.skill,0)+')</option>';
@@ -7451,20 +7890,21 @@ function AM_cardHTML(id){
     h+='</select></label></div>';
   }
 
-  h+='<div class="am-actions">';
+  h+='<div class="ge-am-actions">';
   if(!owned){
     if(gateMet){
-      h+='<button class="btn btn-gold" data-am-buy="'+id+'">'+AM_icon('cash','b-ico')+'BUY '+AM_fmt(sys.cost)+'</button>';
+      h+='<button class="ge-btn ge-btn-gold ge-btn-block" data-am-buy="'+id+'">'+AM_icon('cash','ge-ic-md')+'BUY '+AM_fmt(sys.cost)+'</button>';
     }else{
-      h+='<button class="btn" disabled>'+AM_icon('lock','b-ico')+'LOCKED</button>';
-      h+='<p class="muted am-req">🔒 Requires <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b> rank — you are <b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>.</p>';
+      h+='<button class="ge-btn ge-btn-block" disabled>'+AM_icon('lock','ge-ic-md')+'LOCKED</button>';
+      h+='<p class="ge-caption ge-muted">'+AM_icon('lock','ge-ic-sm')+' Requires <b>'+AM_esc(AM_rankName(sys.rankGate))+'</b> rank — you are <b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>.</p>';
     }
   }else{
-    h+='<button class="btn '+(on?'btn-green':'')+'" data-am-toggle="'+id+'">'+(on?'⏸ TURN OFF':'▶ TURN ON')+'</button>';
+    h+='<button class="ge-btn ge-btn-block '+(on?'ge-btn-ghost':'ge-btn-primary')+'" data-am-toggle="'+id+'">'+(on?AM_icon('x','ge-ic-md')+'TURN OFF':AM_icon('check','ge-ic-md')+'TURN ON')+'</button>';
   }
   h+='</div></div>';
   return h;
 }
+
 
 function AM_screenHead(){
   try{ if(typeof screenHead==='function') return screenHead('equipment','AUTOMATION CONTROL CENTER'); }catch(e){}
@@ -7485,25 +7925,28 @@ try{
         var s=S.am[k];
         if(s.owned){ if(s.on){ online++; total+=AM_num(AM_SYSTEMS[k].dailyCost,0); } }
       });
-      var h=AM_screenHead();
-      h+='<div class="card am-summary"><div class="kv"><span>'+AM_icon('equipment','kv-ico')+' Systems online</span><b>'+online+' / '+AM_ORDER.length+'</b></div>';
-      h+='<div class="kv"><span>'+AM_icon('cash','kv-ico')+' Operating cost (active)</span><b>'+AM_fmt(total)+'/day</b></div>';
-      h+='<div class="kv"><span>'+AM_icon('day','kv-ico')+' Last day charged</span><b>'+AM_fmt(S.am.lastCost)+'</b></div>';
-      h+='<div class="kv"><span>'+AM_icon('star','kv-ico')+' Your rank</span><b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b></div></div>';
+      var h='<div class="ge-screen">'+AM_screenHead();
+      h+='<div class="ge-card"><div class="ge-card-head"><h3>'+AM_icon('equipment','ge-ic-lg')+'FLEET STATUS</h3></div>';
+      h+=PF_kv(AM_icon('equipment','ge-ic-sm')+' Systems online','<b class="ge-num">'+online+' / '+AM_ORDER.length+'</b>');
+      h+=PF_kv(AM_icon('cash','ge-ic-sm')+' Operating cost (active)','<b class="ge-num">'+AM_fmt(total)+'/day</b>');
+      h+=PF_kv(AM_icon('day','ge-ic-sm')+' Last day charged','<b class="ge-num">'+AM_fmt(S.am.lastCost)+'</b>');
+      h+=PF_kv(AM_icon('star','ge-ic-sm')+' Your rank','<b>'+AM_esc(AM_rankName(AM_rankIdx()))+'</b>')+'</div>';
       if(S.am.notes&&S.am.notes.length){
-        h+='<div class="card am-notes"><b>Last day report</b><ul>';
+        h+='<div class="ge-card"><div class="ge-card-head"><h3>'+AM_icon('scroll','ge-ic-lg')+'LAST DAY REPORT</h3></div><ul class="ge-notes">';
         S.am.notes.forEach(function(n){ h+='<li>'+n+'</li>'; });
         h+='</ul></div>';
       }
-      h+='<div class="am-grid">';
+      h+='<div class="ge-am-grid">';
       AM_ORDER.forEach(function(k){ h+=AM_cardHTML(k); });
       h+='</div>';
-      h+='<p class="muted" style="text-align:center">Automation is earned: each system unlocks at a tycoon rank, costs cash to install, and bills operating costs every day it runs. If cash runs short, systems pause — still armed, still yours.</p>';
+      h+='<p class="ge-caption ge-muted ge-center">Automation is earned: each system unlocks at a tycoon rank, costs cash to install, and bills operating costs every day it runs. If cash runs short, systems pause — still armed, still yours.</p>';
+      h+='</div>';
       r.innerHTML=h;
       AM_wireAutomation(r);
     };
   }
 }catch(e){}
+
 
 function AM_wireAutomation(root){
   if(!root) return;
@@ -7539,13 +7982,14 @@ function AM_wireAutomation(root){
       sel.onchange=function(){
         var st=AM_sysState('manager'); if(!st) return;
         st.empId=sel.value||null;
-        AM_toast(st.empId?'\uD83D\uDCBC Supervisor assigned.':'\uD83D\uDCBC Supervisor removed.');
+        AM_toast(AM_icon('users','ge-ic-md')+(st.empId?' Supervisor assigned.':' Supervisor removed.'));
         AM_save();
         try{ if(typeof RENDER!=='undefined'&&RENDER.automation) RENDER.automation(); }catch(e){}
       };
     });
   }catch(e){}
 }
+
 
 /* auto-register on load (idempotent; parent may also call AM_init() later) */
 try{ AM_init(); }catch(e){}
@@ -7833,7 +8277,7 @@ function MN_grantUnlocks() {
     if (!key || typeof key !== 'string') return;
     if (MN_completed(m.id) && !s.mn.unlocks[key]) {
       s.mn.unlocks[key] = true;
-      try { if (typeof toast === 'function') toast('🔓 System unlocked by <b>' + m.name + '</b>'); } catch (e) {}
+      try { if (typeof toast === 'function') toast(icon('check','ge-ic-md')+' System unlocked by <b>' + m.name + '</b>'); } catch (e) {}
     }
   });
 }
@@ -7850,17 +8294,23 @@ function MN_timedHTML(m) {
     if (a) {
       const di = MN_dayIn(m.id);
       const left = Math.max(0, days - di + 1);
-      return '<div class="mn-timer">⏱️ <b>MISSION DAY ' + di + '/' + days + '</b>' +
-        '<span class="muted"> — ' + left + ' DAY' + (left === 1 ? '' : 'S') + ' REMAINING</span></div>';
+      const urgent = left<=2;
+      return '<div class="ms-timer'+(urgent?' ms-urgent':'')+'">'+icon('clock','ge-ic-md')+
+        '<b class="ge-data">MISSION DAY '+di+'/'+days+'</b>'+
+        '<span class="ms-left'+(urgent?' is-hot':'')+'">'+left+' DAY'+(left===1?'':'S')+' REMAINING</span>'+
+        '<div class="ge-progress ge-progress-thin'+(urgent?' ge-progress-bad':'')+'"><i style="width:'+Math.round(di/Math.max(1,days)*100)+'%"></i></div></div>';
     }
     if (MN_failed(m.id)) {
-      return '<div class="mn-timer mn-failed"><span class="muted">❌ Expired — retry when ready.</span> ' +
-        '<button class="btn btn-gold" data-mn-start="' + m.id + '">RETRY MISSION</button></div>';
+      return '<div class="ms-timer ms-failed">'+icon('x','ge-ic-md')+
+        '<span class="ge-muted">Expired \u2014 retry when ready.</span>'+
+        '<button class="ge-btn ge-btn-gold ge-btn-block" data-mn-start="'+m.id+'">RETRY MISSION</button></div>';
     }
-    return '<div class="mn-timer"><button class="btn btn-primary" data-mn-start="' + m.id + '">⏱️ START MISSION</button>' +
-      '<span class="muted"> ' + days + '-day timed mission. Progress only counts after you start.</span></div>';
+    return '<div class="ms-timer">'+icon('clock','ge-ic-md')+
+      '<button class="ge-btn ge-btn-primary ge-btn-block" data-mn-start="'+m.id+'">START MISSION</button>'+
+      '<span class="ge-muted">'+days+'-day timed mission. Progress only counts after you start.</span></div>';
   } catch (e) { return ''; }
 }
+
 /* Parent: call MN_wireMissions(cardRoot) after setting innerHTML in
    RENDER.missions so START/RETRY buttons work. */
 function MN_wireMissions(root) {
@@ -8307,7 +8757,7 @@ function CT_checkout(custId){
   if(cust.visits>=3&&cust.loyalty>=60&&!S.ct.regulars.find(r=>r.name===cust.name)){
     S.ct.regulars.push({name:cust.name,type:cust.type,favStrains:cust.favStrains.slice(),
       visits:cust.visits,avgSpend:Math.round(cust.spent/cust.visits),loyalty:Math.round(cust.loyalty),sinceDay:CT_int(S.day,1)});
-    CT_toast('⭐ '+CT_esc(cust.name)+' is now a REGULAR customer!');
+    CT_toast(CT_icon('star','ge-ic-md')+' '+CT_esc(cust.name)+' is now a REGULAR customer!');
   }
   try{ if(typeof gainRep==='function'&&total>200) gainRep(1); }catch(e){}
   try{ if(typeof checkMissions==='function') checkMissions(); }catch(e){}
@@ -8316,9 +8766,10 @@ function CT_checkout(custId){
   try{ if(typeof updateHUD==='function') updateHUD(); }catch(e){}
   /* remove customer from active list */
   S.ct.customers=S.ct.customers.filter(c=>c.id!==custId);
-  CT_toast('💰 Sale: '+CT_fmt(total)+' ('+cart.items.length+' items)');
+  CT_toast(CT_icon('cash','ge-ic-md')+' Sale: '+CT_fmt(total)+' ('+cart.items.length+' items)');
   return true;
 }
+
 function CT_abandon(cust,reason){
   const S=CT_S(); if(!S) return;
   CT_migrate();
@@ -8367,35 +8818,50 @@ function CT_dispensaryHTML(){
   CT_migrate();
   const st=S.ct.stats;
   const avg=st.completed?Math.round(st.revenue/st.completed):0;
-  let html='<div class="card ct-panel"><h3>'+CT_icon('customers','ic-lg')+'CUSTOMER TRAFFIC</h3>'+
-    '<div class="kv"><span>Customers today</span><b>'+S.ct.servedToday+'</b></div>'+
-    '<div class="kv"><span>Completed carts</span><b>'+st.completed+'</b></div>'+
-    '<div class="kv"><span>Abandoned carts</span><b>'+st.abandoned+'</b></div>'+
-    '<div class="kv"><span>Avg cart value</span><b>'+CT_fmt(avg)+'</b></div>'+
-    '<div class="kv"><span>Lost sales (stockouts)</span><b>'+CT_fmt(st.lostSales)+'</b></div>'+
-    '<div class="kv"><span>Regulars</span><b>'+S.ct.regulars.length+'</b></div></div>';
+  let html=DP_sectionTitle('customers','CUSTOMER TRAFFIC','<span class="ge-num">'+S.ct.servedToday+'</span> SERVED TODAY');
+  html+='<div class="ge-dp-metrics">'+
+   DP_metricTile('customers',S.ct.servedToday,'SERVED TODAY','at the counter')+
+   DP_metricTile('cart',st.completed,'COMPLETED CARTS','lifetime')+
+   DP_metricTile('x',st.abandoned,'ABANDONED','walkouts')+
+   DP_metricTile('cash',CT_fmt(avg),'AVG CART VALUE','per order')+
+   DP_metricTile('box',CT_fmt(st.lostSales),'LOST SALES','stockouts')+
+   DP_metricTile('star',S.ct.regulars.length,'REGULARS','loyal customers')+
+  '</div>';
   if(S.ct.customers.length){
-    html+='<div class="card"><h3>'+CT_icon('cart','ic')+'WAITING CUSTOMERS ('+S.ct.customers.length+')</h3>';
-    S.ct.customers.slice(0,6).forEach(c=>{
+    html+=DP_sectionTitle('cart','ORDER QUEUE','<span class="ge-num">'+S.ct.customers.length+'</span> WAITING');
+    S.ct.customers.slice(0,6).forEach((c,idx)=>{
       const cart=c.cart||{items:[],subtotal:0};
-      html+='<div class="ct-cust"><div class="kv"><span><b>'+CT_esc(c.name)+'</b> <span class="tag">'+c.type+'</span></span><b>'+CT_fmt(c.budget)+' budget</b></div>';
+      html+='<div class="ge-card ge-card-hot ge-dp-cust">'+
+       '<div class="ge-card-head"><h3><span class="ge-dp-cnum ge-num">CUSTOMER #'+(idx+1)+'</span> '+CT_esc(c.name)+'</h3>'+
+       '<span class="ge-pill ge-pill-neutral">'+CT_esc(String(c.type).toUpperCase())+'</span></div>'+
+       '<div class="ge-dp-prefs">'+
+        '<span class="ge-pill ge-pill-neutral">'+CT_icon('terp','ge-ic-sm')+' '+CT_esc(String(c.potPref||'med').toUpperCase())+' POTENCY</span>'+
+        '<span class="ge-pill ge-pill-neutral">'+CT_esc(String(c.flavorPref||'—').toUpperCase())+' FLAVOR</span>'+
+        '<span class="ge-pill ge-pill-neutral">MIN Q'+CT_int(c.minQuality,0)+'</span>'+
+        '<span class="ge-pill ge-pill-neutral">'+CT_icon('wallet','ge-ic-sm')+' '+CT_fmt(c.budget)+'</span>'+
+       '</div>';
       if(cart.items.length){
-        html+=cart.items.map(ci=>'<div class="kv"><span>'+CT_esc(ci.strainName)+' — '+(ci.qtyLabel||(ci.qty+' oz'))+'</span><b>'+CT_fmt(ci.qty*ci.price)+'</b></div>').join('');
-        html+='<div class="kv"><span>SUBTOTAL</span><b>'+CT_fmt(cart.subtotal)+'</b></div>';
-        html+='<button class="btn btn-small btn-green" data-ct-checkout="'+c.id+'">'+CT_icon('sell','b-ico')+'CHECKOUT '+CT_fmt(cart.subtotal)+'</button>';
+        html+='<div class="ge-dp-lines">'+cart.items.map(ci=>'<div class="ge-datarow"><span>'+CT_esc(ci.strainName)+'<br><span class="ge-muted ge-caption">'+(ci.qtyLabel||(ci.qty+' oz'))+'</span></span><b class="ge-num">'+CT_fmt(ci.qty*ci.price)+'</b></div>').join('')+'</div>';
+        html+='<div class="ge-spread ge-dp-total"><span class="ge-label">SUBTOTAL</span><b class="ge-num ge-data">'+CT_fmt(cart.subtotal)+'</b></div>';
+        html+='<button class="ge-btn ge-btn-primary ge-btn-block" data-ct-checkout="'+c.id+'">'+CT_icon('cart','ge-ic-md')+'CHECKOUT '+CT_fmt(cart.subtotal)+'</button>';
+        html+='<div class="ge-dp-trust"><div class="ge-dp-trustrow"><span class="ge-caption ge-muted">SAT '+CT_clamp(c.satisfaction,0,100)+'%</span>'+
+         '<div class="ge-progress ge-progress-thin ge-progress-ok"><i style="width:'+CT_clamp(c.satisfaction,0,100)+'%"></i></div></div>'+
+         '<div class="ge-dp-trustrow"><span class="ge-caption ge-muted">LOYALTY '+CT_clamp(c.loyalty,0,100)+'%</span>'+
+         '<div class="ge-progress ge-progress-thin ge-progress-ok"><i style="width:'+CT_clamp(c.loyalty,0,100)+'%"></i></div></div></div>';
       } else {
-        html+='<p class="muted">Browsing — no match for preferences.</p><button class="btn btn-small" data-ct-dismiss="'+c.id+'">DISMISS</button>';
+        html+='<div class="ge-empty ge-dp-browse">'+CT_icon('search','ge-ic-xl')+'<h3>BROWSING</h3><p>No match for this customer\u2019s preferences.</p></div>'+
+         '<button class="ge-btn ge-btn-ghost ge-btn-block" data-ct-dismiss="'+c.id+'">DISMISS</button>';
       }
       html+='</div>';
     });
-    html+='</div>';
   }
   if(S.ct.regulars.length){
-    html+='<div class="card"><h3>'+CT_icon('star','ic')+'REGULARS ('+S.ct.regulars.length+')</h3>'+
-      S.ct.regulars.slice(0,8).map(r=>'<div class="kv"><span>⭐ '+CT_esc(r.name)+'<br><span class="muted">'+r.visits+' visits • avg '+CT_fmt(r.avgSpend)+'</span></span><b>'+r.loyalty+'% loyal</b></div>').join('')+'</div>';
+    html+=DP_sectionTitle('star','REGULARS','<span class="ge-num">'+S.ct.regulars.length+'</span>');
+    html+='<div class="ge-card ge-card-flat">'+S.ct.regulars.slice(0,8).map(r=>'<div class="ge-datarow"><span>'+CT_icon('star','ge-ic-sm')+' '+CT_esc(r.name)+'<br><span class="ge-muted ge-caption">'+r.visits+' visits • avg '+CT_fmt(r.avgSpend)+'</span></span><b class="ge-num">'+r.loyalty+'%</b></div>').join('')+'</div>';
   }
   return html;
 }
+
 function CT_wireDispensary(r){
   if(!r||!r.querySelectorAll) return;
   r.querySelectorAll('[data-ct-checkout]').forEach(b=>b.onclick=()=>{
@@ -8468,48 +8934,50 @@ function NX_showLogin(){
   show('login'); NX_renderLogin();
 }
 function NX_loginShell(inner){
-  return '<div class="nx-login-bg"><div class="nx-smoke s1"></div><div class="nx-smoke s2"></div><div class="nx-scan"></div></div>'+
-  '<div class="nx-login-term"><div class="nx-term-head">'+icon('gasmask','nx-term-ico')+'<span>SECURE TERMINAL // GROW EMPIRE ID</span><span class="nx-term-dot"></span></div>'+
-  '<div class="nx-login-brand"><div class="logo-text display">GROW EMPIRE</div><div class="tagline dim gold-tag">GROW LIKE YOU OWN THE SHOW.</div>'+
-  '<div class="tagline">SHOCKER OWNZ // PROJECT 0</div></div>'+inner+
-  '<p class="nx-local-note">'+icon('lock','kv-ico')+' LOCAL PROFILES — stored on this device only. No server. No cloud sync.</p></div>';
+  return '<div class="ge-term-bg" aria-hidden="true"><div class="ge-term-smoke s1"></div><div class="ge-term-smoke s2"></div><div class="ge-term-scan"></div></div>'+
+  '<div class="ge-term ge-anim-rise"><div class="ge-term-head">'+icon('gasmask','ge-ic-md')+'<span>SECURE TERMINAL // GROW EMPIRE ID</span><span class="ge-term-dot"></span></div>'+
+  '<div class="ge-term-brand"><div class="ge-display">GROW EMPIRE</div><div class="ge-label ge-gold-text">GROW LIKE YOU OWN THE SHOW.</div>'+
+  '<div class="ge-caption ge-muted">SHOCKER OWNZ // PROJECT 0</div></div>'+inner+
+  '<p class="ge-term-local">'+icon('lock','ge-ic-sm')+' LOCAL PROFILES — stored on this device only. No server. No cloud sync.</p></div>';
 }
+
 function NX_renderLogin(){
   const r=$('login-root'); if(!r) return;
   const last=NX_lastSessionInfo();
   let inner='';
   if(NX_loginMode==='main'){
-    inner='<div class="nx-login-btns">'+
-     '<button class="btn btn-primary btn-big" id="nx-b-login">LOGIN</button>'+
-     '<button class="btn btn-big" id="nx-b-create">CREATE ACCOUNT</button>'+
-     '<button class="btn btn-big" id="nx-b-guest">PLAY AS GUEST</button>'+
-     (last?'<button class="btn btn-gold btn-big" id="nx-b-last">CONTINUE LAST SESSION<br><span class="muted">'+esc(last.name)+' — DAY '+last.day+'</span></button>':'')+
-     '</div><label class="nx-check"><input type="checkbox" id="nx-remember" checked> <span>Remember Me</span></label>'+
-     '<p class="nx-link" id="nx-b-forgot">Forgot Password?</p>';
+    inner='<div class="ge-stack">'+
+     '<button class="ge-btn ge-btn-primary ge-btn-block" id="nx-b-login">LOGIN</button>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-block" id="nx-b-create">CREATE ACCOUNT</button>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-block" id="nx-b-guest">PLAY AS GUEST</button>'+
+     (last?'<button class="ge-btn ge-btn-gold ge-btn-block" id="nx-b-last">CONTINUE LAST SESSION<br><span class="ge-caption">'+esc(last.name)+' — DAY '+last.day+'</span></button>':'')+
+     '</div><label class="ge-check"><input type="checkbox" id="nx-remember" checked> <span>Remember Me</span></label>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-block" id="nx-b-forgot">FORGOT PASSWORD?</button>';
   } else if(NX_loginMode==='login'){
-    inner='<h3>LOGIN</h3><input class="nx-in" id="nx-f-user" placeholder="Username" autocomplete="username">'+
-     '<input class="nx-in" id="nx-f-pass" type="password" placeholder="Password" autocomplete="current-password">'+
-     '<label class="nx-check"><input type="checkbox" id="nx-remember2" checked> <span>Remember Me</span></label>'+
-     '<div class="btn-row"><button class="btn" id="nx-b-back">BACK</button><button class="btn btn-primary" id="nx-do-login">ENTER</button></div>';
+    inner='<h3 class="ge-h2">LOGIN</h3><input class="ge-input" id="nx-f-user" placeholder="Username" autocomplete="username">'+
+     '<input class="ge-input" id="nx-f-pass" type="password" placeholder="Password" autocomplete="current-password">'+
+     '<label class="ge-check"><input type="checkbox" id="nx-remember2" checked> <span>Remember Me</span></label>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-primary" id="nx-do-login">ENTER</button></div>';
   } else if(NX_loginMode==='create'){
-    inner='<h3>CREATE GROW EMPIRE ID</h3>'+
-     '<input class="nx-in" id="nx-c-user" placeholder="Username" autocomplete="username">'+
-     '<input class="nx-in" id="nx-c-grower" placeholder="Grower Name (callsign)">'+
-     '<input class="nx-in" id="nx-c-email" placeholder="Email" autocomplete="email">'+
-     '<input class="nx-in" id="nx-c-pass" type="password" placeholder="Password" autocomplete="new-password">'+
-     '<input class="nx-in" id="nx-c-pass2" type="password" placeholder="Confirm Password" autocomplete="new-password">'+
-     '<p class="muted">Password is obscured and stored on this device only (demo-grade).</p>'+
-     '<div class="btn-row"><button class="btn" id="nx-b-back">BACK</button><button class="btn btn-gold" id="nx-do-create">CREATE ID</button></div>';
+    inner='<h3 class="ge-h2">CREATE GROW EMPIRE ID</h3>'+
+     '<input class="ge-input" id="nx-c-user" placeholder="Username" autocomplete="username">'+
+     '<input class="ge-input" id="nx-c-grower" placeholder="Grower Name (callsign)">'+
+     '<input class="ge-input" id="nx-c-email" placeholder="Email" autocomplete="email">'+
+     '<input class="ge-input" id="nx-c-pass" type="password" placeholder="Password" autocomplete="new-password">'+
+     '<input class="ge-input" id="nx-c-pass2" type="password" placeholder="Confirm Password" autocomplete="new-password">'+
+     '<p class="ge-caption ge-muted">Password is obscured and stored on this device only (demo-grade).</p>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-gold" id="nx-do-create">CREATE ID</button></div>';
   } else if(NX_loginMode==='forgot'){
-    inner='<h3>RESET LOCAL PASSWORD</h3><p class="muted">Local reset — no email is sent. Enter the account email to set a new password on this device.</p>'+
-     '<input class="nx-in" id="nx-f-email" placeholder="Account Email">'+
-     '<input class="nx-in" id="nx-f-new" type="password" placeholder="New Password" autocomplete="new-password">'+
-     '<input class="nx-in" id="nx-f-new2" type="password" placeholder="Confirm New Password" autocomplete="new-password">'+
-     '<div class="btn-row"><button class="btn" id="nx-b-back">BACK</button><button class="btn btn-primary" id="nx-do-reset">RESET</button></div>';
+    inner='<h3 class="ge-h2">RESET LOCAL PASSWORD</h3><p class="ge-caption ge-muted">Local reset — no email is sent. Enter the account email to set a new password on this device.</p>'+
+     '<input class="ge-input" id="nx-f-email" placeholder="Account Email">'+
+     '<input class="ge-input" id="nx-f-new" type="password" placeholder="New Password" autocomplete="new-password">'+
+     '<input class="ge-input" id="nx-f-new2" type="password" placeholder="Confirm New Password" autocomplete="new-password">'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-b-back">BACK</button><button class="ge-btn ge-btn-primary" id="nx-do-reset">RESET</button></div>';
   }
   r.innerHTML=NX_loginShell(inner);
   NX_wireLogin();
 }
+
 function NX_wireLogin(){
   const on=(id,fn)=>{ const e=$(id); if(e) e.onclick=fn; };
   on('nx-b-login',()=>{ NX_loginMode='login'; NX_renderLogin(); });
@@ -8520,30 +8988,30 @@ function NX_wireLogin(){
   on('nx-do-login',()=>{
     const u=($('nx-f-user').value||'').trim().toLowerCase(), pw=$('nx-f-pass').value||'';
     const p=NX_profiles().find(x=>x.username.toLowerCase()===u);
-    if(!p||p.pw!==NX_hash(pw)){ toast('❌ Invalid username or password.'); return; }
+    if(!p||p.pw!==NX_hash(pw)){ toast(icon('x','ge-ic-md')+' Invalid username or password.'); return; }
     p.lastPlayed=Date.now(); NX_saveProfiles(NX_profiles());
     NX_afterAuth(p.id,$('nx-remember2')&&$('nx-remember2').checked);
   });
   on('nx-do-create',()=>{
     const u=($('nx-c-user').value||'').trim(), g=($('nx-c-grower').value||'').trim()||u,
           em=($('nx-c-email').value||'').trim(), p1=$('nx-c-pass').value||'', p2=$('nx-c-pass2').value||'';
-    if(u.length<3){ toast('❌ Username needs 3+ characters.'); return; }
-    if(p1.length<4){ toast('❌ Password needs 4+ characters.'); return; }
-    if(p1!==p2){ toast('❌ Passwords do not match.'); return; }
+    if(u.length<3){ toast(icon('x','ge-ic-md')+' Username needs 3+ characters.'); return; }
+    if(p1.length<4){ toast(icon('x','ge-ic-md')+' Password needs 4+ characters.'); return; }
+    if(p1!==p2){ toast(icon('x','ge-ic-md')+' Passwords do not match.'); return; }
     const profs=NX_profiles();
-    if(profs.some(x=>x.username.toLowerCase()===u.toLowerCase())){ toast('❌ Username taken on this device.'); return; }
+    if(profs.some(x=>x.username.toLowerCase()===u.toLowerCase())){ toast(icon('x','ge-ic-md')+' Username taken on this device.'); return; }
     const np={id:'p'+Date.now().toString(36),username:u,grower:g,email:em,pw:NX_hash(p1),created:Date.now(),lastPlayed:Date.now()};
     profs.push(np); NX_saveProfiles(profs);
-    toast('🪪 Grow Empire ID created: '+esc(u));
+    toast(icon('star','ge-ic-md')+' Grow Empire ID created: '+esc(u));
     NX_afterAuth(np.id,true);
   });
   on('nx-do-reset',()=>{
     const em=($('nx-f-email').value||'').trim().toLowerCase(), p1=$('nx-f-new').value||'', p2=$('nx-f-new2').value||'';
     const profs=NX_profiles(); const p=profs.find(x=>(x.email||'').toLowerCase()===em);
-    if(!p){ toast('❌ No local account with that email.'); return; }
-    if(p1.length<4||p1!==p2){ toast('❌ Passwords must match (4+ chars).'); return; }
+    if(!p){ toast(icon('x','ge-ic-md')+' No local account with that email.'); return; }
+    if(p1.length<4||p1!==p2){ toast(icon('x','ge-ic-md')+' Passwords must match (4+ chars).'); return; }
     p.pw=NX_hash(p1); NX_saveProfiles(profs);
-    toast('✅ Password reset on this device.');
+    toast(icon('check','ge-ic-md')+' Password reset on this device.');
     NX_loginMode='login'; NX_renderLogin();
   });
   on('nx-b-last',()=>{
@@ -8552,6 +9020,7 @@ function NX_wireLogin(){
   });
   on('nx-b-guest',()=>{ NX_afterAuth('guest',($('nx-remember')&&$('nx-remember').checked)); });
 }
+
 function NX_afterAuth(pid,remember){
   NX_setActive(pid); NX_setSession(pid,remember!==false);
   try{ if(typeof NX_bootOrig==='function') NX_bootOrig(); }catch(e){}
@@ -8619,22 +9088,24 @@ RENDER.welcome=function(){
   const s=w.sum, prof=NX_activeProfile();
   const grower=prof?prof.grower:'GUEST';
   let rank='STREET ROOKIE'; try{ rank=TY_rankName(); }catch(e){}
-  r.innerHTML='<div class="nx-login-bg"><div class="nx-smoke s1"></div><div class="nx-scan"></div></div>'+
-  '<div class="nx-welcome"><div class="display nx-w-title">WELCOME BACK</div>'+
-  '<div class="nx-w-name">'+esc(grower)+'</div>'+
-  '<div class="nx-w-sub">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
-  '<div class="nx-w-off">Offline: '+NX_fmtElapsed(w.elapsed)+' ('+w.days+' game day'+(w.days>1?'s':'')+')</div>'+
-  '<p class="muted">YOUR EMPIRE CONTINUED WHILE YOU WERE AWAY</p>'+
-  '<div class="card nx-w-card">'+
-   '<div class="kv"><span>🌱 Plants progressed</span><b>'+s.grown+'</b></div>'+
-   '<div class="kv"><span>💧 Irrigation cycles</span><b>'+s.irr+'</b></div>'+
-   '<div class="kv"><span>🛒 Dispensary orders filled</span><b>'+s.orders+'</b></div>'+
-   '<div class="kv"><span>💰 Revenue generated</span><b>'+fmt$(s.rev)+'</b></div>'+
-   (s.attn?'<div class="kv warn"><span>⚠️ Plants need attention</span><b>'+s.attn+'</b></div><p class="muted">'+s.attnNames.map(esc).join(', ')+(s.attn>3?'…':'')+'</p>':'<div class="kv"><span>✅ Everything stable</span><b>—</b></div>')+
-  '</div><p class="muted">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
-  '<button class="btn btn-primary btn-big" id="nx-enter">ENTER EMPIRE</button></div>';
+  r.innerHTML='<div class="ge-term-bg" aria-hidden="true"><div class="ge-term-smoke s1"></div><div class="ge-term-scan"></div></div>'+
+  '<div class="ge-welcome ge-anim-rise"><div class="ge-display ge-w-title">WELCOME BACK</div>'+
+  '<div class="ge-w-name">'+esc(grower)+'</div>'+
+  '<div class="ge-w-sub">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
+  '<div class="ge-label ge-muted">Offline: '+NX_fmtElapsed(w.elapsed)+' ('+w.days+' game day'+(w.days>1?'s':'')+')</div>'+
+  '<p class="ge-label ge-gold-text">YOUR EMPIRE CONTINUED WHILE YOU WERE AWAY</p>'+
+  '<div class="ge-card">'+
+   PF_kv(icon('grow','ge-ic-sm')+' Plants progressed','<b class="ge-num">'+s.grown+'</b>')+
+   PF_kv(icon('water','ge-ic-sm')+' Irrigation cycles','<b class="ge-num">'+s.irr+'</b>')+
+   PF_kv(icon('cart','ge-ic-sm')+' Dispensary orders filled','<b class="ge-num">'+s.orders+'</b>')+
+   PF_kv(icon('cash','ge-ic-sm')+' Revenue generated','<b class="ge-num">'+fmt$(s.rev)+'</b>')+
+   (s.attn?PF_kv(icon('warn','ge-ic-sm')+' Plants need attention','<b class="ge-num ge-red">'+s.attn+'</b>')+'<p class="ge-caption ge-muted">'+s.attnNames.map(esc).join(', ')+(s.attn>3?'…':'')+'</p>'
+    :PF_kv(icon('check','ge-ic-sm')+' Everything stable','<b>—</b>'))+
+  '</div><p class="ge-caption ge-muted ge-center">Automation protected your automated rooms. Nothing died while you were gone.</p>'+
+  '<button class="ge-btn ge-btn-primary ge-btn-block" id="nx-enter">ENTER EMPIRE</button></div>';
   $('nx-enter').onclick=()=>{ NX_welcome=null; show('splash'); };
 };
+
 function NX_activeProfile(){
   if(!NX_KEY||NX_KEY==='soge_save_v1') return null;
   const pid=NX_KEY.replace('soge_save_v1_','');
@@ -8676,19 +9147,24 @@ RENDER.notifs=function(){
   const r=$('notifs-root'); if(!r) return;
   NX_ensureNx();
   const list=S.nx.notifs;
-  let html=screenHead('warn','NOTIFICATION CENTER')+
-   '<div class="btn-row"><button class="btn btn-small" id="nx-nr">'+icon('check','b-ico')+'MARK ALL READ</button><button class="btn btn-small btn-danger" id="nx-nc">CLEAR</button></div>';
-  if(!list.length) html+='<div class="card"><p class="muted">No notifications yet. Your empire will report here.</p></div>';
+  let html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+
+    icon('x','ge-ic-md')+'<span>MENU</span></button>'+
+   '<h2 class="ge-screenhead-title">'+icon('warn','ge-ic-lg')+'NOTIFICATION CENTER</h2></div>'+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-nr">'+icon('check','ge-ic-md')+'MARK ALL READ</button><button class="ge-btn ge-btn-danger" id="nx-nc">'+icon('x','ge-ic-md')+'CLEAR</button></div>';
+  if(!list.length) html+='<div class="ge-empty">'+icon('warn','ge-ic-xl')+'<h3>ALL QUIET</h3><p>No notifications yet. Your empire will report here.</p></div>';
   list.forEach((n,i)=>{
-    html+='<button class="nx-notif'+(n.read?' read':'')+'" data-ni="'+i+'"><span class="nx-n-ico">'+icon(NX_CAT_ICO[n.cat]||'star','ic')+'</span>'+
-     '<span class="nx-n-body"><span class="nx-n-msg">'+n.msg+'</span><span class="nx-n-meta">Day '+n.day+' • TAP TO VIEW</span></span>'+
-     (n.read?'':'<span class="nx-unread"></span>')+'</button>';
+    html+='<button class="ge-notif'+(n.read?' is-read':'')+'" data-ni="'+i+'"><span class="ge-notif-ico">'+icon(NX_CAT_ICO[n.cat]||'star','ge-ic-md')+'</span>'+
+     '<span class="ge-notif-body"><span class="ge-notif-msg">'+n.msg+'</span><span class="ge-notif-meta ge-caption ge-muted">Day '+n.day+' • TAP TO VIEW</span></span>'+
+     (n.read?'':'<span class="ge-unread"></span>')+'</button>';
   });
+  html+='</div>';
   r.innerHTML=html;
   $('nx-nr').onclick=()=>{ list.forEach(n=>n.read=true); S.nx.unread=0; save(); RENDER.notifs(); };
   $('nx-nc').onclick=()=>{ S.nx.notifs=[]; S.nx.unread=0; save(); RENDER.notifs(); };
   r.querySelectorAll('[data-ni]').forEach(b=>b.onclick=()=>{ const n=list[int(b.dataset.ni,0)]; if(n){ n.read=true; S.nx.unread=Math.max(0,int(S.nx.unread,0)-1); save(); if(n.screen&&SCREENS.includes(n.screen)) show(n.screen); } });
 };
+
 
 /* ---------------- EMPIRE SAVED (subtle, throttled) ---------------- */
 let NX_lastSavedToast=0;
@@ -8696,8 +9172,9 @@ function NX_saved(){
   const now=Date.now();
   if(now-NX_lastSavedToast<90000) return;
   NX_lastSavedToast=now;
-  try{ toast('💾 EMPIRE SAVED'); }catch(e){}
+  try{ toast(icon('check','ge-ic-md')+' EMPIRE SAVED'); }catch(e){}
 }
+
 
 /* ---------------- nx state ---------------- */
 function NX_ensureNx(){
@@ -8761,39 +9238,49 @@ RENDER.profile=function(){
   let rank='STREET ROOKIE'; try{ rank=TY_rankName(); }catch(e){}
   const earned=NX_earnedTitles();
   const disp=S.nx.displayTitle||rank;
-  const stars='★'.repeat(NX_repStars())+'☆'.repeat(5-NX_repStars());
-  let html=screenHead('star','GROWER PROFILE')+
-  '<div class="nx-prof-hero"><div class="nx-prof-mask">'+icon('gasmask','ic-xl')+'</div>'+
-   '<div class="nx-prof-name display">'+esc(grower)+'</div>'+
-   '<div class="nx-prof-title gold-tag">'+esc(disp)+'</div>'+
-   '<div class="nx-prof-sub">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
-   '<div class="nx-prof-stars">'+stars+'</div></div>'+
-  '<div class="card"><h3>'+icon('empire','ic-lg')+'EMPIRE RECORD</h3>'+
-   '<div class="kv"><span>'+icon('cash','kv-ico')+'Empire value</span><b>'+fmt$(NX_empireValue())+'</b></div>'+
-   '<div class="kv"><span>'+icon('harvest','kv-ico')+'Plants harvested</span><b>'+num(S.stats.harvests,0)+'</b></div>'+
-   '<div class="kv"><span>'+icon('harvest','kv-ico')+'Lifetime harvest</span><b>'+(num(S.stats.lifetimeHarvestOz,0)/16).toFixed(1)+' lbs</b></div>'+
-   '<div class="kv"><span>'+icon('keepers','kv-ico')+'Keeper genetics</span><b>'+S.keepers.length+'</b></div>'+
-   '<div class="kv"><span>'+icon('genetics','kv-ico')+'Strains created</span><b>'+(S.customStrains||[]).length+'</b></div>'+
-   '<div class="kv"><span>'+icon('star','kv-ico')+'Highest potency</span><b>'+NX_bestPotency()+'%</b></div>'+
-   '<div class="kv"><span>'+icon('harvest','kv-ico')+'Best yield</span><b>'+num(S.stats.biggestHarvest,0).toFixed(1)+' oz</b></div>'+
-   '<div class="kv"><span>'+icon('dispensary','kv-ico')+'Dispensary revenue</span><b>'+fmt$(S.stats.lifetimeRevenue)+'</b></div></div>'+
-  '<div class="card"><h3>'+icon('trophy','ic-lg')+'TITLES ('+earned.length+'/'+NX_TITLES.length+')</h3><p class="muted">Tap an earned title to display it.</p><div class="nx-titles">';
+  const nStars=NX_repStars();
+  let stars=''; for(let i=0;i<5;i++) stars+='<span class="ge-star'+(i<nStars?' on':'')+'">'+icon('star','ge-ic-sm')+'</span>';
+  const ach=S.achievements||[];
+  let html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+
+    icon('x','ge-ic-md')+'<span>MENU</span></button>'+
+   '<h2 class="ge-screenhead-title">'+icon('star','ge-ic-lg')+'GROWER PROFILE</h2></div>'+
+  '<div class="ge-card ge-card-hot ge-dossier ge-anim-rise"><div class="ge-dossier-mask">'+icon('gasmask','ge-ic-xl')+'</div>'+
+   '<div class="ge-dossier-name ge-display">'+esc(grower)+'</div>'+
+   '<div class="ge-badge ge-badge-legendary">'+esc(disp)+'</div>'+
+   '<div class="ge-dossier-sub">'+esc(rank)+' — Level '+int(S.level,1)+'</div>'+
+   '<div class="ge-stars ge-dossier-stars">'+stars+'</div>'+
+   '<div class="ge-dossier-id"><div><span class="ge-label ge-muted">REP</span><b class="ge-num">'+int(S.reputation,0)+'</b></div>'+
+   '<div><span class="ge-label ge-muted">EMPIRE VALUE</span><b class="ge-num ge-gold-text">'+fmt$(NX_empireValue())+'</b></div></div></div>'+
+  '<div class="ge-section-title">EMPIRE RECORD</div><div class="ge-tiles ge-tiles-4">'+
+   PF_tile(icon('harvest','ge-ic-md'),'PLANTS HARVESTED',num(S.stats.harvests,0))+
+   PF_tile(icon('harvest','ge-ic-md'),'LIFETIME YIELD',(num(S.stats.lifetimeHarvestOz,0)/16).toFixed(1)+' lbs')+
+   PF_tile(icon('star','ge-ic-md'),'HIGHEST POTENCY',NX_bestPotency()+'%')+
+   PF_tile(icon('harvest','ge-ic-md'),'BEST YIELD',num(S.stats.biggestHarvest,0).toFixed(1)+' oz')+
+   PF_tile(icon('keepers','ge-ic-md'),'KEEPERS',S.keepers.length)+
+   PF_tile(icon('genetics','ge-ic-md'),'STRAINS CREATED',(S.customStrains||[]).length)+
+   PF_tile(icon('dispensary','ge-ic-md'),'DISPENSARY REVENUE',fmt$(S.stats.lifetimeRevenue))+
+   PF_tile(icon('trophy','ge-ic-md'),'ACHIEVEMENTS',S.achievements.length+'/'+ACHIEVEMENTS.length)+
+   PF_tile(icon('project0','ge-ic-md'),'PROJECT 0 SCORE',num(S.project0.points,0))+
+  '</div>'+
+  '<div class="ge-section-title">TITLES<span class="ge-spread ge-num">'+earned.length+'/'+NX_TITLES.length+'</span></div>'+
+  '<p class="ge-caption ge-muted">Tap an earned title to display it.</p><div class="ge-title-grid">';
   NX_TITLES.forEach(t=>{
     const has=earned.some(e=>e.id===t.id), sel=S.nx.displayTitle===t.name;
-    html+='<button class="nx-title'+(has?' has':'')+(sel?' sel':'')+'" data-title="'+t.id+'"'+(has?'':' disabled')+'>'+
-     '<b>'+esc(t.name)+'</b><span>'+esc(t.desc)+'</span>'+(has?icon('check','kv-ico'):icon('lock','kv-ico'))+'</button>';
+    html+='<button class="ge-title'+(has?' has':'')+(sel?' sel':'')+'" data-title="'+t.id+'"'+(has?'':' disabled')+'>'+
+     '<b>'+esc(t.name)+'</b><span class="ge-caption">'+esc(t.desc)+'</span>'+(has?icon('check','ge-ic-sm'):icon('lock','ge-ic-sm'))+'</button>';
   });
-  html+='</div></div>'+
-  '<div class="card"><h3>'+icon('trophy','ic-lg')+'ACHIEVEMENT SHOWCASE</h3>';
-  const ach=S.achievements||[];
-  html+=ach.length?'<div class="tags">'+ach.slice(-12).map(id=>'<span class="tag gold">'+esc(String(id))+'</span>').join('')+'</div>':'<p class="muted">No achievements yet — the grind awaits.</p>';
-  html+='</div>';
+  html+='</div>'+
+  '<div class="ge-section-title">ACHIEVEMENT SHOWCASE</div><div class="ge-card ge-card-flat">';
+  html+=ach.length?'<div class="ge-ach-tags">'+ach.slice(-12).map(id=>'<span class="ge-badge ge-badge-legendary">'+esc(String(id))+'</span>').join('')+'</div>':'<p class="ge-caption ge-muted">No achievements yet — the grind awaits.</p>';
+  html+='</div></div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{
     const t=NX_TITLES.find(x=>x.id===b.dataset.title);
-    if(t&&earned.some(e=>e.id===t.id)){ S.nx.displayTitle=t.name; save(); toast('👑 Title set: '+esc(t.name)); RENDER.profile(); }
+    if(t&&earned.some(e=>e.id===t.id)){ S.nx.displayTitle=t.name; save(); toast(icon('crown-gold','ge-ic-md')+' Title set: '+esc(t.name)); RENDER.profile(); }
   });
 };
+
 
 /* ---------------- automation tech tree ---------------- */
 const NX_TECH_TIERS=[
@@ -8824,29 +9311,34 @@ function NX_techNodeState(nd){
 }
 RENDER.techtree=function(){
   const r=$('techtree-root'); if(!r) return;
-  let html=screenHead('equipment','AUTOMATION TECH TREE')+'<p class="muted">Automation is earned, never given. Climb the tiers.</p><div class="nx-tree">';
+  let html='<div class="ge-screen">'+
+   '<div class="ge-screenhead"><button class="ge-screenhead-back" onclick="show(\'menu\')">'+
+    icon('x','ge-ic-md')+'<span>MENU</span></button>'+
+   '<h2 class="ge-screenhead-title">'+icon('equipment','ge-ic-lg')+'AUTOMATION TECH TREE</h2></div>'+
+   '<p class="ge-caption ge-muted">Automation is earned, never given. Climb the tiers.</p><div class="ge-tree">';
   NX_TECH_TIERS.forEach((tier,ti)=>{
-    html+='<div class="nx-tier"><div class="nx-tier-head"><span class="nx-tier-num">'+(ti+1)+'</span><div><b>'+tier.name+'</b><p>'+tier.desc+'</p></div></div><div class="nx-tier-nodes">';
+    html+='<div class="ge-tier"><div class="ge-tier-head"><span class="ge-tier-num">'+(ti+1)+'</span><div><b>'+tier.name+'</b><p class="ge-caption ge-muted">'+tier.desc+'</p></div></div><div class="ge-tier-nodes">';
     tier.nodes.forEach(nd=>{
       if(nd.am){
         const sys=AM_SYSTEMS[nd.id], info=NX_techNodeState(nd);
         const state=typeof info==='string'?info:info.state;
         const req=typeof info==='object'?('Requires: '+info.rankName+' • '+fmt$(sys.cost)):'';
-        html+='<div class="nx-node '+state+'"><span class="nx-node-ico">'+icon(sys.ico,'ic-lg')+'</span><div class="nx-node-body"><b>'+esc(sys.name)+'</b><p>'+esc(sys.desc)+'</p>'+
-         (state==='owned'?'<span class="badge green">INSTALLED</span>':state==='available'?'<span class="badge gold">AVAILABLE</span>':'<span class="badge">'+icon('lock','kv-ico')+' '+esc(req)+'</span>')+'</div>'+
-         (state==='available'?'<button class="btn btn-small btn-gold" data-buyam="'+nd.id+'">INSTALL — '+fmt$(sys.cost)+'</button>':'')+'</div>';
+        html+='<div class="ge-node '+state+'"><span class="ge-node-ico">'+icon(sys.ico,'ge-ic-lg')+'</span><div class="ge-node-body"><b>'+esc(sys.name)+'</b><p class="ge-caption ge-muted">'+esc(sys.desc)+'</p>'+
+         (state==='owned'?'<span class="ge-badge ge-badge-keeper">'+icon('check','ge-ic-sm')+'INSTALLED</span>':state==='available'?'<span class="ge-badge ge-badge-legendary">AVAILABLE</span>':'<span class="ge-badge">'+icon('lock','ge-ic-sm')+' '+esc(req)+'</span>')+'</div>'+
+         (state==='available'?'<button class="ge-btn ge-btn-gold" data-buyam="'+nd.id+'">INSTALL — '+fmt$(sys.cost)+'</button>':'')+'</div>';
       } else {
         const info=NX_techNodeState(nd), state=info.state;
-        html+='<div class="nx-node '+state+'"><span class="nx-node-ico">'+icon(nd.ico||'check','ic-lg')+'</span><div class="nx-node-body"><b>'+esc(nd.name)+'</b><p>'+esc(nd.desc)+'</p>'+
-         (state==='owned'?'<span class="badge green">MASTERED</span>':'<span class="badge">'+icon('lock','kv-ico')+' LEVEL '+nd.lvl+'</span>')+'</div></div>';
+        html+='<div class="ge-node '+state+'"><span class="ge-node-ico">'+icon(nd.ico||'check','ge-ic-lg')+'</span><div class="ge-node-body"><b>'+esc(nd.name)+'</b><p class="ge-caption ge-muted">'+esc(nd.desc)+'</p>'+
+         (state==='owned'?'<span class="ge-badge ge-badge-keeper">'+icon('check','ge-ic-sm')+'MASTERED</span>':'<span class="ge-badge">'+icon('lock','ge-ic-sm')+' LEVEL '+nd.lvl+'</span>')+'</div></div>';
       }
     });
-    html+='</div></div>'+(ti<NX_TECH_TIERS.length-1?'<div class="nx-tree-link"></div>':'');
+    html+='</div></div>'+(ti<NX_TECH_TIERS.length-1?'<div class="ge-tree-link"></div>':'');
   });
-  html+='</div><button class="btn" onclick="show(\'automation\')">OPEN CONTROL CENTER</button>';
+  html+='</div><button class="ge-btn ge-btn-block" onclick="show(\'automation\')">OPEN CONTROL CENTER</button></div>';
   r.innerHTML=html;
   r.querySelectorAll('[data-buyam]').forEach(b=>b.onclick=()=>{ if(AM_buy(b.dataset.buyam)){ NX_saved(); RENDER.techtree(); updateHUD(); } });
 };
+
 
 /* ---------------- keeper extras ---------------- */
 function NX_chime(){
@@ -8910,12 +9402,12 @@ function NX_keeperHistory(id){
 function NX_rerunKeeper(id){
   const k=NX_getKeeper(id); if(!k||!k.genetics) return;
   const st=getStrain(k.strainId);
-  if(!st||!isUnlocked(k.strainId)){ toast('❌ Strain not available.'); return; }
-  if(S.plants.length>=FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].slots){ toast('❌ No open plant slots.'); return; }
+  if(!st||!isUnlocked(k.strainId)){ toast(icon('x','ge-ic-md')+' Strain not available.'); return; }
+  if(S.plants.length>=FACILITIES[clamp(int(S.facility,0),0,FACILITIES.length-1)].slots){ toast(icon('x','ge-ic-md')+' No open plant slots.'); return; }
   const p=NX_makeKeeperPlant(k);
   S.plants.push(p); S.stats.plantsStarted++;
   save(); updateHUD();
-  toast('🌱 Rerunning '+esc(k.strainName)+' #'+k.phenoNum+' — same genetics, new run.');
+  toast(icon('grow','ge-ic-md')+' Rerunning '+esc(k.strainName)+' #'+k.phenoNum+' — same genetics, new run.');
   show('grow');
 }
 function NX_makeKeeperPlant(k){
@@ -8961,7 +9453,7 @@ function NX_breedingGoalUI(){
   d.innerHTML='<h3>'+icon('genetics','ic-lg')+'BREEDING GOAL</h3><p class="muted">Bias offspring trait rolls toward your goal.</p>'+
    '<select id="nx-goal">'+NX_BREED_GOALS.map(g=>'<option value="'+g.id+'"'+(S.nx.breedGoal===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select>';
   r.insertBefore(d,r.firstChild);
-  d.querySelector('#nx-goal').onchange=e=>{ S.nx.breedGoal=e.target.value; save(); toast('🧬 Breeding goal: '+esc(NX_BREED_GOALS.find(g=>g.id===S.nx.breedGoal).name)); };
+  d.querySelector('#nx-goal').onchange=e=>{ S.nx.breedGoal=e.target.value; save(); toast(icon('dna','ge-ic-md')+' Breeding goal: '+esc(NX_BREED_GOALS.find(g=>g.id===S.nx.breedGoal).name)); };
 }
 function NX_applyBreedGoal(cross){
   const goal=S.nx&&S.nx.breedGoal; if(!cross||!cross.traitRanges) return;
@@ -9049,9 +9541,9 @@ function NX_dispExtras(){
 }
 function NX_invDecision(id,action){
   const it=S.inventory.find(x=>x.id===id); if(!it) return;
-  if(action==='nxhold'){ it.held=!it.held; toast(it.held?'🔒 Held — excluded from quick sale.':'🔓 Released.'); }
-  if(action==='nxreserve'){ it.reserved=!it.reserved; toast(it.reserved?'🏪 Reserved for dispensary shelves.':'Reservation cleared.'); }
-  if(action==='nxbreed'){ it.breedTag=!it.breedTag; toast(it.breedTag?'🧬 Tagged as breeding seed stock.':'Breeding tag removed.'); }
+  if(action==='nxhold'){ it.held=!it.held; toast(it.held?icon('lock','ge-ic-md')+' Held — excluded from quick sale.':icon('check','ge-ic-md')+' Released.'); }
+  if(action==='nxreserve'){ it.reserved=!it.reserved; toast(it.reserved?icon('storefront','ge-ic-md')+' Reserved for dispensary shelves.':'Reservation cleared.'); }
+  if(action==='nxbreed'){ it.breedTag=!it.breedTag; toast(it.breedTag?icon('dna','ge-ic-md')+' Tagged as breeding seed stock.':'Breeding tag removed.'); }
   save(); RENDER.dispensary(); updateHUD();
 }
 function NX_compareProduct(id){
@@ -9106,9 +9598,9 @@ const NX_NEW_EVENTS=[
    onStart:function(){ S.plants.forEach(p=>{ p.water=clamp(num(p.water,80)-25,0,100); }); },
    choices:[
     {label:'CALL THE TECH', sub:function(){ return 'Pay '+fmt$(120)+' — sealed today'; },
-     run:function(){ if(S.cash<120){ toast('❌ Need $120.'); return; } S.cash-=120; S.plants.forEach(p=>{p.water=clamp(num(p.water,0)+30,0,100);}); toast('🔧 Leak sealed, trays re-watered.'); return 'end'; }},
+     run:function(){ if(S.cash<120){ toast(icon('x','ge-ic-md')+' Need $120.'); return; } S.cash-=120; S.plants.forEach(p=>{p.water=clamp(num(p.water,0)+30,0,100);}); toast(icon('equipment','ge-ic-md')+' Leak sealed, trays re-watered.'); return 'end'; }},
     {label:'PATCH IT YOURSELF', sub:'Free — but plants stay stressed today',
-     run:function(){ S.plants.forEach(p=>{p.stress=clamp(num(p.stress,0)+10,0,100);}); toast('🩹 Patched with tape. It holds… mostly.'); }} ]},
+     run:function(){ S.plants.forEach(p=>{p.stress=clamp(num(p.stress,0)+10,0,100);}); toast(icon('check','ge-ic-md')+' Patched with tape. It holds… mostly.'); }} ]},
  { id:'wx-rescontam', rarity:'RARE', weight:8, cd:20, dur:[3,4],
    title:'RESERVOIR CONTAMINATION',
    text:function(){ return 'The reservoir smells wrong — biofilm. Nutrient uptake is crashing until it is flushed.'; },
@@ -9116,9 +9608,9 @@ const NX_NEW_EVENTS=[
    onStart:function(){ S.plants.forEach(p=>{ p.nutrition=clamp(num(p.nutrition,70)-30,0,100); }); },
    choices:[
     {label:'FLUSH & STERILIZE', sub:function(){ return 'Pay '+fmt$(200)+' — full reset'; },
-     run:function(){ if(S.cash<200){ toast('❌ Need $200.'); return; } S.cash-=200; S.plants.forEach(p=>{p.nutrition=clamp(num(p.nutrition,0)+40,0,100);}); toast('🧪 Reservoir sterilized. Uptake restored.'); return 'end'; }},
+     run:function(){ if(S.cash<200){ toast(icon('x','ge-ic-md')+' Need $200.'); return; } S.cash-=200; S.plants.forEach(p=>{p.nutrition=clamp(num(p.nutrition,0)+40,0,100);}); toast(icon('flask','ge-ic-md')+' Reservoir sterilized. Uptake restored.'); return 'end'; }},
     {label:'DILUTE AND WAIT', sub:'Free — slow recovery over the event',
-     run:function(){ toast('💧 Diluting… recovery will be slow.'); }} ]},
+     run:function(){ toast(icon('water','ge-ic-md')+' Diluting… recovery will be slow.'); }} ]},
  { id:'wx-nutlock', rarity:'UNCOMMON', weight:12, cd:14, dur:[3,4],
    title:'NUTRIENT LOCKOUT',
    text:function(){ return 'pH drifted hard — plants show lockout: pale growth despite full feed strength.'; },
@@ -9126,9 +9618,9 @@ const NX_NEW_EVENTS=[
    onStart:function(){ S.plants.forEach(p=>{ p.health=clamp(num(p.health,100)-8,0,100); }); },
    choices:[
     {label:'PH CORRECTION KIT', sub:function(){ return 'Pay '+fmt$(90)+' — instant fix'; },
-     run:function(){ if(S.cash<90){ toast('❌ Need $90.'); return; } S.cash-=90; S.plants.forEach(p=>{p.health=clamp(num(p.health,0)+10,0,100);}); toast('⚗️ pH corrected. Lockout clearing.'); return 'end'; }},
+     run:function(){ if(S.cash<90){ toast(icon('x','ge-ic-md')+' Need $90.'); return; } S.cash-=90; S.plants.forEach(p=>{p.health=clamp(num(p.health,0)+10,0,100);}); toast(icon('flask','ge-ic-md')+' pH corrected. Lockout clearing.'); return 'end'; }},
     {label:'FLUSH WITH WATER', sub:'Free — loses a day of feeding',
-     run:function(){ S.plants.forEach(p=>{ p.nutrition=clamp(num(p.nutrition,0)-20,0,100); p.health=clamp(num(p.health,0)+4,0,100); }); toast('💧 Flushed. Slowly recovering.'); }} ]},
+     run:function(){ S.plants.forEach(p=>{ p.nutrition=clamp(num(p.nutrition,0)-20,0,100); p.health=clamp(num(p.health,0)+4,0,100); }); toast(icon('water','ge-ic-md')+' Flushed. Slowly recovering.'); }} ]},
  { id:'wx-herm', rarity:'RARE', weight:7, cd:22, dur:[2,3],
    title:'HERMAPHRODITE DISCOVERED',
    text:function(){ return 'Bananas! A plant in flower is throwing male parts — it can seed your whole room if ignored.'; },
@@ -9136,9 +9628,9 @@ const NX_NEW_EVENTS=[
    onStart:function(){},
    choices:[
     {label:'CULL IT NOW', sub:'Lose the plant — save the room',
-     run:function(){ const c=S.plants.filter(p=>stageOf(p)>=3); if(c.length){ const v=c[rndi(0,c.length-1)]; S.plants=S.plants.filter(p=>p.id!==v.id); toast('✂️ Culled to protect the room.'); } return 'end'; }},
+     run:function(){ const c=S.plants.filter(p=>stageOf(p)>=3); if(c.length){ const v=c[rndi(0,c.length-1)]; S.plants=S.plants.filter(p=>p.id!==v.id); toast(icon('train','ge-ic-md')+' Culled to protect the room.'); } return 'end'; }},
     {label:'ISOLATE & WATCH', sub:'Risky — 50% it seeds neighbors',
-     run:function(){ if(Math.random()<0.5){ S.plants.forEach(p=>{ if(stageOf(p)>=3) p.stress=clamp(num(p.stress,0)+25,0,100); }); toast('🌱 It seeded! Flowering plants stressed.'); } else toast('👀 Isolated in time. Crisis dodged.'); return 'end'; }} ]},
+     run:function(){ if(Math.random()<0.5){ S.plants.forEach(p=>{ if(stageOf(p)>=3) p.stress=clamp(num(p.stress,0)+25,0,100); }); toast(icon('grow','ge-ic-md')+' It seeded! Flowering plants stressed.'); } else toast('👀 Isolated in time. Crisis dodged.'); return 'end'; }} ]},
  { id:'wx-empcalloff', rarity:'COMMON', weight:12, cd:12, dur:[2,2],
    title:'EMPLOYEE CALLS OFF',
    text:function(){ return 'No-show on the schedule — the room runs short-handed today.'; },
@@ -9146,9 +9638,9 @@ const NX_NEW_EVENTS=[
    onStart:function(){ S.plants.forEach(p=>{ p.stress=clamp(num(p.stress,0)+8,0,100); }); },
    choices:[
     {label:'COVER THE SHIFT', sub:'You work it — lose the day\'s edge, room stays calm',
-     run:function(){ S.plants.forEach(p=>{ p.stress=clamp(num(p.stress,0)-8,0,100); }); gainXP(20); toast('💪 Shift covered. Respect earned.'); return 'end'; }},
+     run:function(){ S.plants.forEach(p=>{ p.stress=clamp(num(p.stress,0)-8,0,100); }); gainXP(20); toast(icon('crew','ge-ic-md')+' Shift covered. Respect earned.'); return 'end'; }},
     {label:'RUN SHORT', sub:'Free — stress lingers',
-     run:function(){ toast('😮‍💨 Running short-handed…'); }} ]},
+     run:function(){ toast('Running short-handed…'); }} ]},
  { id:'wx-bigorder', rarity:'UNCOMMON', weight:10, cd:16, dur:[3,3],
    title:'HUGE DISPENSARY ORDER',
    text:function(){ return 'A buyer wants 20 oz of your best flower, today. Premium price — if you have the stock.'; },
@@ -9156,13 +9648,13 @@ const NX_NEW_EVENTS=[
    onStart:function(){},
    choices:[
     {label:'FILL THE ORDER', sub:'Sell 20 oz at +25% price',
-     run:function(){ const it=S.inventory.find(i=>num(i.amount,0)>=20&&i.type==='flower'); if(!it){ toast('❌ Stock gone.'); return; }
+     run:function(){ const it=S.inventory.find(i=>num(i.amount,0)>=20&&i.type==='flower'); if(!it){ toast(icon('x','ge-ic-md')+' Stock gone.'); return; }
        const pay=Math.round(pricePerOz(it)*20*1.25); it.amount=Math.round((it.amount-20)*10)/10;
        if(it.amount<=0) S.inventory=S.inventory.filter(x=>x.id!==it.id);
        S.cash+=pay; S.stats.lifetimeRevenue+=pay; gainRep(8); gainXP(120);
-       toast('💰 Big order filled: +'+fmt$(pay)); save(); updateHUD(); return 'end'; }},
+       toast(icon('cash','ge-ic-md')+' Big order filled: +'+fmt$(pay)); save(); updateHUD(); return 'end'; }},
     {label:'PASS', sub:'Keep your stock',
-     run:function(){ toast('🚫 Order declined.'); return 'end'; }} ]},
+     run:function(){ toast(icon('x','ge-ic-md')+' Order declined.'); return 'end'; }} ]},
  { id:'wx-raremut', rarity:'LEGENDARY', weight:3, cd:40, dur:[1,1],
    title:'RARE MUTATION EVENT',
    text:function(){ return 'Something impossible is happening in the trays — a seedling is expressing genetics you have never seen.'; },
@@ -9170,13 +9662,13 @@ const NX_NEW_EVENTS=[
    onStart:function(){},
    choices:[
     {label:'PRESERVE IT', sub:'Costs $500 — becomes a tracked project',
-     run:function(){ if(S.cash<500){ toast('❌ Need $500.'); return; } S.cash-=500;
+     run:function(){ if(S.cash<500){ toast(icon('x','ge-ic-md')+' Need $500.'); return; } S.cash-=500;
        const st=getStrain(S.plants[0].strainId);
        S.customStrains.push({id:'nxmut'+Date.now(),name:'MUTATION X',custom:true,strainId:st?st.id:'qr',tags:['HYBRID'],seed:0,ft:60,yld:70,pot:85,terp:80,stab:40,resin:90,vigor:85,lineage:'Wild mutation event'});
        gainXP(300); addP0('genetics',8);
-       toast('🧬 Rare mutation preserved as a new genetic line!'); save(); return 'end'; }},
+       toast(icon('dna','ge-ic-md')+' Rare mutation preserved as a new genetic line!'); save(); return 'end'; }},
     {label:'LET IT RIDE', sub:'Free — 50% it stabilizes on its own',
-     run:function(){ if(Math.random()<0.5){ gainXP(150); toast('🍀 It stabilized! +150 XP.'); } else toast('🥀 It reverted. Gone.'); return 'end'; }} ]}
+     run:function(){ if(Math.random()<0.5){ gainXP(150); toast(icon('check','ge-ic-md')+' It stabilized! +150 XP.'); } else toast(icon('warn','ge-ic-md')+' It reverted. Gone.'); return 'end'; }} ]}
 ];
 function NX_registerEvents(){
   try{ if(typeof WX_EVENT_DEFS!=='undefined') NX_NEW_EVENTS.forEach(e=>{ if(!WX_EVENT_DEFS.some(x=>x.id===e.id)) WX_EVENT_DEFS.push(e); }); }catch(e){}
@@ -9279,11 +9771,11 @@ let NX_wrappedSettings=false;
 function NX_settingsProfiles(){
   const r=$('settings-root'); if(!r||r.querySelector('#nx-profcard')) return;
   const profs=NX_profiles(), cur=NX_activeProfile();
-  const d=document.createElement('div'); d.className='card'; d.id='nx-profcard';
-  d.innerHTML='<h3>'+icon('star','ic-lg')+'GROW EMPIRE ID '+(cur?'<span class="badge gold">'+esc(cur.username)+'</span>':'<span class="badge">GUEST</span>')+'</h3>'+
-   '<p class="muted">Local profiles on this device. Cloud sync: <b>NOT CONNECTED</b> — saves stay on this device.</p>'+
-   profs.map(p=>'<div class="kv"><span>'+icon('star','kv-ico')+esc(p.username)+' <span class="muted">('+esc(p.grower)+')</span></span><b><button class="btn btn-small" data-sw="'+p.id+'">SWITCH</button> <button class="btn btn-small btn-danger" data-delp="'+p.id+'">DELETE</button></b></div>').join('')+
-   '<div class="btn-row"><button class="btn btn-small" id="nx-newprof">NEW PROFILE</button><button class="btn btn-small" id="nx-logoutb">LOG OUT</button></div>';
+  const d=document.createElement('div'); d.className='ge-card'; d.id='nx-profcard';
+  d.innerHTML='<div class="ge-card-head"><h3>'+icon('star','ge-ic-lg')+'GROW EMPIRE ID '+(cur?'<span class="ge-badge ge-badge-legendary">'+esc(cur.username)+'</span>':'<span class="ge-badge">GUEST</span>')+'</h3></div>'+
+   '<p class="ge-caption ge-muted">Local profiles on this device. Cloud sync: <b>NOT CONNECTED</b> — saves stay on this device.</p>'+
+   profs.map(p=>'<div class="ge-datarow"><span>'+icon('star','ge-ic-sm')+esc(p.username)+' <span class="ge-muted">('+esc(p.grower)+')</span></span><span class="ge-inline-btns"><button class="ge-btn ge-btn-sm" data-sw="'+p.id+'">SWITCH</button> <button class="ge-btn ge-btn-sm ge-btn-danger" data-delp="'+p.id+'">DELETE</button></span></div>').join('')+
+   '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="nx-newprof">NEW PROFILE</button><button class="ge-btn ge-btn-ghost" id="nx-logoutb">LOG OUT</button></div>';
   r.insertBefore(d,r.firstChild);
   d.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{
     if(!confirm('Switch profile? Current game saves first.')) return;
@@ -9299,6 +9791,7 @@ function NX_settingsProfiles(){
   d.querySelector('#nx-newprof').onclick=()=>{ try{save();}catch(e){} NX_logout(); };
   d.querySelector('#nx-logoutb').onclick=()=>{ if(confirm('Log out? Progress is saved locally.')) NX_logout(); };
 }
+
 
 /* ---------------- EMPIRE SAVED hooks on key actions ---------------- */
 function NX_wrapKeyActions(){
@@ -9783,23 +10276,24 @@ function CAP_showBootLoading(done){
 /* ---------- Android Settings additions ---------- */
 function CAP_legalText(kind){
   if(kind==='privacy'){
-    return '<h3>PRIVACY POLICY</h3><div style="text-align:left;max-height:50vh;overflow:auto">'+
+    return '<h3 class="ge-h2">PRIVACY POLICY</h3><div class="ge-legal">'+
     '<p><b>Grow Empire v1.0.0 \u2014 Shocker OwnZ</b></p>'+
     '<p>Grow Empire stores ALL of your game data <b>locally on your device only</b> (save files, profiles, settings). Nothing is uploaded to any server.</p>'+
     '<p><b>Data collected: none.</b> This version includes no analytics, no crash reporting, no advertising, and no account servers. Grow Empire ID profiles are local device profiles, not cloud accounts.</p>'+
     '<p>Permissions used: Internet (reserved for future features; the game runs fully offline from its bundled files).</p>'+
     '<p>If analytics, crash reporting, authentication, or cloud saves are added in a future version, this policy will be updated and disclosed before release.</p>'+
-    '<p class="muted">Questions: contact the developer via the Google Play listing.</p></div>'+
-    '<div class="btn-row"><button class="btn btn-primary" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button></div>';
+    '<p class="ge-caption ge-muted">Questions: contact the developer via the Google Play listing.</p></div>'+
+    '<div class="ge-btn-row"><button class="ge-btn ge-btn-primary" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button></div>';
   }
-  return '<h3>TERMS OF USE</h3><div style="text-align:left;max-height:50vh;overflow:auto">'+
+  return '<h3 class="ge-h2">TERMS OF USE</h3><div class="ge-legal">'+
   '<p><b>Grow Empire v1.0.0 \u2014 Shocker OwnZ</b></p>'+
   '<p>Grow Empire is a <b>fictional simulation game</b> about cannabis cultivation business management. It is entertainment only.</p>'+
   '<p>Nothing in this game is medical, legal, or horticultural advice, and nothing here is instruction for real-world activity. Obey the laws where you live.</p>'+
   '<p>Virtual currency, genetics, and items have no real-world value and cannot be redeemed. Game progress is stored locally; uninstalling or clearing app data will erase it. The developer is not responsible for lost local saves.</p>'+
   '<p>Do not attempt to extract, reverse-engineer, or redistribute the game\u2019s assets or code.</p></div>'+
-  '<div class="btn-row"><button class="btn btn-primary" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button></div>';
+  '<div class="ge-btn-row"><button class="ge-btn ge-btn-primary" onclick="this.closest(\'.modal-back\').remove()">CLOSE</button></div>';
 }
+
 function CAP_cyclePref(key,values){
   try{
     const p=CAP_prefs();
@@ -9821,13 +10315,13 @@ function CAP_togglePref(key){
 function CAP_settingsExtra(){
   try{
     const p=CAP_prefs();
-    const onOff=v=>v?'<b style="color:#3ddc5f">ON</b>':'<b style="color:#8a8a8a">OFF</b>';
+    const onOff=v=>v?'<b class="ge-green">ON</b>':'<b class="ge-faint">OFF</b>';
     let key='soge_save_v1';
     try{ key=(typeof NX_saveKey==='function')?NX_saveKey():'soge_save_v1'; }catch(e){}
     let saveInfo='no save yet', saveKB='';
     try{
       const raw=localStorage.getItem(key);
-      if(raw){ saveKB=' \u00b7 '+(raw.length/1024).toFixed(1)+' KB'; }
+      if(raw){ saveKB=' · '+(raw.length/1024).toFixed(1)+' KB'; }
       const ls=(typeof S!=='undefined'&&S&&S.lastSeen)?new Date(S.lastSeen):null;
       saveInfo=(ls&&!isNaN(ls.getTime())?ls.toLocaleString():'session start')+saveKB;
     }catch(e){}
@@ -9835,32 +10329,33 @@ function CAP_settingsExtra(){
     const animName={full:'FULL',reduced:'REDUCED',off:'OFF'}[p.anim]||'FULL';
     const txtName={s:'SMALL',m:'MEDIUM',l:'LARGE'}[p.textSize]||'MEDIUM';
     return ''+
-    '<div class="card"><h3>APP \u2014 ANDROID</h3>'+
-     '<div class="kv"><span>Haptic feedback</span><button class="btn btn-small" style="width:auto;min-width:84px;margin:0" data-cap-t="haptics">'+onOff(p.haptics)+'</button></div>'+
-     '<div class="kv"><span>Sound FX</span><button class="btn btn-small" style="width:auto;min-width:84px;margin:0" data-cap-t="sound">'+onOff(p.sound)+'</button></div>'+
-     '<div class="kv"><span>Graphics quality</span><button class="btn btn-small" style="width:auto;min-width:84px;margin:0" data-cap-c="gfx">'+gfxName+'</button></div>'+
-     '<div class="kv"><span>Animation level</span><button class="btn btn-small" style="width:auto;min-width:84px;margin:0" data-cap-c="anim">'+animName+'</button></div>'+
-     '<div class="kv"><span>Text size</span><button class="btn btn-small" style="width:auto;min-width:84px;margin:0" data-cap-c="textSize">'+txtName+'</button></div>'+
-     '<div class="kv"><span>Native bridge</span><b>'+(CAP_native()?'CONNECTED':'WEB')+'</b></div>'+
+    '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('settings','ge-ic-lg')+'APP \u2014 ANDROID</h3></div>'+
+     PF_kv('Haptic feedback','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-t="haptics">'+onOff(p.haptics)+'</button>')+
+     PF_kv('Sound FX','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-t="sound">'+onOff(p.sound)+'</button>')+
+     PF_kv('Graphics quality','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="gfx">'+gfxName+'</button>')+
+     PF_kv('Animation level','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="anim">'+animName+'</button>')+
+     PF_kv('Text size','<button class="ge-btn ge-btn-sm ge-prefbtn" data-cap-c="textSize">'+txtName+'</button>')+
+     PF_kv('Native bridge','<b>'+(CAP_native()?'CONNECTED':'WEB')+'</b>')+
     '</div>'+
-    '<div class="card"><h3>SAVE STATUS</h3>'+
-     '<div class="kv"><span>Last saved</span><b>'+saveInfo+'</b></div>'+
-     '<div class="kv"><span>Storage</span><b>Local device only</b></div>'+
-     '<div class="btn-row"><button class="btn btn-small" id="cap-set-save2">SAVE NOW</button></div>'+
+    '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('box','ge-ic-lg')+'SAVE STATUS</h3></div>'+
+     PF_kv('Last saved','<b>'+saveInfo+'</b>')+
+     PF_kv('Storage','<b>Local device only</b>')+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="cap-set-save2">SAVE NOW</button></div>'+
     '</div>'+
-    '<div class="card"><h3>ACCOUNT \u2014 GROW EMPIRE ID</h3>'+
-     '<p class="muted">Local profiles on this device. No server. No cloud sync.</p>'+
-     '<div class="btn-row"><button class="btn btn-small" id="cap-set-profile">MY PROFILE</button>'+
-     '<button class="btn btn-small" id="cap-set-switch">SWITCH PROFILE</button></div>'+
+    '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('star','ge-ic-lg')+'ACCOUNT \u2014 GROW EMPIRE ID</h3></div>'+
+     '<p class="ge-caption ge-muted">Local profiles on this device. No server. No cloud sync.</p>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="cap-set-profile">MY PROFILE</button>'+
+     '<button class="ge-btn ge-btn-ghost" id="cap-set-switch">SWITCH PROFILE</button></div>'+
     '</div>'+
-    '<div class="card"><h3>LEGAL</h3>'+
-     '<div class="btn-row"><button class="btn btn-small" id="cap-set-privacy">PRIVACY POLICY</button>'+
-     '<button class="btn btn-small" id="cap-set-terms">TERMS</button></div>'+
+    '<div class="ge-card"><div class="ge-card-head"><h3>'+icon('scroll','ge-ic-lg')+'LEGAL</h3></div>'+
+     '<div class="ge-btn-row"><button class="ge-btn ge-btn-ghost" id="cap-set-privacy">PRIVACY POLICY</button>'+
+     '<button class="ge-btn ge-btn-ghost" id="cap-set-terms">TERMS</button></div>'+
     '</div>'+
-    '<div class="card"><p class="muted display" style="text-align:center">GROW EMPIRE <b>v1.0.0</b> \u2014 Shocker OwnZ<br>'+
-     'GROW LIKE YOU OWN THE SHOW.<br><span style="font-size:11px">A fictional cultivation simulation. Entertainment only.</span></p></div>';
+    '<div class="ge-card ge-card-flat"><p class="ge-caption ge-muted ge-center">GROW EMPIRE <b>v1.0.0</b> \u2014 Shocker OwnZ<br>'+
+     'GROW LIKE YOU OWN THE SHOW.<br><span class="ge-caption">A fictional cultivation simulation. Entertainment only.</span></p></div>';
   }catch(e){ return ''; }
 }
+
 (function CAP_wrapSettings(){
   try{
     if(typeof RENDER!=='undefined'&&typeof RENDER.settings==='function'&&!RENDER.settings.__cap_wrapped){
@@ -9892,3 +10387,906 @@ function CAP_settingsExtra(){
 
 /* public surface for future native integrations */
 try{ window.SOGE_CAP={haptic:CAP_haptic,sfx:CAP_sfx,native:CAP_native,prefs:CAP_prefs,version:'1.0.0'}; }catch(e){}
+
+/* === UI OVERHAUL: new presentation helpers (appended; no logic changes) === */
+function DP_iconSafe(k,cls){
+  /* icon() with fallback: never emit an empty ic-missing span */
+  try{ const h=icon(k,cls||''); return h.indexOf('ic-missing')>=0?icon('scroll',cls||''):h; }catch(e){ return ''; }
+}
+function DP_gradeBadge(q){
+  /* quality grade badge: gold reserved for 90+ (legendary/premium semantics) */
+  q=Math.round(Number(q)||0);
+  const cls=q>=90?'ge-badge-legendary':q>=80?'ge-badge-elite':'ge-badge-common';
+  return '<span class="ge-badge '+cls+'">Q'+q+'</span>';
+}
+function DP_demPill(ptype){
+  /* live demand indicator for a product type — reads only, no sim change */
+  let dem='normal';
+  try{ dem=TY_typeDem(ptype).demand||'normal'; }catch(e){}
+  const map={high:['ge-pill-optimal','HIGH DEMAND'],low:['ge-pill-critical','LOW DEMAND'],collector:['ge-pill-gold','COLLECTOR']};
+  const m=map[dem]||['ge-pill-neutral','STABLE'];
+  return '<span class="ge-pill '+m[0]+'">'+m[1]+'</span>';
+}
+function DP_metricTile(ico,val,label,sub,tone){
+  return '<div class="ge-metric-tile"><div class="ge-metric-value ge-num '+(tone||'')+'">'+val+'</div>'+
+   '<div class="ge-metric-label">'+DP_iconSafe(ico,'ge-ic-sm')+' '+label+'</div>'+
+   (sub?'<div class="ge-metric-sub">'+sub+'</div>':'')+'</div>';
+}
+function DP_sectionTitle(ico,title,spread){
+  return '<div class="ge-section-title">'+DP_iconSafe(ico,'ge-ic-md')+' '+title+
+   (spread?'<span class="ge-spread">'+spread+'</span>':'')+'</div>';
+}
+function DP_terpTags(it){
+  /* terpene/flavor tag chips from the strain record + terpene score pill */
+  let tags=[];
+  try{ const st=getStrain(it.strainId); if(st&&Array.isArray(st.tags)) tags=st.tags.slice(0,4); }catch(e){}
+  let h=tags.map(t=>'<span class="ge-pill ge-pill-neutral">'+esc(t)+'</span>').join('');
+  const terp=Math.round(Number(it.terpenes)||0);
+  h+='<span class="ge-pill '+(terp>=80?'ge-pill-optimal':terp>=60?'ge-pill-watch':'ge-pill-neutral')+'">TERPS '+terp+'%</span>';
+  return h;
+}
+function DP_todaySales(){
+  /* today's revenue so far = lifetime revenue minus last closed day's books (read-only) */
+  try{
+    const life=num(S.stats&&S.stats.lifetimeRevenue,0);
+    const base=num(S.ty&&S.ty.fin?S.ty.fin.lastLifeRev:0,0);
+    return Math.max(0,Math.round(life-base));
+  }catch(e){ return 0; }
+}
+function DP_avgSat(){
+  try{ const st=S.ty.cust.stats; return st.satN?Math.round(st.sat/st.satN):0; }catch(e){ return 0; }
+}
+function DP_invValue(){
+  try{ return Math.round((S.inventory||[]).reduce((a,i)=>a+pricePerOz(i)*num(i.amount,0),0)); }catch(e){ return 0; }
+}
+const EM_FACILITY_BLURB=[
+ 'Where every empire begins. Humble, hungry, yours.',
+ 'Out of the tent and into a real room.',
+ 'Serious square footage for a serious operation.',
+ 'Industrial scale. The neighborhood knows your name.',
+ 'Precision environment for genetic work.',
+ 'The crown jewel. Project 0 grade preservation.'
+];
+const EM_EQUIP_TIERS=['','Standard','Professional','Commercial','Industrial','Project 0'];
+const EM_EQUIP_ICON={lights:'lighting',hvac:'hvac',humid:'humid',dehumid:'drop',co2sys:'co2',
+ irrigation:'irrigation',nutrients:'nutrients',sensors:'sensors',drycure:'drycure'};
+function EM_facilityArt(tier){
+  const t=clamp(int(tier,0),0,5);
+  const w=46+t*12, h=30+t*6, x=Math.round((120-w)/2), y=76-h;
+  const gold=t>=5, lab=t>=4;
+  let s='<svg class="ge-fac-art" viewBox="0 0 120 80" aria-hidden="true">';
+  s+='<rect width="120" height="80" fill="#0b0c0e"/>';
+  s+='<ellipse cx="60" cy="72" rx="54" ry="9" fill="#e02020" opacity="0.10"/>';
+  s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#181b20" stroke="'+(gold?'#d4a017':'#343a42')+'" stroke-width="1.5"/>';
+  s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="5" fill="'+(gold?'#d4a017':'#7a0d0d')+'"/>';
+  const nL=2+t;
+  for(let i=0;i<nL;i++){
+    const lx=Math.round(x+8+i*(w-16)/(nL-1));
+    s+='<rect x="'+lx+'" y="'+(y+12)+'" width="5" height="'+Math.max(4,h-24)+'" fill="#ff6b6b" opacity="0.75"/>';
+  }
+  s+='<rect x="'+Math.round(x+w/2-7)+'" y="'+(y+h-14)+'" width="14" height="14" fill="#0b0c0e" stroke="#4a4a4e"/>';
+  if(lab) s+='<circle cx="'+(x+w-14)+'" cy="'+(y+16)+'" r="6" fill="none" stroke="#e02020" stroke-width="1.5"/>';
+  if(gold) s+='<path d="M'+(x+8)+' '+(y-9)+' l3 6 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#d4a017"/>';
+  return s+'</svg>';
+}
+function EM_progressStrip(){
+  const cur=int(S.facility,0);
+  let h='<div class="ge-strip" role="list" aria-label="Facility progression">';
+  FACILITIES.forEach((f,i)=>{
+    const st=i<cur?'done':i===cur?'cur':'todo';
+    h+='<div class="ge-strip-node ge-strip-'+st+'" role="listitem">'+
+      '<span class="ge-strip-dot">'+(i<cur?icon('check','ge-ic-sm'):i===cur?icon('empire','ge-ic-sm'):icon('lock','ge-ic-sm'))+'</span>'+
+      '<span class="ge-strip-name">'+esc(f.name)+'</span>'+
+      '<span class="ge-strip-sub ge-num">'+f.slots+' slots</span>'+
+      (i===cur?'<span class="ge-pill ge-pill-optimal">CURRENT</span>':i===cur+1?'<span class="ge-pill ge-pill-neutral">NEXT</span>':'')+
+      '</div>';
+    if(i<FACILITIES.length-1) h+='<div class="ge-strip-link'+(i<cur?' done':'')+'" aria-hidden="true"></div>';
+  });
+  return h+'</div>';
+}
+function EM_facilityCard(f,i){
+  const cur=int(S.facility,0);
+  const owned=i<cur, isCur=i===cur, next=i===cur+1;
+  const cash=num(S.cash,0);
+  let h='<div class="ge-card ge-facility'+(isCur?' ge-card-hot':'')+'">';
+  h+='<div class="ge-facility-art">'+EM_facilityArt(i)+'</div>';
+  h+='<div class="ge-facility-body">';
+  h+='<div class="ge-card-head"><h3>'+esc(f.name)+'</h3>'+
+    (isCur?'<span class="ge-pill ge-pill-optimal">'+icon('check','ge-ic-sm')+'CURRENT</span>'
+     :owned?'<span class="ge-pill ge-pill-neutral">OWNED</span>'
+     :next?'<span class="ge-pill ge-pill-neutral">NEXT</span>'
+     :'<span class="ge-pill ge-pill-neutral">'+icon('lock','ge-ic-sm')+'LOCKED</span>')+'</div>';
+  h+='<div class="ge-datarow"><span>'+icon('grow','ge-ic-md')+'Capacity</span><b class="ge-num">'+f.slots+' grow slots</b></div>';
+  h+='<ul class="ge-benefits"><li>'+f.slots+' grow slots</li><li>'+esc(EM_FACILITY_BLURB[i]||'')+'</li></ul>';
+  if(isCur){
+    h+='<p class="ge-label ge-green">Operating at full capacity.</p>';
+  }else if(owned){
+    h+='<p class="ge-caption ge-muted">Outgrown — expand to move up.</p>';
+  }else if(next){
+    const pct=clamp(cash/Math.max(1,f.cost)*100,0,100);
+    h+='<div class="ge-progress-meta"><span>Expansion fund</span><b class="ge-num">'+fmt$(cash)+' / '+fmt$(f.cost)+'</b></div>';
+    h+='<div class="ge-progress"><i style="width:'+pct+'%"></i></div>';
+    h+='<button class="ge-btn ge-btn-primary ge-btn-block" data-buyfac="'+i+'">'+icon('empire','ge-ic-md')+'EXPAND — '+fmt$(f.cost)+'</button>';
+  }else{
+    const prev=FACILITIES[i-1];
+    const pct=clamp(cash/Math.max(1,f.cost)*100,0,100);
+    h+='<div class="ge-lockreq">'+icon('lock','ge-ic-md')+'<div><b>Requires '+esc(prev?prev.name:'')+'</b><p class="ge-caption ge-muted">Facilities expand in order. Cash progress carries over.</p></div></div>';
+    h+='<div class="ge-progress-meta"><span>Unlock progress</span><b class="ge-num">'+Math.round(pct)+'%</b></div>';
+    h+='<div class="ge-progress"><i style="width:'+pct+'%"></i></div>';
+  }
+  return h+'</div></div>';
+}
+function EM_motherRoomCard(){
+  const maxed=int(S.motherCapacity,0)>=4;
+  let h='<div class="ge-card ge-facility"><div class="ge-facility-art">'+EM_facilityArt(3)+'</div><div class="ge-facility-body">';
+  h+='<div class="ge-card-head"><h3>MOTHER ROOM</h3>'+(maxed?'<span class="ge-pill ge-pill-neutral">MAXED</span>':'')+'</div>';
+  h+='<p class="ge-caption ge-muted">House mother plants to take identical clones.</p>';
+  h+='<div class="ge-datarow"><span>'+icon('mothers','ge-ic-md')+'Mother slots</span><b class="ge-num">'+int(S.motherCapacity,0)+' / 4</b></div>';
+  h+=maxed?'<p class="ge-label">MAXED OUT.</p>'
+    :'<button class="ge-btn ge-btn-gold ge-btn-block" data-buymother="1">'+icon('plus','ge-ic-md')+'ADD SLOT — '+fmt$(MOTHER_CAP_COSTS[int(S.motherCapacity,0)])+'</button>';
+  return h+'</div></div>';
+}
+function EM_facilitiesHTML(){
+  let h='<div class="ge-section-title">'+icon('empire','ge-ic-md')+'<span>FACILITY PROGRESSION</span></div>';
+  h+=EM_progressStrip();
+  h+='<div class="ge-section-title">'+icon('facility','ge-ic-md')+'<span>FACILITIES</span></div>';
+  FACILITIES.forEach((f,i)=>{ h+=EM_facilityCard(f,i); });
+  h+=EM_motherRoomCard();
+  return h;
+}
+function EM_equipTierName(lvl){ return EM_EQUIP_TIERS[clamp(int(lvl,0),1,5)]; }
+function EM_dotMeter(lvl,max){
+  let s='<span class="ge-dots" role="img" aria-label="Level '+int(lvl,0)+' of '+int(max,0)+'">';
+  for(let i=1;i<=max;i++) s+='<i class="'+(i<=lvl?'on':'')+'"></i>';
+  return s+'</span>';
+}
+function EM_equipModule(d){
+  const lvl=int(num(S.equipment[d.id],1),1), maxed=lvl>=d.max;
+  const tier=EM_equipTierName(lvl);
+  let h='<div class="ge-card ge-equip">';
+  h+='<div class="ge-equip-ico">'+icon(EM_EQUIP_ICON[d.id]||d.ic,'ge-ic-xl')+'</div>';
+  h+='<div class="ge-equip-body">';
+  h+='<div class="ge-card-head"><h3>'+esc(d.name)+'</h3><span class="ge-pill '+(lvl>=5?'ge-pill-gold':'ge-pill-neutral')+'">'+esc(tier).toUpperCase()+'</span></div>';
+  h+=EM_dotMeter(lvl,d.max);
+  h+='<p class="ge-caption ge-muted">'+esc(d.desc)+'</p>';
+  if(maxed){
+    h+='<p class="ge-label">MAXED OUT.</p>';
+  }else{
+    const cost=equipCost(d,lvl), nt=EM_equipTierName(lvl+1);
+    h+='<div class="ge-datarow"><span>Next · '+esc(nt)+'</span><b class="ge-num">'+fmt$(cost)+'</b></div>';
+    h+='<button class="ge-btn ge-btn-primary ge-btn-block" data-buye="'+d.id+'">'+icon('equipment','ge-ic-md')+'UPGRADE — '+fmt$(cost)+'</button>';
+  }
+  return h+'</div></div>';
+}
+function EM_amSummary(){
+  try{
+    if(typeof AM_ORDER==='undefined'||!S||!S.am) return '';
+    const online=AM_ORDER.filter(k=>{ const s=S.am[k]; return s&&s.owned&&s.on; }).length;
+    return '<div class="ge-card ge-equip"><div class="ge-equip-ico">'+icon('settings','ge-ic-xl')+'</div>'+
+     '<div class="ge-equip-body"><div class="ge-card-head"><h3>AUTOMATION</h3><span class="ge-pill ge-pill-neutral">SYSTEMS</span></div>'+
+     '<p class="ge-caption ge-muted">Hands-free empire systems — watering, feeding, climate and more.</p>'+
+     '<div class="ge-datarow"><span>Systems online</span><b class="ge-num">'+online+' / '+AM_ORDER.length+'</b></div>'+
+     '<button class="ge-btn ge-btn-ghost ge-btn-block" data-ge-auto="1">OPEN AUTOMATION</button></div></div>';
+  }catch(e){ return ''; }
+}
+function EM_equipmentHTML(){
+  let h=npcBlurb('sal');
+  h+='<div class="ge-section-title">'+icon('equipment','ge-ic-md')+'<span>EQUIPMENT DEPOT</span></div>';
+  EQUIP_DEFS.forEach(d=>{ h+=EM_equipModule(d); });
+  h+=EM_amSummary();
+  return h;
+}
+function EM_crewHTML(){
+  let h='<div class="ge-card ge-card-flat"><div class="ge-card-head"><h3>'+icon('crew','ge-ic-lg')+'CREW</h3></div>'+
+   '<p class="ge-caption ge-muted">Crew members charge a daily wage, deducted each day. Named professionals live under the STAFF tab.</p></div>';
+  CREW_DEFS.forEach(c=>{
+    const hired=!!S.crew[c.id];
+    h+='<div class="ge-card ge-equip'+(hired?' ge-hired':'')+'"><div class="ge-equip-ico">'+icon(c.ic,'ge-ic-xl')+'</div><div class="ge-equip-body">';
+    h+='<div class="ge-card-head"><h3>'+esc(c.name)+'</h3>'+(hired?'<span class="ge-pill ge-pill-optimal">'+icon('check','ge-ic-sm')+'ON PAYROLL</span>':'')+'</div>';
+    h+='<p class="ge-caption ge-muted">'+esc(c.desc)+'</p>';
+    h+='<div class="ge-datarow"><span>'+icon('cash','ge-ic-md')+'Hire cost</span><b class="ge-num">'+fmt$(c.hire)+'</b></div>';
+    h+='<div class="ge-datarow"><span>'+icon('day','ge-ic-md')+'Daily wage</span><b class="ge-num">'+fmt$(c.wage)+'</b></div>';
+    h+=hired?'':'<button class="ge-btn ge-btn-primary ge-btn-block" data-hire="'+c.id+'">'+icon('crew','ge-ic-md')+'HIRE</button>';
+    h+='</div></div>';
+  });
+  return h;
+}
+function EM_gateProgress(l){
+  const g=l.gate||{};
+  let h='';
+  if(int(g.rep,0)>0){ const p=clamp(int(S.reputation,0)/int(g.rep,0)*100,0,100);
+    h+='<div class="ge-progress-meta"><span>Reputation</span><b class="ge-num">'+int(S.reputation,0)+' / '+int(g.rep,0)+'</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+p+'%"></i></div>'; }
+  if(num(g.cash,0)>0){ const p=clamp(num(S.cash,0)/num(g.cash,0)*100,0,100);
+    h+='<div class="ge-progress-meta"><span>Cash</span><b class="ge-num">'+fmt$(num(S.cash,0))+' / '+fmt$(g.cash)+'</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+p+'%"></i></div>'; }
+  if(int(g.missions,0)>0){ const p=clamp(int(S.stats.missionsDone,0)/int(g.missions,0)*100,0,100);
+    h+='<div class="ge-progress-meta"><span>Missions</span><b class="ge-num">'+int(S.stats.missionsDone,0)+' / '+int(g.missions,0)+'</b></div><div class="ge-progress ge-progress-thin"><i style="width:'+p+'%"></i></div>'; }
+  return h;
+}
+function EM_rarCls(rarity){
+  return rarity==='legendary'?'ge-badge ge-badge-legendary'
+    :rarity==='elite'?'ge-badge ge-badge-elite'
+    :'ge-pill ge-pill-neutral';
+}
+function EM_facilityUnlockCine(prevT,newT,name){
+  const slots=FACILITIES[clamp(int(S.facility,0),0,5)].slots;
+  return cineOverlay(
+   '<div class="ge-cine-fac"><div class="ge-display ge-cine-title">FACILITY UNLOCKED</div>'+
+   '<div class="ge-cine-compare"><div class="ge-cine-side"><span class="ge-label">BEFORE</span>'+facilitySceneSVG(prevT)+'<b>'+esc(FAC_TIERS[prevT].name)+'</b></div>'+
+   '<div class="ge-cine-arrow">'+icon('arrow-right','ge-ic-lg')+'</div>'+
+   '<div class="ge-cine-side"><span class="ge-label">NOW</span>'+facilitySceneSVG(newT)+'<b>'+esc(name)+'</b></div></div>'+
+   '<p class="ge-body">+'+slots+' grow slots</p>'+
+   '<p class="ge-caption ge-muted">Tap anywhere to continue</p></div>',
+   'ge-cine-facility',2800);
+}
+function WX_ic(n,cls){ return (typeof icon==='function')?icon(n,cls||'ge-ic-md'):''; }
+function WX_rarPill(rar){
+  return rar==='LEGENDARY'?'ge-pill-gold':rar==='RARE'?'ge-pill-gold':rar==='UNCOMMON'?'ge-pill-watch':'ge-pill-neutral';
+}
+function WX_envBandFor(key,v){
+  if(v===null||v===undefined||isNaN(+v)) return 'unknown';
+  v=+v; var b='unknown';
+  if(key==='temp'){ b=v<64||v>86?'critical':v<67||v>84?'warning':v<70||v>82?'watch':'optimal'; }
+  else if(key==='rh'){ b=v<30||v>70?'critical':v<35||v>65?'warning':v<40||v>60?'watch':'optimal'; }
+  else if(key==='vpd'){ b=v<0.4||v>1.6?'critical':v<0.6||v>1.4?'warning':v<0.8||v>1.2?'watch':'optimal'; }
+  else if(key==='ppfd'){ b=v<400||v>1050?'critical':v<500||v>1025?'warning':v<600||v>1000?'watch':'optimal'; }
+  else if(key==='co2'){ b=v<600||v>1800?'critical':v<700||v>1650?'warning':v<800||v>1500?'watch':'optimal'; }
+  else if(key==='ph'){ b=v<5.5||v>6.8?'critical':v<5.65||v>6.65?'warning':v<5.8||v>6.5?'watch':'optimal'; }
+  else if(key==='ec'){ b=v<0.4||v>3.0?'critical':v<0.6||v>2.6?'warning':v<1.0||v>2.2?'watch':'optimal'; }
+  return b;
+}
+function WX_envPill(band){
+  var cls={optimal:'ge-pill-optimal',watch:'ge-pill-watch',warning:'ge-pill-warning',critical:'ge-pill-critical',unknown:'ge-pill-neutral'}[band]||'ge-pill-neutral';
+  var ic={optimal:'check',watch:'warn',warning:'warn',critical:'warn',unknown:'sensors'}[band]||'sensors';
+  var lbl={optimal:'OPTIMAL',watch:'WATCH',warning:'WARNING',critical:'CRITICAL',unknown:'NO DATA'}[band]||'NO DATA';
+  return '<span class="ge-pill '+cls+'">'+WX_ic(ic,'ge-ic-sm')+lbl+'</span>';
+}
+function WX_roomAvg(key){
+  try{
+    if(typeof S==='undefined'||!S||!Array.isArray(S.plants)||!S.plants.length) return null;
+    var sum=0,n=0;
+    S.plants.forEach(function(p){ var v=num(p[key],NaN); if(!isNaN(v)){ sum+=v; n++; } });
+    return n?sum/n:null;
+  }catch(e){ return null; }
+}
+function WX_reservoirEst(){
+  var n=WX_roomAvg('nutrition');
+  if(n===null) return {ph:null,ec:null};
+  return { ph:Math.round((5.5+n/100*1.5)*10)/10, ec:Math.round((0.3+n/100*2.4)*10)/10 };
+}
+function WX_envDerived(){
+  try{ if(typeof TY_envVals==='function'){ var v=TY_envVals(); return {vpd:num(v.vpd,NaN),ppfd:num(v.ppfd,NaN)}; } }catch(e){}
+  return {vpd:NaN,ppfd:NaN};
+}
+function WX_envReadings(){
+  var e=(typeof S!=='undefined'&&S&&S.env)?S.env:{};
+  var dv=WX_envDerived(), res=WX_reservoirEst();
+  var defs=[
+    {key:'temp',label:'TEMP',icon:'temp',val:num(e.temp,76),min:60,max:95,fmt:function(v){return Math.round(v)+'°F';},target:'TARGET 70–82°F'},
+    {key:'rh',label:'RH',icon:'humidity',val:num(e.humidity,52),min:0,max:100,fmt:function(v){return Math.round(v)+'%';},target:'TARGET 40–60%'},
+    {key:'vpd',label:'VPD',icon:'vpd',val:dv.vpd,min:0,max:2,fmt:function(v){return v.toFixed(2)+' kPa';},target:'TARGET 0.8–1.2 kPa'},
+    {key:'ppfd',label:'PPFD',icon:'lighting',val:dv.ppfd,min:0,max:1200,fmt:function(v){return String(Math.round(v));},target:'TARGET 600–1000'},
+    {key:'co2',label:'CO2',icon:'co2',val:num(e.co2,900),min:400,max:1600,fmt:function(v){return Math.round(v)+' ppm';},target:'TARGET 800–1500'},
+    {key:'ph',label:'pH',icon:'ph',val:res.ph,min:4,max:8,fmt:function(v){return v.toFixed(1);},target:'TARGET 5.8–6.5 · EST'},
+    {key:'ec',label:'EC',icon:'ec',val:res.ec,min:0,max:3,fmt:function(v){return v.toFixed(1)+' mS';},target:'TARGET 1.0–2.2 · EST'}
+  ];
+  defs.forEach(function(g){
+    if(g.val===null||g.val===undefined||isNaN(g.val)) g.val=null;
+    g.band=g.val===null?'unknown':WX_envBandFor(g.key,g.val);
+    g.pct=g.val===null?0:clamp((g.val-g.min)/(g.max-g.min)*100,0,100);
+  });
+  return defs;
+}
+function WX_envGaugeHTML(g){
+  var tone={optimal:'ge-ring-ok',watch:'ge-ring-warn',warning:'ge-ring-bad',critical:'ge-ring-bad',unknown:''}[g.band];
+  var valTxt=g.val===null?'—':g.fmt(g.val);
+  return '<div class="ge-env-gauge">'+
+   '<div class="ge-ring '+tone+'"><svg viewBox="0 0 36 36" aria-hidden="true">'+
+   '<circle class="ge-ring-track" cx="18" cy="18" r="15.9155"></circle>'+
+   '<circle class="ge-ring-val" cx="18" cy="18" r="15.9155" stroke-dasharray="'+Math.round(g.pct)+' 100"></circle></svg>'+
+   '<div class="ge-ring-label ge-num">'+valTxt+'</div></div>'+
+   '<div class="ge-env-gauge-name">'+WX_ic(g.icon,'ge-ic-sm')+g.label+'</div>'+
+   WX_envPill(g.band)+
+   '<div class="ge-caption ge-muted">'+g.target+'</div></div>';
+}
+function WX_envScoreRing(){
+  var score=null;
+  try{ if(typeof envEval==='function') score=envEval().score; }catch(e){}
+  if(score===null||isNaN(score)) return '';
+  var tone=score>=80?'ge-ring-ok':score>=55?'ge-ring-warn':'ge-ring-bad';
+  return '<div class="ge-env-score"><div class="ge-ring '+tone+'"><svg viewBox="0 0 36 36" aria-hidden="true">'+
+   '<circle class="ge-ring-track" cx="18" cy="18" r="15.9155"></circle>'+
+   '<circle class="ge-ring-val" cx="18" cy="18" r="15.9155" stroke-dasharray="'+clamp(Math.round(score),0,100)+' 100"></circle></svg>'+
+   '<div class="ge-ring-label ge-num">'+Math.round(score)+'</div></div>'+
+   '<div class="ge-caption ge-muted">ENV SCORE</div></div>';
+}
+function WX_cleanIssue(txt){
+  if(txt&&typeof txt==='object'){ return {icon:txt.icon||'warn',text:String(txt.text||'')}; }
+  var t=String(txt||'').replace(/^[^A-Za-z0-9(]+/u,'');
+  var ic='warn';
+  if(/cold|hot|temp/i.test(t)) ic='temp';
+  else if(/humidity/i.test(t)) ic='humidity';
+  else if(/light/i.test(t)) ic='lighting';
+  else if(/co2/i.test(t)) ic='co2';
+  return {icon:ic,text:t};
+}
+function WX_envSliderHTML(key,label,val,min,max,unit,iconName){
+  return '<div class="ge-env-ctl"><div class="ge-datarow"><span>'+WX_ic(iconName,'ge-ic-sm')+label+'</span><b class="ge-num ge-env-val">'+val+unit+'</b></div>'+
+   '<input type="range" class="ge-env-slider" min="'+min+'" max="'+max+'" step="1" value="'+val+'" data-env="'+key+'" data-unit="'+unit+'" aria-label="'+label+'">'+
+   '<div class="ge-env-scale"><span class="ge-caption ge-muted">'+min+unit+'</span><span class="ge-caption ge-muted">'+max+unit+'</span></div></div>';
+}
+var WX_EQUIP_ROWS=[
+ {id:'lights',label:'LIGHTS',icon:'lighting'},
+ {id:'hvac',label:'CLIMATE',icon:'hvac'},
+ {id:'co2sys',label:'CO2 SYSTEM',icon:'co2'},
+ {id:'irrigation',label:'IRRIGATION',icon:'irrigation'},
+ {id:'nutrients',label:'NUTRIENTS',icon:'nutrients'},
+ {id:'drycure',label:'DRY / CURE',icon:'drycure'}
+];
+function WX_envEquipHTML(){
+  return WX_EQUIP_ROWS.map(function(r){
+    var off=false;
+    try{ off=WX_equipDisabled(r.id); }catch(e){}
+    return '<div class="ge-datarow"><span>'+WX_ic(r.icon,'ge-ic-sm')+r.label+'</span>'+
+     (off?'<span class="ge-pill ge-pill-critical">'+WX_ic('warn','ge-ic-sm')+'OFFLINE</span>'
+         :'<span class="ge-pill ge-pill-optimal">'+WX_ic('check','ge-ic-sm')+'ONLINE</span>')+'</div>';
+  }).join('');
+}
+function WX_envControlHTML(){
+  WX_init();
+  var gauges=WX_envReadings();
+  var html='<div class="ge-card ge-card-hot ge-env-panel">'+
+   '<div class="ge-card-head"><h3>'+WX_ic('hvac','ge-ic-md')+'ENVIRONMENT CONTROL</h3><span class="ge-spread">'+WX_envScoreRing()+'</span></div>'+
+   '<div class="ge-env-gauges">'+gauges.map(WX_envGaugeHTML).join('')+'</div>'+
+   '<div class="ge-divider"></div>'+
+   '<div class="ge-section-title">HARDWARE CONTROLS</div>'+
+   '<div class="ge-env-sliders">'+
+    WX_envSliderHTML('light','LIGHT INTENSITY',num(S.env.light,80),40,100,'%','lighting')+
+    WX_envSliderHTML('temp','TEMPERATURE',num(S.env.temp,76),60,95,'°F','temp')+
+    WX_envSliderHTML('humidity','HUMIDITY',num(S.env.humidity,52),20,90,'%','humidity')+
+    WX_envSliderHTML('co2','CO2',num(S.env.co2,900),400,1600,' PPM','co2')+
+   '</div>';
+  html+='<div class="ge-divider"></div><div class="ge-section-title">EQUIPMENT STATUS</div>'+WX_envEquipHTML();
+  var issues=[];
+  try{ if(typeof envEval==='function') issues=envEval().issues||[]; }catch(e){}
+  if(issues.length){
+    html+='<div class="ge-divider"></div><div class="ge-section-title">ATTENTION</div><div class="ge-stack">'+
+     issues.map(function(t){ var c=WX_cleanIssue(t); return '<div class="ge-datarow"><span>'+WX_ic(c.icon,'ge-ic-sm')+esc(c.text)+'</span>'+WX_envPill('warning')+'</div>'; }).join('')+'</div>';
+  } else {
+    html+='<div class="ge-env-ok">'+WX_ic('check','ge-ic-md')+'<span>Environment dialed in.</span></div>';
+  }
+  html+=WX_envHistoryHTML();
+  html+='</div>';
+  return html;
+}
+function WX_wireEnvControls(root){
+  if(!root) return;
+  root.querySelectorAll('input[type=range][data-env].ge-env-slider').forEach(function(s){
+    s.oninput=function(e){
+      var t=e.target;
+      try{ S.env[t.dataset.env]=+t.value; }catch(err){}
+      var lab=t.closest('.ge-env-ctl');
+      var out=lab?lab.querySelector('.ge-env-val'):null;
+      if(out) out.textContent=t.value+t.dataset.unit;
+    };
+    s.onchange=function(){
+      try{ save(); }catch(e){}
+      try{ if(typeof refreshGrowUI==='function') refreshGrowUI(); }catch(e){}
+    };
+  });
+  root.querySelectorAll('[data-wx-histr]').forEach(function(b){
+    b.onclick=function(){ WX_setHistRange(b.dataset.wxHistr); };
+  });
+}
+function WX_envSnapshotTick(){
+  try{
+    if(typeof S==='undefined'||!S) return;
+    if(!S.envHist) S.envHist=[];
+    if(!Array.isArray(S.envHist)) S.envHist=[];
+    var now=Date.now();
+    var last=S.envHist[S.envHist.length-1];
+    if(last&&now-num(last.t,0)<20*3600*1000) return; /* idempotent: ~1 snapshot/day max */
+    var dv=WX_envDerived(), res=WX_reservoirEst();
+    S.envHist.push({
+      t:now,
+      temp:num(S.env.temp,76), rh:num(S.env.humidity,52),
+      vpd:isNaN(dv.vpd)?null:Math.round(dv.vpd*100)/100,
+      ec:res.ec, ph:res.ph,
+      water:WX_roomAvg('water'), health:WX_roomAvg('health')
+    });
+    while(S.envHist.length>200) S.envHist.shift();
+  }catch(e){}
+}
+var WX_histRange='24H';
+function WX_setHistRange(r){
+  WX_histRange=r;
+  try{ if(typeof current!=='undefined'&&typeof RENDER!=='undefined'&&RENDER[current]) RENDER[current](); }catch(e){}
+}
+function WX_histFiltered(){
+  var out=[];
+  try{
+    if(typeof S==='undefined'||!S||!Array.isArray(S.envHist)) return out;
+    var span={'1H':3600000,'6H':21600000,'24H':86400000,'7D':604800000}[WX_histRange]||86400000;
+    var cut=Date.now()-span;
+    out=S.envHist.filter(function(e){ return e&&num(e.t,0)>=cut; });
+  }catch(e){}
+  return out;
+}
+function WX_sparkSVG(vals){
+  var pts=vals.filter(function(v){ return v!==null&&v!==undefined&&!isNaN(v); });
+  if(pts.length<2) return '';
+  var stride=Math.max(1,Math.ceil(pts.length/60)); /* cap ~60 points */
+  var ds=[]; for(var i=0;i<pts.length;i+=stride) ds.push(pts[i]);
+  if(ds[ds.length-1]!==pts[pts.length-1]) ds.push(pts[pts.length-1]);
+  var mn=Math.min.apply(null,ds), mx=Math.max.apply(null,ds), rg=(mx-mn)||1;
+  var p=ds.map(function(v,i){
+    var x=(i/(ds.length-1)*100).toFixed(1);
+    var y=(34-((v-mn)/rg*30)).toFixed(1);
+    return x+','+y;
+  }).join(' ');
+  return '<svg class="ge-spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+p+'"/></svg>';
+}
+function WX_envHistoryHTML(){
+  var ranges=['1H','6H','24H','7D'];
+  var html='<div class="ge-divider"></div><div class="ge-section-title">ENVIRONMENT HISTORY</div>'+
+   '<div class="ge-seg" role="tablist">'+ranges.map(function(r){
+     return '<button role="tab" aria-selected="'+(WX_histRange===r)+'" class="'+(WX_histRange===r?'is-active':'')+'" data-wx-histr="'+r+'">'+r+'</button>';
+   }).join('')+'</div>';
+  var rows=WX_histFiltered();
+  if(rows.length<2){
+    return html+'<div class="ge-empty">'+WX_ic('sensors','ge-ic-xl')+'<h3>Not enough history yet</h3><p>Environment snapshots are recorded once per day. Check back after a few grows.</p></div>';
+  }
+  var series=[
+    {k:'temp',label:'TEMP',fmt:function(v){return Math.round(v)+'°F';}},
+    {k:'rh',label:'RH',fmt:function(v){return Math.round(v)+'%';}},
+    {k:'vpd',label:'VPD',fmt:function(v){return v.toFixed(2);}},
+    {k:'ec',label:'EC',fmt:function(v){return v.toFixed(1);}},
+    {k:'ph',label:'pH',fmt:function(v){return v.toFixed(1);}},
+    {k:'water',label:'WATER',fmt:function(v){return Math.round(v)+'%';}},
+    {k:'health',label:'HEALTH',fmt:function(v){return Math.round(v)+'%';}}
+  ];
+  html+='<div class="ge-env-hist-grid">'+series.map(function(s){
+    var vals=rows.map(function(e){ return (e&&e[s.k]!==null&&e[s.k]!==undefined)?+e[s.k]:null; }).filter(function(v){ return v!==null&&!isNaN(v); });
+    if(vals.length<2) return '<div class="ge-env-hist"><div class="ge-spread"><span class="ge-label">'+s.label+'</span><span class="ge-caption ge-muted">—</span></div><p class="ge-caption ge-muted">No data in this range.</p></div>';
+    var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+    return '<div class="ge-env-hist"><div class="ge-spread"><span class="ge-label">'+s.label+'</span><b class="ge-num">'+s.fmt(vals[vals.length-1])+'</b></div>'+
+     WX_sparkSVG(vals)+
+     '<div class="ge-spread"><span class="ge-caption ge-muted">min '+s.fmt(mn)+'</span><span class="ge-caption ge-muted">max '+s.fmt(mx)+'</span></div></div>';
+  }).join('')+'</div>';
+  return html;
+}
+function GT_starMeter(v){
+  const val=clamp(Math.round(num(v,0)/20*2)/2,0,5);
+  let h='<span class="ge-smeter" role="img" aria-label="'+val+' of 5 stars">';
+  for(let i=1;i<=5;i++){
+    const c=val>=i?'on':(val>=i-0.5?'half':'');
+    h+='<i class="'+c+'">★</i>';
+  }
+  return h+'</span>';
+}
+function GT_demandPill(st){
+  const d=GT_demand(st)[0];
+  const cls=d==='HIGH'?'ge-pill-optimal':d==='RISING'?'ge-pill-watch':'ge-pill-neutral';
+  return '<span class="ge-pill '+cls+'">'+d+' DEMAND</span>';
+}
+function GT_rarityBadge(rar){
+  const map={legendary:['ge-badge-legendary','crown-gold'],elite:['ge-badge-elite','star'],rare:['','star'],common:['ge-badge-common','leaf']};
+  const m=map[rar]||map.common;
+  return '<span class="ge-badge '+m[0]+'">'+icon(m[1],'ge-ic-sm')+String(rar).toUpperCase()+'</span>';
+}
+function GT_p0Status(st){
+  const isP0=st.id==='project-zero-og'||st.id==='crown-jewel';
+  if(isP0) return '<span class="ge-badge ge-badge-legendary">'+icon('project0','ge-ic-sm')+'PROJECT 0 ARCHIVE</span>';
+  const kp=(S.keepers||[]).filter(k=>k.strainId===st.id).length;
+  if(kp>0) return '<span class="ge-badge ge-badge-keeper">'+icon('crown','ge-ic-sm')+'PRESERVED ×'+kp+'</span>';
+  return '<span class="ge-badge ge-badge-common">STANDARD ARCHIVE</span>';
+}
+function GT_crossesOf(st){
+  try{
+    return (S.customStrains||[]).filter(c=>String(c.lineage||'').indexOf(st.name)>=0);
+  }catch(e){ return []; }
+}
+let GR_uid=0;
+function GR_facilityScene(tier){
+  GR_uid++;
+  const u='grf'+GR_uid, W=400, H=160;
+  const T=FAC_TIERS[clamp(int(tier,0),0,8)]||FAC_TIERS[0];
+  let h='<svg class="ge-facscene" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice" aria-hidden="true">';
+  h+='<defs><linearGradient id="'+u+'bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161013"/><stop offset="1" stop-color="#0a0708"/></linearGradient>'+
+     '<radialGradient id="'+u+'gl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff5a5a" stop-opacity="0.5"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></radialGradient></defs>';
+  h+='<rect width="'+W+'" height="'+H+'" fill="url(#'+u+'bg)"/>';
+  /* floor */
+  h+='<rect y="'+(H-16)+'" width="'+W+'" height="16" fill="#0d0b0a"/><rect y="'+(H-16)+'" width="'+W+'" height="1.5" fill="#2a2a2e"/>';
+  /* ---- tier structure ---- */
+  if(tier<=1){
+    /* grow tent */
+    h+='<path d="M52 '+(H-16)+' L200 30 L348 '+(H-16)+' z" fill="#141114" stroke="#3a2a2e" stroke-width="3"/>';
+    h+='<path d="M200 30 L200 '+(H-16)+'" stroke="#2a2024" stroke-width="2"/>';
+    h+='<path d="M176 '+(H-16)+' L200 84 L224 '+(H-16)+'" fill="#0c0a0c" stroke="#3a2a2e" stroke-width="2"/>';
+    if(tier===1){ h+='<rect x="286" y="52" width="34" height="10" fill="#1c1c1e" stroke="#333"/><rect x="80" y="52" width="34" height="10" fill="#1c1c1e" stroke="#333"/>'; }
+  }else if(tier<=3){
+    /* home / production room */
+    h+='<rect x="36" y="34" width="328" height="'+(H-50)+'" fill="#121013" stroke="#33302f" stroke-width="2"/>';
+    for(let wx=56;wx<340;wx+=38) h+='<rect x="'+wx+'" y="44" width="26" height="18" fill="#1e1a1c" stroke="#2e2a2c"/>';
+    if(tier===3){ h+='<rect x="36" y="20" width="328" height="9" fill="#1c1c1e" stroke="#333"/>'; for(let dx=70;dx<360;dx+=60) h+='<rect x="'+dx+'" y="20" width="4" height="9" fill="#333"/>'; }
+  }else if(tier===4){
+    /* commercial facility: sawtooth roof warehouse */
+    h+='<rect x="24" y="52" width="352" height="'+(H-68)+'" fill="#111014" stroke="#3a3638" stroke-width="2"/>';
+    h+='<path d="M24 52 l44 -26 l44 26 l44 -26 l44 26 l44 -26 l44 26 l44 -26 l44 26" fill="none" stroke="#3a3638" stroke-width="3"/>';
+    for(let wx=44;wx<340;wx+=40) h+='<rect x="'+wx+'" y="66" width="24" height="30" fill="#191417" stroke="#2e2a2c"/>';
+  }else if(tier===5){
+    /* genetics lab: benches + dna helix */
+    h+='<rect x="24" y="44" width="352" height="'+(H-60)+'" fill="#0e1518" stroke="#2e4a4e" stroke-width="2"/>';
+    h+='<path d="M300 60 C 330 80 330 110 300 128 M340 60 C 310 80 310 110 340 128" fill="none" stroke="#e02020" stroke-width="2.5" opacity="0.85"/>';
+    for(let ry=0;ry<4;ry++){ const yy=74+ry*14; h+='<line x1="306" y1="'+yy+'" x2="334" y2="'+yy+'" stroke="#8a8a8e" stroke-width="1.5" opacity="0.7"/>'; }
+    h+='<rect x="52" y="96" width="120" height="10" fill="#1c1c1e" stroke="#3a6a6e"/><rect x="66" y="70" width="14" height="26" fill="#233038" stroke="#3a6a6e"/><rect x="92" y="78" width="18" height="18" fill="#233038" stroke="#3a6a6e"/>';
+  }else if(tier===6){
+    /* breeding facility: crossing lines */
+    h+='<rect x="24" y="44" width="352" height="'+(H-60)+'" fill="#121014" stroke="#4a3638" stroke-width="2"/>';
+    h+='<path d="M150 122 L250 70 M250 122 L150 70" stroke="#e02020" stroke-width="3" opacity="0.7"/>';
+    h+='<circle cx="150" cy="122" r="10" fill="none" stroke="#3ddc5f" stroke-width="2"/><circle cx="250" cy="70" r="10" fill="none" stroke="#3ddc5f" stroke-width="2"/>';
+    h+='<circle cx="250" cy="122" r="10" fill="none" stroke="#e02020" stroke-width="2"/><circle cx="150" cy="70" r="10" fill="none" stroke="#e02020" stroke-width="2"/>';
+  }else if(tier===7){
+    /* preservation vault: gold-trimmed vault door */
+    h+='<rect x="0" y="0" width="'+W+'" height="5" fill="#d4a017" opacity="0.55"/><rect x="0" y="'+(H-21)+'" width="'+W+'" height="5" fill="#d4a017" opacity="0.55"/>';
+    h+='<circle cx="200" cy="92" r="46" fill="#151517" stroke="#d4a017" stroke-width="3"/>';
+    h+='<circle cx="200" cy="92" r="34" fill="none" stroke="#3a3a3e" stroke-width="2"/>';
+    for(let sp=0;sp<8;sp++){ const a=sp*Math.PI/4, x1=200+Math.cos(a)*12, y1=92+Math.sin(a)*12, x2=200+Math.cos(a)*34, y2=92+Math.sin(a)*34;
+      h+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#4a4a4e" stroke-width="3"/>'; }
+    h+='<circle cx="200" cy="92" r="8" fill="#d4a017" opacity="0.85"/>';
+  }else{
+    /* shocker ownz empire: tower + crown */
+    h+='<rect x="150" y="26" width="100" height="'+(H-42)+'" fill="#141114" stroke="#5a1a1a" stroke-width="2"/>';
+    h+='<rect x="165" y="12" width="70" height="16" fill="#141114" stroke="#5a1a1a" stroke-width="2"/>';
+    for(let wy=40;wy<H-24;wy+=18) for(let wx=160;wx<240;wx+=20) h+='<rect x="'+wx+'" y="'+wy+'" width="10" height="8" fill="#ff5a5a" opacity="0.28"/>';
+    h+='<rect x="60" y="70" width="60" height="'+(H-86)+'" fill="#100e10" stroke="#3a2a2e"/><rect x="280" y="70" width="60" height="'+(H-86)+'" fill="#100e10" stroke="#3a2a2e"/>';
+    h+='<path d="M182 8 l6 -10 l6 6 l6 -12 l6 12 l6 -6 l6 10 z" fill="#d4a017"/>';
+  }
+  /* ---- hanging light bars ---- */
+  const nL=T.lights, span=W/(nL+1);
+  for(let i=1;i<=nL;i++){
+    const x=Math.round(i*span);
+    h+='<line x1="'+x+'" y1="26" x2="'+x+'" y2="14" stroke="#3a3a3e" stroke-width="3"/>';
+    h+='<rect x="'+(x-28)+'" y="26" width="56" height="7" rx="2" fill="#151517" stroke="#7a0d0d"/>';
+    h+='<rect x="'+(x-23)+'" y="27.5" width="46" height="4" fill="#ff6b6b" opacity="0.8"/>';
+    h+='<ellipse class="ge-facscene-glow" cx="'+x+'" cy="86" rx="50" ry="44" fill="url(#'+u+'gl)"/>';
+  }
+  /* ---- plant rows (kept clear of vault door / tower) ---- */
+  const rows=T.rows, skipMid=(tier>=7);
+  for(let ri=0;ri<rows;ri++){
+    const y0=H-26-ri*9, n=5+Math.min(5,rows);
+    for(let i=0;i<n;i++){
+      const x=Math.round(28+i*(W-56)/Math.max(1,n-1));
+      if(skipMid&&x>110&&x<290) continue;
+      const hh=13+((i*37+ri*13)%3)*5;
+      h+='<g><rect x="'+(x-6)+'" y="'+(y0-6)+'" width="12" height="6" fill="#141414"/>'+
+         '<path d="M'+x+' '+(y0-6)+' v-'+hh+'" stroke="#1d3a1a" stroke-width="2"/>'+
+         '<path d="M'+x+' '+(y0-10)+' c-6 -2 -9 -6 -8 -11 c4 1 7 5 8 11z M'+x+' '+(y0-10)+' c6 -2 9 -6 8 -11 c-4 1 -7 5 -8 11z" fill="#2e6b34"/></g>';
+    }
+  }
+  return h+'</svg>';
+}
+function GR_ring(pct,tone){
+  const p=clamp(Math.round(pct),0,100);
+  return '<span class="ge-ring ge-ring-'+tone+'"><svg viewBox="0 0 36 36" aria-hidden="true">'+
+   '<circle class="ge-ring-track" cx="18" cy="18" r="15.9155"/>'+
+   '<circle class="ge-ring-val" cx="18" cy="18" r="15.9155" stroke-dasharray="'+p+' 100"/></svg>'+
+   '<span class="ge-ring-label">'+p+'<small>%</small></span></span>';
+}
+function GR_tile(ico,label,val,sub,tone){
+  return '<div class="ge-metric-tile"><div class="ge-metric-value ge-num '+(tone||'')+'">'+val+'</div>'+
+   '<div class="ge-metric-label">'+icon(ico,'ge-ic-md')+' '+label+'</div>'+
+   (sub?'<div class="ge-metric-sub">'+sub+'</div>':'')+'</div>';
+}
+function GR_bar(label,val,tone){
+  const p=clamp(Math.round(val),0,100);
+  return '<div class="ge-progress-meta"><span>'+label+'</span><b class="ge-num">'+p+'</b></div>'+
+   '<div class="ge-progress ge-progress-'+tone+'"><i style="width:'+p+'%"></i></div>';
+}
+function GR_starMeter(label,pct,known){
+  const p=clamp(Math.round(num(pct,0)),0,100), full=Math.round(p/20);
+  let s='';
+  for(let i=0;i<5;i++) s+='<span class="'+(known&&i<full?'on':'')+'">'+icon('star','ge-ic-sm')+'</span>';
+  return '<div class="ge-stars-row"><span class="ge-label">'+label+'</span><span class="ge-stars">'+s+'</span>'+
+   '<span class="ge-num ge-muted">'+(known?p:'???')+'</span></div>';
+}
+function GR_issuePill(issue){
+  const toneCls={watch:'ge-pill-watch',warning:'ge-pill-warning',critical:'ge-pill-critical'}[issue.tone]||'ge-pill-watch';
+  return '<span class="ge-pill '+toneCls+'">'+icon(issue.icon,'ge-ic-sm')+' '+esc(issue.text)+'</span>';
+}
+function GR_emptyPlanter(){
+  return '<svg class="ge-empty-pot" viewBox="0 0 64 64" aria-hidden="true">'+
+   '<path d="M18 40 h28 l-3 14 a3 3 0 0 1-3 3 H24 a3 3 0 0 1-3-3 z" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4" opacity="0.55"/>'+
+   '<rect x="15" y="34" width="34" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55"/>'+
+   '<path d="M32 34 v-7 M26 27 a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2" opacity="0.35" stroke-linecap="round"/></svg>';
+}
+function GR_plantName(p){
+  return esc(phenoName(p)).replace('🧬',icon('dna','ge-ic-sm'));
+}
+function GR_condTone(p){
+  return p.health>=70?'ok':p.health>=40?'warn':'bad';
+}
+function HM_identityHead(){
+  let grower='GUEST';
+  try{ const prof=NX_activeProfile(); if(prof&&prof.grower) grower=prof.grower; }catch(e){}
+  let rank='STREET ROOKIE';
+  try{ rank=TY_rankName(); }catch(e){}
+  let val=0;
+  try{ if(typeof NX_empireValue==='function') val=NX_empireValue(); }catch(e){}
+  let fac='-';
+  try{ fac=FAC_TIERS[facTierIdx()].name; }catch(e){}
+  const plants=int((S&&S.plants)?S.plants.length:0,0);
+  return '<div class="ge-home-hero ge-anim-rise">'+
+   '<div class="ge-home-hero-top"><div class="ge-home-mask">'+icon('gasmask','ge-ic-xl')+'</div>'+
+   '<div><div class="ge-label ge-muted">EMPIRE COMMAND CENTER</div>'+
+   '<div class="ge-h1 ge-home-name">'+esc(grower)+'</div>'+
+   '<div class="ge-home-rank"><span class="ge-badge ge-badge-keeper">'+icon('crown-red','ge-ic-sm')+esc(rank)+'</span></div></div></div>'+
+   '<div class="ge-tiles ge-tiles-4 ge-home-stats">'+
+   '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+fmt$(val)+'</div><div class="ge-metric-label">EMPIRE VALUE</div></div>'+
+   '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+plants+'</div><div class="ge-metric-label">ACTIVE GROWS</div></div>'+
+   '<div class="ge-metric-tile"><div class="ge-metric-value ge-truncate">'+esc(fac)+'</div><div class="ge-metric-label">FACILITY</div></div>'+
+   '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">DAY '+int(S.day,1)+'</div><div class="ge-metric-label">DAY</div></div>'+
+   '</div></div>';
+}
+function HM_envPill(){
+  let score=100;
+  try{ score=envEval().score; }catch(e){}
+  let cls='ge-pill-optimal', label='OPTIMAL';
+  if(score>=90){ cls='ge-pill-optimal'; label='OPTIMAL'; }
+  else if(score>=70){ cls='ge-pill-neutral'; label='STABLE'; }
+  else if(score>=50){ cls='ge-pill-watch'; label='UNSTABLE'; }
+  else{ cls='ge-pill-critical'; label='CRITICAL'; }
+  return '<span class="ge-pill '+cls+'">'+icon('temp','ge-ic-sm')+label+' '+score+'</span>';
+}
+function HM_menuModules(openMissions){
+  const fi=clamp(int(S.facility,0),0,FACILITIES.length-1);
+  const slots=FACILITIES[fi].slots, nPlants=S.plants.length;
+  let rem=null, needy=0, ready=0;
+  S.plants.forEach(p=>{
+    try{
+      if(num(p.health,100)<50||num(p.water,100)<20||num(p.nutrition,100)<15) needy++;
+      const stg=stageOf(p);
+      if(stg>=5) ready++;
+      const st=getStrain(p.strainId);
+      if(st&&stg<5){ const d=Math.max(0,Math.ceil(num(st.ft,0)-num(p.day,0))); if(rem===null||d<rem) rem=d; }
+    }catch(e){}
+  });
+  const nextAct=ready>0?('<span class="ge-green">'+ready+' READY</span>')
+    :needy>0?('<span class="ge-amber">'+needy+' NEED HELP</span>')
+    :rem!==null?('HARVEST IN '+rem+'D'):'PLANT A SEED';
+  let unlocked=0,total=0,keepers=0,hunts=0;
+  try{ unlocked=unlockedCount(S); total=allStrains().length; keepers=(S.keepers||[]).length; }catch(e){}
+  try{ hunts=(S.phenoHunts||[]).filter(h=>h.active).length; }catch(e){}
+  let rev=0,cust=0,rating='-';
+  try{ rev=num(S.ty.fin.rev,0); const st=S.ty.cust.stats; cust=int(st.cust,0); if(st.satN>0) rating=Math.round(st.sat/st.satN)+'%'; }catch(e){}
+  let expSoon=0;
+  try{ const act=(S.mn&&S.mn.active)||{}; Object.keys(act).forEach(id=>{ const a=act[id]; const left=int(a.days,0)-(int(S.day,1)-int(a.startDay,1)); if(left>=0&&left<=2) expSoon++; }); }catch(e){}
+  let p0=0;
+  try{ p0=int(S.project0.points,0); }catch(e){}
+  const mods=[
+    {ico:'grow',title:'ACTIVE GROW',go:'grow',cta:'VIEW ROOM',
+     metrics:'<span class="ge-num">'+nPlants+'/'+slots+'</span><span>PLANTS'+(nPlants?' &middot; '+nextAct:'')+'</span>'+HM_envPill()},
+    {ico:'dispensary',title:'DISPENSARY',go:'dispensary',cta:'OPEN DISPENSARY',
+     metrics:'<span class="ge-num">'+fmt$(rev)+'</span><span>TODAY &middot; '+cust+' CUSTOMERS &middot; RATING '+rating+'</span>'},
+    {ico:'genetics',title:'GENETICS',go:'genetics',cta:'OPEN VAULT',
+     metrics:'<span class="ge-num">'+unlocked+'/'+total+'</span><span>UNLOCKED &middot; '+keepers+' KEEPERS &middot; '+hunts+' HUNTS</span>'},
+    {ico:'missions',title:'MISSIONS',go:'missions',cta:'VIEW MISSIONS',
+     metrics:'<span class="ge-num">'+openMissions+'</span><span>ACTIVE'+(expSoon>0?' &middot; <span class="ge-pill ge-pill-warning">EXPIRING SOON</span>':'')+'</span>'},
+    {ico:'project0',title:'PROJECT 0',go:'project0',cta:'ENTER VAULT',
+     metrics:'<span class="ge-num">'+p0+'</span><span>PRESERVATION SCORE</span>'}
+  ];
+  let h='<div class="ge-menu-modules">';
+  mods.forEach(m=>{
+    h+='<button class="ge-card ge-card-tap ge-menu-mod ge-anim-rise" data-go="'+m.go+'">'+
+     '<span class="ge-menu-mod-head">'+icon(m.ico,'ge-ic-lg')+'<span class="ge-menu-mod-title ge-label">'+m.title+'</span></span>'+
+     '<span class="ge-menu-mod-metrics">'+m.metrics+'</span>'+
+     '<span class="ge-menu-mod-cta">'+m.cta+'</span></button>';
+  });
+  return h+'</div>';
+}
+const MS_SECTIONS=[
+ {id:'active',label:'ACTIVE',icon:'missions'},
+ {id:'daily',label:'DAILY',icon:'clock'},
+ {id:'weekly',label:'WEEKLY',icon:'calendar'},
+ {id:'story',label:'STORY',icon:'scroll'},
+ {id:'project0',label:'PROJECT 0',icon:'project0'}
+];
+const MS_STORY_CATS=['Tutorial','Grow Challenges','Strain Trials','Quality Challenges',
+ 'Yield Challenges','Breeding','Speed Runs','Hard Mode'];
+const MS_EMPTY={
+ active:{t:'No missions in progress',p:'Start a contract from DAILY, WEEKLY or STORY — or finish what you began.'},
+ daily:{t:'No daily contracts',p:'Short-burn timed missions (1\u20132 days) appear here when available.'},
+ weekly:{t:'No weekly operations',p:'Longer timed missions (3+ days) appear here when available.'},
+ story:{t:'No story missions',p:'The campaign arc lives here.'},
+ project0:{t:'No Project 0 missions',p:'Preservation-first trials appear here.'}
+};
+function MS_days(m){ const d=parseInt(m&&m.days,10); return isFinite(d)?d:0; }
+function MS_inSection(m,sec,done,started){
+  if(sec==='active') return !done&&started;
+  if(sec==='daily') return !!m.timed&&MS_days(m)>=1&&MS_days(m)<=2;
+  if(sec==='weekly') return !!m.timed&&MS_days(m)>=3;
+  if(sec==='project0') return m.cat==='Project 0';
+  return MS_STORY_CATS.indexOf(m.cat)>=0;
+}
+function MS_diffBadge(m){
+  const rw=m.reward||{};
+  const cash=num(rw.cash,0);
+  let label='EASY', cls='ge-pill-optimal';
+  if(m.timed||cash>=1500||num(rw.p0,0)>=6||num(rw.rep,0)>=50){ label='HARD'; cls='ge-pill-critical'; }
+  else if(cash>=400||num(rw.p0,0)>=3||num(rw.xp,0)>=200){ label='MEDIUM'; cls='ge-pill-warning'; }
+  return '<span class="ge-pill '+cls+' ms-diff">'+label+'</span>';
+}
+function MS_statePill(done,started){
+  if(done) return '<span class="ge-pill ge-pill-optimal">'+icon('check','ge-ic-sm')+'COMPLETE</span>';
+  if(started) return '<span class="ge-pill ge-pill-watch">IN PROGRESS</span>';
+  return '<span class="ge-pill ge-pill-neutral">AVAILABLE</span>';
+}
+function MS_rewardHTML(m){
+  const rw=m.reward||{};
+  const bits=[
+    rw.cash?fmt$(Math.round(rw.cash*DIFFS[S.difficulty].missionReward)):'',
+    rw.rep?'+'+rw.rep+' rep':'',
+    rw.xp?'+'+rw.xp+' XP':'',
+    rw.p0?'+'+rw.p0+' P0':'',
+    (rw.gen||[]).length?icon('dna','ge-ic-sm')+' genetics':''
+  ].filter(Boolean).join(' \u2022 ');
+  return bits?'<p class="ms-reward">'+icon('trophy','ge-ic-sm')+'<span>REWARD \u2014 '+bits+'</span></p>':'';
+}
+function MS_objHTML(m,pr){
+  const done=pr.cur>=pr.target;
+  let lis='';
+  if(pr.target>1){
+    const n=Math.min(pr.cur,pr.target);
+    for(let i=1;i<=pr.target;i++){
+      const pd=i<=n;
+      lis+='<li class="ms-obj'+(pd?' is-done':'')+'">'+
+       '<span class="ms-check">'+icon(pd?'check':'clock','ge-ic-sm')+'</span>'+
+       '<span class="ms-objt">Objective '+i+' of '+pr.target+'</span>'+
+       '<span class="ge-pill '+(pd?'ge-pill-optimal':'ge-pill-neutral')+'">'+(pd?'DONE':'OPEN')+'</span></li>';
+    }
+  }else{
+    lis='<li class="ms-obj'+(done?' is-done':'')+'">'+
+     '<span class="ms-check">'+icon(done?'check':'clock','ge-ic-sm')+'</span>'+
+     '<span class="ms-objt">'+esc(m.desc)+'</span>'+
+     '<b class="ge-num">'+Math.min(pr.cur,pr.target)+'/'+pr.target+'</b></li>';
+  }
+  return '<ul class="ms-objs">'+lis+'</ul>';
+}
+function MS_cardHTML(m,cat,pr,done,started){
+  const multi=pr.target>1;
+  return '<div class="ge-card ge-mission'+(done?' is-done':'')+'">'+
+   '<div class="ms-top"><span class="ms-cat">'+esc(cat)+'</span>'+MS_statePill(done,started)+MS_diffBadge(m)+'</div>'+
+   '<h3 class="ms-title">'+(done?icon('check','ge-ic-sm'):'')+esc(m.name)+'</h3>'+
+   (multi?'<p class="ge-muted">'+esc(m.desc)+'</p>':'')+
+   MN_timedHTML(m)+
+   MS_objHTML(m,pr)+
+   '<div class="ge-progress-meta"><span>'+icon('level','ge-ic-sm')+'PROGRESS</span><b class="ge-num">'+Math.min(pr.cur,pr.target)+'/'+pr.target+'</b></div>'+
+   '<div class="ge-progress'+(done?' ge-progress-ok':'')+'"><i style="width:'+clamp(pr.cur/pr.target*100,0,100)+'%"></i></div>'+
+   MS_rewardHTML(m)+
+  '</div>';
+}
+function MS_stripEmoji(s){
+  try{
+    return String(s==null?'':s).replace(/^(\p{Extended_Pictographic}|\uFE0F|\u200D|[\u00A9\u00AE\u2600-\u27BF\u2B00-\u2BFF]|\s)+/u,'').trim();
+  }catch(e){ return String(s==null?'':s); }
+}
+const MS_ACH_ICONS={
+ 'x-firstharvest':'grow','x-greenthumb':'leaf','x-geneticfreak':'dna','x-masterbreeder':'flask',
+ 'x-perfectgrow':'star','x-millionaire':'cash','x-strain100':'grow','x-empirebuilder':'empire',
+ 'x-p0200':'project0','x-p0pillars':'project0','x-firstpound':'box','x-100plants':'grow',
+ 'x-1000plants':'grow','x-30club':'star','x-perfectenv':'temp','x-10m':'cash','x-geneticmaster':'dna'
+};
+function MS_achIcon(id){ return MS_ACH_ICONS[id]||'trophy'; }
+function MS_achGold(id){ return id==='x-perfectgrow'||id==='x-30club'; }
+function MS_placeBadge(p){
+  const t=p===1?'1ST':p===2?'2ND':'3RD';
+  const cls=p===1?'ge-badge-legendary':p===2?'ge-badge':'ge-badge-elite';
+  return '<span class="ge-badge '+cls+'">'+t+'</span>';
+}
+function PF_pill(kind,icoName,text){
+  return '<span class="ge-pill ge-pill-'+kind+'">'+icon(icoName,'ge-ic-sm')+text+'</span>';
+}
+function PF_kv(label,value){
+  return '<div class="ge-datarow"><span>'+label+'</span><b>'+value+'</b></div>';
+}
+function PF_tile(icoHtml,label,value,sub){
+  return '<div class="ge-metric-tile"><div class="ge-metric-value ge-num">'+value+'</div>'+
+   '<div class="ge-metric-label">'+icoHtml+label+'</div>'+
+   (sub?'<div class="ge-metric-sub">'+sub+'</div>':'')+'</div>';
+}
+function P0V_scoreRing(){
+  const lvls=P0V_trackLevels(), pct=clamp(lvls/40*100,0,100);
+  return '<div class="ge-ring ge-ring-gold"><svg viewBox="0 0 36 36">'+
+   '<circle class="ge-ring-track" cx="18" cy="18" r="15.9155"/>'+
+   '<circle class="ge-ring-val" cx="18" cy="18" r="15.9155" stroke-dasharray="'+pct.toFixed(0)+' 100"/>'+
+   '</svg><div class="ge-ring-label">'+lvls+'<small>LEVELS</small></div></div>';
+}
+function P0V_trackLevels(){
+  return P0_TRACKS.reduce((a,tr)=>a+int(p0Level(tr.id),0),0);
+}
+function P0V_metricsHTML(){
+  const arch=Array.isArray(S.phenoArchive)?S.phenoArchive:[];
+  const rare=arch.filter(a=>a.rarity==='elite'||a.rarity==='legendary').length;
+  const historic={};
+  arch.forEach(a=>{ if(a.strainName) historic[a.strainName]=1; });
+  const legacyRuns=(S.ex&&S.ex.legacy)?int(S.ex.legacy.runs,0):0;
+  const metrics=[
+    {v:int(S.project0.points,0), l:'PRESERVATION SCORE', ic:'project0', gold:true},
+    {v:arch.length, l:'ARCHIVED GENETICS', ic:'box'},
+    {v:rare, l:'RARE TRAITS', ic:'star'},
+    {v:Object.keys(historic).length, l:'HISTORIC LINES', ic:'scroll'},
+    {v:(S.customStrains||[]).length, l:'STABILIZED LINES', ic:'dna'},
+    {v:legacyRuns, l:'LEGACY PROJECTS', ic:'crown-gold'}
+  ];
+  return metrics.map(m=>
+   '<div class="ge-metric-tile ge-p0-metric'+(m.gold?' ge-p0-metric-gold':'')+'">'+
+    '<div class="ge-p0-metric-ic">'+icon(m.ic,'ge-ic-lg')+'</div>'+
+    '<div class="ge-metric-value ge-num">'+m.v+'</div>'+
+    '<div class="ge-metric-label">'+m.l+'</div>'+
+   '</div>').join('');
+}
+function P0V_tracksHTML(){
+  return P0_TRACKS.map(tr=>{
+    const pts=S.project0.tracks[tr.id]||0, lvl=p0Level(tr.id);
+    const nextTh=P0_LEVEL_PTS[Math.min(lvl+1,P0_LEVEL_PTS.length-1)];
+    const pct=lvl>=5?100:clamp(pts/nextTh*100,0,100);
+    const maxed=lvl>=5;
+    return '<div class="ge-card ge-card-flat ge-p0-track ge-anim-rise">'+
+     '<div class="ge-card-head"><h3>'+icon(tr.ico,'ge-ic-md')+esc(tr.name)+'</h3>'+
+      '<span class="ge-pill '+(maxed?'ge-pill-gold':'ge-pill-neutral')+'">LV '+lvl+'</span></div>'+
+     '<div class="ge-progress'+(maxed?' ge-progress-gold':'')+'"><i style="width:'+pct+'%"></i></div>'+
+     '<div class="ge-progress-meta"><span class="ge-num">'+pts+' pts</span>'+
+      '<b>'+(lvl<5?nextTh+' for LV '+(lvl+1):'MAXED')+'</b></div>'+
+    '</div>';
+  }).join('');
+}
+function P0V_rewardsHTML(){
+  return P0_TRACKS.map(tr=>{
+    const lvl=p0Level(tr.id), rw=P0_REWARDS[tr.id]||{};
+    return '<div class="ge-p0-rewardrow">'+
+     '<div class="ge-p0-reward-track">'+icon(tr.ico,'ge-ic-md')+'<span>'+esc(tr.name)+'</span></div>'+
+     '<div class="ge-p0-reward-cells">'+
+      P0V_rewardCell(rw[3],lvl>=3,3)+
+      P0V_rewardCell(rw[5],lvl>=5,5)+
+     '</div></div>';
+  }).join('');
+}
+function P0V_rewardCell(rw,earned,atLvl){
+  const desc=rw?P0V_rewardDesc(rw):'—';
+  return '<div class="ge-p0-rewardcell'+(earned?' is-earned':'')+'">'+
+   '<div class="ge-label ge-muted">LV '+atLvl+'</div>'+
+   '<div class="ge-p0-rewarddesc">'+desc+'</div>'+
+   '<span class="ge-pill '+(earned?'ge-pill-gold':'ge-pill-neutral')+'">'+
+    (earned?icon('check','ge-ic-sm')+'EARNED':icon('lock','ge-ic-sm')+'LOCKED')+'</span>'+
+  '</div>';
+}
+function P0V_rewardDesc(rw){
+  if(rw.cash) return '<span class="ge-num ge-green">'+fmt$(rw.cash)+'</span> CASH';
+  if(rw.rep)  return '<span class="ge-num">+'+rw.rep+'</span> REP';
+  if(rw.xp)   return '<span class="ge-num">+'+rw.xp+'</span> XP';
+  if(rw.gen){
+    const nm=rw.gen.map(g=>{ try{ const st=getStrain(g); return st?esc(st.name):esc(g); }catch(e){ return esc(g); } }).join(', ');
+    return icon('dna','ge-ic-sm')+' UNLOCK: '+nm;
+  }
+  if(rw.title) return icon('trophy','ge-ic-sm')+' TITLE: '+P0V_titleText(rw.title);
+  return '—';
+}
+function P0V_titleTag(t){
+  const m=P0V_titleSplit(t);
+  return '<span class="ge-pill ge-p0-title-pill '+(m.gold?'ge-pill-gold':'ge-pill-neutral')+'">'+
+   icon(m.ic,'ge-ic-sm')+esc(m.text)+'</span>';
+}
+function P0V_titleText(t){ return P0V_titleSplit(t).text; }
+function P0V_titleSplit(t){
+  const s=String(t||'');
+  const table=[
+    ['🧬','dna',false],['💪','trophy',false],['🏦','keepers',false],
+    ['🌱','grow',false],['❤️','users',false],['❤','users',false],
+    ['🕊️','project0',true],['🕊','project0',true],
+    ['💎','star',true],['📚','scroll',false]
+  ];
+  for(let i=0;i<table.length;i++){
+    if(s.indexOf(table[i][0])===0)
+      return {ic:table[i][1],gold:table[i][2],text:s.slice(table[i][0].length).trim()};
+  }
+  return {ic:'trophy',gold:false,text:s};
+}

@@ -9,13 +9,15 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 34'%3E%3Cpath d='M4 10l7 5.5L24 6l13 9.5L44 10 40.5 28h-33z' fill='%23e02020'/%3E%3Crect x='7.5' y='29' width='33' height='3' rx='1.5' fill='%23e02020'/%3E%3C/svg%3E">
 </head>
 <body>
-<header id="hud" class="hidden">
-  <div class="hud-brand"><svg class="ic ic-lg" viewBox="0 0 24 24" aria-hidden="true"><g fill="#e02020" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/><circle cx="2.5" cy="8" r="1.6"/><circle cx="12" cy="4.5" r="1.6"/><circle cx="21.5" cy="8" r="1.6"/></g></svg></div>
-  <div class="hud-stats">
-    <div class="hud-stat"><span class="hud-label">CASH</span><span id="hud-cash" class="hud-val">$0</span></div>
-    <div class="hud-stat"><span class="hud-label">REP</span><span id="hud-rep" class="hud-val">0</span></div>
-    <div class="hud-stat"><span class="hud-label">LVL</span><span id="hud-level" class="hud-val">1</span></div>
-    <div class="hud-stat"><span class="hud-label">DAY</span><span id="hud-day" class="hud-val">1</span></div>
+<header id="hud" class="ge-topbar hidden">
+  <div class="ge-topbar-inner">
+    <div class="ge-topbar-brand"><svg class="ic ge-ic-lg" viewBox="0 0 24 24" aria-hidden="true"><g fill="#e02020" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/><circle cx="2.5" cy="8" r="1.6"/><circle cx="12" cy="4.5" r="1.6"/><circle cx="21.5" cy="8" r="1.6"/></g></svg></div>
+    <div class="ge-topbar-stats">
+      <div class="ge-topbar-stat"><span class="ge-label">CASH</span><span id="hud-cash" class="ge-data"></span></div>
+      <div class="ge-topbar-stat"><span class="ge-label">REP</span><span id="hud-rep" class="ge-data"></span></div>
+      <div class="ge-topbar-stat ge-topbar-lvl"><span class="ge-label">LVL</span><span id="hud-level" class="ge-data"></span><div class="ge-progress ge-progress-thin ge-topbar-xp"><i id="hud-xpbar"></i></div></div>
+      <div class="ge-topbar-stat"><span class="ge-label">DAY</span><span id="hud-day" class="ge-data"></span></div>
+    </div>
   </div>
 </header>
 
@@ -72,12 +74,14 @@
   <section id="scr-settings" class="screen hidden"><div id="settings-root"></div></section>
 </main>
 
-<nav id="bottomnav" class="hidden">
-  <button data-nav="menu"><svg class="ic nav-ic" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/></g></svg><span>Menu</span></button>
-  <button data-nav="grow"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13c0-3.6 2.8-6.5 7.5-6.5 0 3.6-2.8 6.5-7.5 6.5z"/><path d="M12 13c0-3.6-2.8-6.5-7.5-6.5 0 3.6 2.8 6.5 7.5 6.5z"/><path d="M5 21h14"/></svg><span>Grow</span></button>
-  <button data-nav="genetics"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3c0 5.5 10 5.5 10 11s-10 5.5-10 7"/><path d="M17 3c0 5.5-10 5.5-10 11s10 5.5 10 7"/><path d="M8.6 6.8h6.8M8.6 17.2h6.8M7.9 12h8.2"/></svg><span>Genetics</span></button>
-  <button data-nav="dispensary"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5V20h16v-9.5"/><path d="M2.8 10.5L4.3 4h15.4l1.5 6.5"/><path d="M2.8 10.5h18.4"/><path d="M10 20v-5.5h4V20"/></svg><span>Shop</span></button>
-  <button data-nav="missions"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12V21l-3-2.2-3 2.2-3-2.2-3 2.2z"/><path d="M9 8.5h6M9 12h6M9 15.5h3.5"/></svg><span>Missions</span></button>
+<nav id="bottomnav" class="ge-navdock hidden" aria-label="Primary">
+  <div class="ge-navdock-row">
+    <button class="ge-navdock-btn" data-nav="menu"><svg class="ic nav-ic" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor" stroke="none"><path d="M2.5 9l4.3 3.4L12 5.5l5.2 6.9L21.5 9 19.3 19H4.7z"/><rect x="4.7" y="20" width="14.6" height="2.2" rx="1"/></g></svg><span>Menu</span></button>
+    <button class="ge-navdock-btn" data-nav="grow"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13c0-3.6 2.8-6.5 7.5-6.5 0 3.6-2.8 6.5-7.5 6.5z"/><path d="M12 13c0-3.6-2.8-6.5-7.5-6.5 0 3.6 2.8 6.5 7.5 6.5z"/><path d="M5 21h14"/></svg><span>Grow</span></button>
+    <button class="ge-navdock-btn" data-nav="genetics"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3c0 5.5 10 5.5 10 11s-10 5.5-10 7"/><path d="M17 3c0 5.5-10 5.5-10 11s10 5.5 10 7"/><path d="M8.6 6.8h6.8M8.6 17.2h6.8M7.9 12h8.2"/></svg><span>Genetics</span></button>
+    <button class="ge-navdock-btn" data-nav="dispensary"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5V20h16v-9.5"/><path d="M2.8 10.5L4.3 4h15.4l1.5 6.5"/><path d="M2.8 10.5h18.4"/><path d="M10 20v-5.5h4V20"/></svg><span>Shop</span></button>
+    <button class="ge-navdock-btn" data-nav="missions"><svg class="ic nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12V21l-3-2.2-3 2.2-3-2.2-3 2.2z"/><path d="M9 8.5h6M9 12h6M9 15.5h3.5"/></svg><span>Missions</span></button>
+  </div>
 </nav>
 
 <div id="modal-root"></div>
