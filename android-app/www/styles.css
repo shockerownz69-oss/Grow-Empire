@@ -93,7 +93,7 @@ svg,img{max-width:100%;}
 
 /* ================= Screens ================= */
 #app{max-width:560px;margin:0 auto;padding:10px 10px 20px;min-height:60vh;}
-.screen{animation:fadein .18s ease-out;}
+.screen{animation:fadein .18s ease-out;padding-bottom:calc(var(--ge-navdock-h) + 44px + env(safe-area-inset-bottom,0px));}
 
 /* ---------- Splash ---------- */
 .splash-wrap{text-align:center;padding:38px 12px 20px;}
@@ -194,11 +194,11 @@ svg,img{max-width:100%;}
   border:1px solid var(--gold); color:#1a1200; text-shadow:none;
   box-shadow:0 0 14px rgba(212,160,23,.4), inset 0 1px 0 rgba(255,255,255,.4), 0 2px 0 #4a3403;
 }
-.btn-green{
-  background:linear-gradient(180deg,#36c65c,#1a7a33 60%,#145c26);
-  border:1px solid var(--green);
-  box-shadow:0 0 12px rgba(61,220,95,.35), inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #0a3816;
-}
+.btn-green{ /* P4: re-toned to brand crimson — no bright-green CTA buttons */
+    background:linear-gradient(180deg,#e53232 0%, var(--crimson) 40%, var(--deepred) 100%);
+    border:1px solid var(--crimson-glow);
+    box-shadow:0 0 12px rgba(224,32,32,.4), inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #4d0808;
+  }
 .btn-danger{
   background:linear-gradient(180deg,#5c1414,#2a0808);
   border:1px solid var(--red);
@@ -642,7 +642,6 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 #scr-genetics .strain-pick.sel{border-color:var(--crimson-glow);
   box-shadow:0 0 16px rgba(224,32,32,.55), inset 0 0 16px rgba(224,32,32,.15);}
 /* DISPENSARY: money green + gold */
-#scr-dispensary .btn-green{box-shadow:0 0 14px rgba(61,220,95,.45);}
 #scr-dispensary .kv b{color:#c8f5d2;}
 /* BREEDING: lab chamber */
 #scr-breeding .card{border:1px dashed var(--deepred);
@@ -752,6 +751,17 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .p-flower svg{width:100%;height:100%;display:block;}
 /* Genetics collectible cards */
 .strain-card{overflow:hidden;}
+/* ---- P2-W2 Living Codex ---- */
+.codex-clue{color:var(--muted);font-size:12px;margin:6px 0 2px;}
+.codex-clue i{color:var(--amber);font-style:italic;}
+.strain-card.codex-complete{border:1px solid var(--gold);box-shadow:0 0 14px rgba(212,160,23,.28);}
+.strain-card.codex-complete .strain-hero{border-bottom:1px solid var(--gold);}
+.ge-card.codex-complete{border:1px solid var(--gold);box-shadow:0 0 14px rgba(212,160,23,.28);}
+.codex-hist-head{display:flex;align-items:center;gap:8px;margin:10px 0 4px;flex-wrap:wrap;}
+.codex-hist-head h4{margin:0;font-size:11px;letter-spacing:2px;color:var(--muted);}
+.codex-notes{margin-top:6px;border-top:1px dashed #4a3410;padding-top:2px;}
+.codex-note{font-size:12px;color:var(--muted);margin:4px 0;}
+
 .strain-hero{margin:-14px -14px 10px;height:112px;overflow:hidden;position:relative;
   border-bottom:1px solid var(--deepred);}
 .strain-hero svg{width:100%;height:100%;display:block;object-fit:cover;}
@@ -856,7 +866,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 @keyframes pulse{50%{transform:scale(1.08);}}
 /* ---- plant focus sheet ---- */
 .focus-back{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;}
-.focus-sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#121214;border-top:2px solid var(--crimson);border-radius:18px 18px 0 0;z-index:91;padding:10px 16px 24px;transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.9,.25,1.1);max-height:86vh;overflow-y:auto;}
+.focus-sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#121214;border-top:2px solid var(--crimson);border-radius:18px 18px 0 0;z-index:91;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.9,.25,1.1);max-height:86vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .focus-sheet.open{transform:translateY(0);}
 .focus-handle{width:44px;height:5px;border-radius:3px;background:#3a3a3e;margin:2px auto 10px;}
 .focus-stage{position:relative;height:170px;background:radial-gradient(ellipse at 50% 80%,rgba(224,32,32,.14),transparent 65%),#0b0b0d;border:1px solid var(--line);border-radius:14px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;margin-bottom:10px;}
@@ -866,7 +876,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .p-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
 .p-actions .btn{padding:10px 4px;font-size:11px;}
 /* micro-animations: water droplets */
-.fx-drops i{position:absolute;top:-14px;width:7px;height:11px;background:#5ac8fa;border-radius:50% 50% 60% 60%;animation:drop .7s ease-in forwards;}
+.fx-drops i{position:absolute;top:-14px;width:7px;height:11px;background:#9fb2c4;border-radius:50% 50% 60% 60%;animation:drop .7s ease-in forwards;}
 .fx-drops i:nth-child(1){left:38%;animation-delay:0s;}
 .fx-drops i:nth-child(2){left:47%;animation-delay:.08s;}
 .fx-drops i:nth-child(3){left:55%;animation-delay:.15s;}
@@ -1205,7 +1215,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{
 .gx-node.gx-rar-legendary b{ color:#ffe9a8; }
 .gx-node.gx-rar-promising{ border-color:#8a8f98; }
 .gx-foundation{ margin-top:.6rem; }
-.gx-linbtn{ margin-top:.6rem;width:100%; }
+.gx-linbtn{margin:0}
 
 /* ---------- grade report ---------- */
 .gx-grade{
@@ -1590,3 +1600,2957 @@ body.anim-reduced *,body.anim-reduced *::before,body.anim-reduced *::after{anima
   #app{max-width:760px;}
   .cap-load-box{max-width:420px;}
 }
+
+/* ===== UI OVERHAUL [DESIGN SYSTEM TOKENS + COMPONENTS] ===== */
+/* ============================================================================
+   GE DESIGN SYSTEM v1 — Shocker OwnZ Grow Empire
+   ----------------------------------------------------------------------------
+   WHAT: shared visual foundation for the UI overhaul. Self-contained.
+   HOW TO LOAD: paste this ENTIRE block AFTER styles.css (or append to it).
+                It must load after legacy styles so ge- rules win on ties.
+   RULES FOR CONSUMERS (screen workers):
+     - Prefix: every class in this file starts with "ge-". No collisions.
+     - No external assets. No webfonts. No images. No CDNs. Offline-safe.
+     - Colors: GREEN is semantic-only (healthy/success/profit/active).
+       NO blue as a brand color. Gold = premium/legendary ONLY.
+     - Touch targets: 44px minimum. Animations: transform/opacity only.
+     - Honor prefers-reduced-motion (handled at the bottom of this file).
+     - Icons come from GE_NEW_ICONS (icons.js) merged into ICONS; render
+       with icon('name','ge-ic-md') etc. Never emoji-as-UI (see emoji-map.md).
+   TOKENS: all design tokens live on :root as --ge-* custom properties.
+   ========================================================================== */
+
+:root{
+  /* ---- brand neutrals ---- */
+  --ge-black:#08090B;
+  --ge-graphite:#111318;
+  --ge-gunmetal:#181B20;
+  --ge-raised:#20242B;
+  --ge-ink:#EDEDEF;
+  --ge-white:#F7F7F5;
+  --ge-muted:#9BA1A8;
+  --ge-faint:#666C75;
+
+  /* ---- brand reds ---- */
+  --ge-crimson-deep:#7A0D0D;
+  --ge-crimson:#C1121F;
+  --ge-red:#E02020;
+  --ge-red-glow:#FF3B3B;
+  --ge-ember:#C1541B;            /* burnt orange — warnings, heat */
+
+  /* ---- restrained premium ---- */
+  --ge-gold:#D4A017;             /* premium/legendary ONLY */
+
+  /* ---- semantics (never brand) ---- */
+  --ge-green:#3DDC5F;            /* healthy / success / profit / active */
+  --ge-amber:#FFB020;            /* watch / caution */
+  --ge-orange:#FF7A1A;           /* warning */
+  --ge-danger:#FF4444;           /* critical / destructive */
+
+  /* ---- lines & surfaces ---- */
+  --ge-line:rgba(255,255,255,.08);
+  --ge-line-strong:rgba(255,255,255,.15);
+  --ge-surface-1:#111318;
+  --ge-surface-2:#181B20;
+  --ge-surface-3:#20242B;
+  --ge-glass:rgba(17,19,24,.78);          /* frosted overlay base */
+  --ge-grad-surface:linear-gradient(180deg,#1A1D23 0%,#111318 100%);
+  --ge-grad-red:linear-gradient(180deg,#D92626 0%,#A30F0F 100%);
+  --ge-grad-gold:linear-gradient(180deg,#E7B93A 0%,#A8760F 100%);
+  --ge-grad-black:linear-gradient(180deg,#0B0C0E 0%,#08090B 100%);
+  --ge-grain:repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);
+
+  /* ---- depth ---- */
+  --ge-hi-inset:inset 0 1px 0 rgba(255,255,255,.06);
+  --ge-edge-red:inset 0 1px 0 rgba(255,59,59,.22);   /* fine red edge-light */
+  --ge-sh-1:0 1px 2px rgba(0,0,0,.5);
+  --ge-sh-2:0 4px 14px rgba(0,0,0,.45);
+  --ge-sh-3:0 10px 30px rgba(0,0,0,.55);
+  --ge-sh-glow:0 0 14px rgba(224,32,32,.28);         /* controlled glow */
+
+  /* ---- spacing scale ---- */
+  --ge-sp-1:4px; --ge-sp-2:8px; --ge-sp-3:12px; --ge-sp-4:16px;
+  --ge-sp-5:20px; --ge-sp-6:24px; --ge-sp-8:32px; --ge-sp-10:40px; --ge-sp-12:48px;
+
+  /* ---- radius scale ---- */
+  --ge-r-xs:6px; --ge-r-sm:8px; --ge-r-md:12px;
+  --ge-r-lg:16px; --ge-r-xl:20px; --ge-r-pill:999px;
+
+  /* ---- motion ---- */
+  --ge-dur-fast:120ms;
+  --ge-dur:220ms;
+  --ge-dur-slow:420ms;
+  --ge-ease:cubic-bezier(.2,.7,.3,1);
+  --ge-ease-out:cubic-bezier(0,0,.2,1);
+
+  /* ---- icon sizes ---- */
+  --ge-ic-sm:16px; --ge-ic-md:20px; --ge-ic-lg:24px; --ge-ic-xl:32px;
+
+  /* ---- type stacks (system only — offline requirement) ---- */
+  --ge-font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ge-font-h1:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ge-h2:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ge-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  --ge-label:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ge-data:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+
+  /* ---- type sizes ---- */
+  --ge-size-display:32px;
+  --ge-size-h1:24px;
+  --ge-size-h2:17px;
+  --ge-size-body:15px;
+  --ge-size-caption:12px;
+  --ge-size-label:11px;
+  --ge-lh-tight:1.15;
+  --ge-lh:1.45;
+
+  /* ---- chrome ---- */
+  --ge-topbar-h:56px;
+  --ge-navdock-h:64px;
+  --ge-app-max:560px;
+}
+
+/* ---- base guardrails: every ge- class uses border-box; kill sideways scroll ---- */
+[class*="ge-"]{box-sizing:border-box}
+.ge-app,.ge-screen{overflow-x:clip}
+img[class*="ge-"],svg[class*="ge-"]{flex:none}
+
+/* ==========================================================================
+   TYPOGRAPHY — clear hierarchy. Display is condensed brand feel via
+   font-stretch (falls back gracefully). Labels are compact uppercase but
+   NOT everything-bold: weight 600, restrained tracking.
+   ========================================================================== */
+.ge-display{font-family:var(--ge-font-display);font-stretch:condensed;font-weight:800;
+  font-size:var(--ge-size-display);line-height:var(--ge-lh-tight);letter-spacing:.01em;
+  color:var(--ge-white);text-transform:uppercase}
+.ge-h1{font-family:var(--ge-font-h1);font-stretch:condensed;font-weight:800;
+  font-size:var(--ge-size-h1);line-height:var(--ge-lh-tight);letter-spacing:.015em;
+  color:var(--ge-white);text-transform:uppercase;margin:0}
+.ge-h2{font-family:var(--ge-h2);font-weight:700;font-size:var(--ge-size-h2);
+  line-height:1.3;color:var(--ge-ink);margin:0}
+.ge-body{font-family:var(--ge-body);font-size:var(--ge-size-body);
+  line-height:var(--ge-lh);color:var(--ge-ink)}
+.ge-label{font-family:var(--ge-label);font-weight:600;font-size:var(--ge-size-label);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ge-muted)}
+.ge-data{font-family:var(--ge-data);font-variant-numeric:tabular-nums}
+.ge-caption{font-family:var(--ge-body);font-size:var(--ge-size-caption);
+  line-height:1.4;color:var(--ge-muted)}
+.ge-muted{color:var(--ge-muted)}
+.ge-gold-text{color:var(--ge-gold)}
+.ge-green{color:var(--ge-green)} .ge-amber{color:var(--ge-amber)}
+.ge-orange{color:var(--ge-orange)} .ge-red{color:var(--ge-danger)}
+.ge-num{font-variant-numeric:tabular-nums}
+.ge-truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ge-hidden{display:none!important}
+
+/* ---- icon sizing helpers: pass as the cls arg → icon('cash','ge-ic-md') ---- */
+svg.ge-ic-sm{width:var(--ge-ic-sm);height:var(--ge-ic-sm)}
+svg.ge-ic-md{width:var(--ge-ic-md);height:var(--ge-ic-md)}
+svg.ge-ic-lg{width:var(--ge-ic-lg);height:var(--ge-ic-lg)}
+svg.ge-ic-xl{width:var(--ge-ic-xl);height:var(--ge-ic-xl)}
+
+/* ==========================================================================
+   APP SHELL — top command bar + bottom nav dock + screen wrappers.
+   Workers: wrap each screen root in .ge-screen; chrome bucket owns
+   #hud/#bottomnav rewrites using .ge-topbar/.ge-navdock.
+   ========================================================================== */
+.ge-app{max-width:var(--ge-app-max);margin:0 auto;min-height:100dvh;
+  background:var(--ge-grad-black);color:var(--ge-ink);
+  font-family:var(--ge-body);font-size:var(--ge-size-body)}
+.ge-screen{padding:var(--ge-sp-4) var(--ge-sp-4) calc(var(--ge-navdock-h) + var(--ge-sp-6));
+  animation:ge-fade-in var(--ge-dur) var(--ge-ease-out)}
+.ge-screenhead{display:flex;align-items:center;gap:var(--ge-sp-3);
+  margin-bottom:var(--ge-sp-4);min-height:44px}
+.ge-screenhead-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;
+  min-width:44px;padding:0 12px 0 4px;background:none;border:0;color:var(--ge-muted);
+  font-family:var(--ge-label);font-weight:700;font-size:var(--ge-size-label);
+  letter-spacing:.1em;cursor:pointer;border-radius:var(--ge-r-sm)}
+.ge-screenhead-back:active{color:var(--ge-ink);transform:scale(.96)}
+.ge-screenhead-title{display:flex;align-items:center;gap:var(--ge-sp-2);margin:0;min-width:0;
+  font-family:var(--ge-font-h1);font-stretch:condensed;font-weight:800;
+  font-size:var(--ge-size-h1);letter-spacing:.015em;text-transform:uppercase;color:var(--ge-white)}
+.ge-screenhead-title svg{width:var(--ge-ic-lg);height:var(--ge-ic-lg);color:var(--ge-red)}
+
+/* ---- top command bar (sticky) ---- */
+.ge-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;
+  gap:var(--ge-sp-3);min-height:var(--ge-topbar-h);
+  padding:calc(env(safe-area-inset-top,0px)) var(--ge-sp-4) 0;
+  background:var(--ge-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--ge-line)}
+.ge-topbar-inner{display:flex;align-items:center;gap:var(--ge-sp-3);
+  min-height:var(--ge-topbar-h);width:100%}
+.ge-topbar-brand{display:flex;align-items:center;gap:var(--ge-sp-2);
+  font-family:var(--ge-font-display);font-stretch:condensed;font-weight:800;
+  font-size:15px;letter-spacing:.06em;color:var(--ge-white);text-transform:uppercase}
+.ge-topbar-brand svg{width:22px;height:22px}
+.ge-topbar-stats{display:flex;gap:var(--ge-sp-3);margin-left:auto;align-items:center}
+.ge-topbar-stat{display:flex;align-items:center;gap:5px;font-family:var(--ge-data);
+  font-size:13px;font-variant-numeric:tabular-nums;color:var(--ge-ink)}
+.ge-topbar-stat svg{width:var(--ge-ic-sm);height:var(--ge-ic-sm)}
+.ge-topbar-actions{display:flex;gap:var(--ge-sp-2);margin-left:auto}
+
+/* ---- bottom nav dock ---- */
+.ge-navdock{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:var(--ge-glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--ge-line-strong)}
+.ge-navdock-row{display:flex;max-width:var(--ge-app-max);margin:0 auto}
+.ge-navdock-btn{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;min-height:var(--ge-navdock-h);background:none;
+  border:0;color:var(--ge-faint);cursor:pointer;position:relative;
+  font-family:var(--ge-label);font-weight:600;font-size:9.5px;letter-spacing:.09em}
+.ge-navdock-btn svg{width:22px;height:22px}
+.ge-navdock-btn.is-active{color:var(--ge-white)}
+.ge-navdock-btn.is-active::before{content:"";position:absolute;top:0;left:22%;right:22%;
+  height:2px;border-radius:2px;background:var(--ge-red);box-shadow:var(--ge-sh-glow)}
+.ge-navdock-badge{position:absolute;top:8px;right:calc(50% - 20px);min-width:18px;height:18px;
+  padding:0 5px;border-radius:var(--ge-r-pill);background:var(--ge-red);color:#fff;
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* ---- safe-area helpers ---- */
+.ge-safe-top{padding-top:env(safe-area-inset-top,0px)}
+.ge-safe-bottom{padding-bottom:env(safe-area-inset-bottom,0px)}
+.ge-safe-pad{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+
+/* ==========================================================================
+   CARDS — smoked glass / dark brushed metal. Restrained: white inner
+   highlight by default, red edge-light only on .ge-card-hot.
+   ========================================================================== */
+.ge-card{background:var(--ge-grad-surface);background-blend-mode:overlay;
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-lg);
+  padding:var(--ge-sp-4);margin-bottom:var(--ge-sp-3);position:relative;
+  box-shadow:var(--ge-sh-2),var(--ge-hi-inset)}
+.ge-card::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:var(--ge-grain);pointer-events:none;opacity:.5}
+.ge-card-hot{box-shadow:var(--ge-sh-2),var(--ge-edge-red)}
+.ge-card-flat{box-shadow:var(--ge-hi-inset);background:var(--ge-surface-1)}
+.ge-card-compact{padding:var(--ge-sp-3);border-radius:var(--ge-r-md)}
+.ge-card-tap{cursor:pointer;transition:transform var(--ge-dur-fast) var(--ge-ease)}
+.ge-card-tap:active{transform:scale(.985)}
+.ge-card-head{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-3)}
+.ge-card-head h3{margin:0;font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--ge-white)}
+.ge-card-head svg{width:var(--ge-ic-md);height:var(--ge-ic-md);color:var(--ge-red)}
+.ge-card-head .ge-spread{margin-left:auto}
+
+/* ---- metric tiles (telemetry grids) ---- */
+.ge-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-3)}
+.ge-tiles-4{grid-template-columns:repeat(2,1fr)}
+@media(min-width:600px){.ge-tiles-4{grid-template-columns:repeat(4,1fr)}}
+.ge-metric-tile{background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);padding:var(--ge-sp-3);min-width:0;box-shadow:var(--ge-hi-inset)}
+.ge-metric-value{font-family:var(--ge-data);font-weight:700;font-size:20px;
+  font-variant-numeric:tabular-nums;color:var(--ge-white);line-height:1.2}
+.ge-metric-label{font-family:var(--ge-label);font-weight:600;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ge-muted);margin-top:4px}
+.ge-metric-sub{font-size:11px;color:var(--ge-faint);margin-top:2px}
+
+/* ---- domain cards: combine with .ge-card (class="ge-card ge-plant-card") ---- */
+.ge-plant-card{display:grid;grid-template-columns:64px 1fr auto;gap:var(--ge-sp-3);align-items:center}
+.ge-plant-art{width:64px;height:76px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 70%,rgba(61,220,95,.08),transparent 70%);
+  border-radius:var(--ge-r-sm)}
+.ge-plant-art svg{width:100%;height:100%}
+.ge-plant-meta{min-width:0}
+.ge-plant-name{font-weight:700;font-size:14px;color:var(--ge-white);margin:0 0 2px}
+.ge-plant-sub{font-size:12px;color:var(--ge-muted)}
+.ge-specimen{display:grid;grid-template-columns:52px 1fr;gap:var(--ge-sp-3)}
+.ge-specimen-art{width:52px;height:52px;border-radius:var(--ge-r-sm);
+  background:var(--ge-surface-3);display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--ge-line)}
+.ge-specimen-art svg{width:34px;height:34px}
+.ge-equip{display:grid;grid-template-columns:44px 1fr auto;gap:var(--ge-sp-3);align-items:center}
+.ge-equip-ico{width:44px;height:44px;border-radius:var(--ge-r-sm);background:var(--ge-surface-3);
+  border:1px solid var(--ge-line);display:flex;align-items:center;justify-content:center;color:var(--ge-muted)}
+.ge-equip-ico svg{width:var(--ge-ic-lg);height:var(--ge-ic-lg)}
+.ge-facility{display:grid;grid-template-columns:1fr auto;gap:var(--ge-sp-2);align-items:center}
+.ge-mission{display:block}
+.ge-mission-top{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-customer{display:grid;grid-template-columns:40px 1fr auto;gap:var(--ge-sp-3);align-items:center}
+.ge-customer-face{width:40px;height:40px;border-radius:50%;background:var(--ge-surface-3);
+  border:1px solid var(--ge-line);display:flex;align-items:center;justify-content:center;color:var(--ge-muted)}
+.ge-customer-face svg{width:var(--ge-ic-md);height:var(--ge-ic-md)}
+
+/* ==========================================================================
+   STATUS PILLS — green/amber/orange/red semantics. Watch ≠ warning.
+   ========================================================================== */
+.ge-pill{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:4px 11px;
+  border-radius:var(--ge-r-pill);font-family:var(--ge-label);font-weight:700;
+  font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;border:1px solid transparent;
+  white-space:nowrap}
+.ge-pill svg{width:13px;height:13px}
+.ge-pill-optimal{color:var(--ge-green);border-color:rgba(61,220,95,.35);background:rgba(61,220,95,.1)}
+.ge-pill-watch{color:var(--ge-amber);border-color:rgba(255,176,32,.35);background:rgba(255,176,32,.1)}
+.ge-pill-warning{color:var(--ge-orange);border-color:rgba(255,122,26,.4);background:rgba(255,122,26,.12)}
+.ge-pill-critical{color:var(--ge-danger);border-color:rgba(255,68,68,.45);background:rgba(255,68,68,.12)}
+.ge-pill-neutral{color:var(--ge-muted);border-color:var(--ge-line-strong);background:rgba(255,255,255,.04)}
+.ge-pill-gold{color:var(--ge-gold);border-color:rgba(212,160,23,.45);background:rgba(212,160,23,.1)}
+
+/* ---- badges: keeper / mother / legendary + rarity tiers ---- */
+.ge-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+  border-radius:var(--ge-r-sm);font-family:var(--ge-label);font-weight:700;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--ge-line-strong);
+  background:rgba(255,255,255,.04);color:var(--ge-ink)}
+.ge-badge svg{width:14px;height:14px}
+.ge-badge-keeper{color:#ffb3b3;border-color:rgba(224,32,32,.5);background:rgba(224,32,32,.1)}
+.ge-badge-keeper svg{color:var(--ge-red)}
+.ge-badge-mother{color:#b8f0c6;border-color:rgba(61,220,95,.4);background:rgba(61,220,95,.08)}
+.ge-badge-mother svg{color:var(--ge-green)}
+.ge-badge-legendary{color:var(--ge-gold);border-color:rgba(212,160,23,.55);
+  background:rgba(212,160,23,.1);box-shadow:0 0 10px rgba(212,160,23,.15)}
+.ge-badge-elite{color:#ffd9d9;border-color:rgba(224,32,32,.35);background:rgba(224,32,32,.07)}
+.ge-badge-common{color:var(--ge-muted)}
+
+/* ==========================================================================
+   BUTTONS — 44px targets. transform/opacity feedback only.
+   ========================================================================== */
+.ge-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 18px;border-radius:var(--ge-r-md);border:1px solid transparent;
+  font-family:var(--ge-label);font-weight:700;font-size:13px;letter-spacing:.07em;
+  text-transform:uppercase;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  color:var(--ge-ink);background:var(--ge-surface-3);
+  transition:transform var(--ge-dur-fast) var(--ge-ease),opacity var(--ge-dur-fast),background var(--ge-dur-fast)}
+.ge-btn svg{width:18px;height:18px}
+.ge-btn:active{transform:scale(.96)}
+.ge-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.ge-btn-primary{background:var(--ge-grad-red);color:#fff;
+  box-shadow:0 2px 14px rgba(224,32,32,.3),var(--ge-hi-inset)}
+.ge-btn-danger{background:transparent;color:var(--ge-danger);border-color:rgba(255,68,68,.5)}
+.ge-btn-ghost{background:transparent;color:var(--ge-muted);border-color:var(--ge-line-strong)}
+.ge-btn-ghost:active{color:var(--ge-ink)}
+.ge-btn-gold{background:var(--ge-grad-gold);color:#1a1206;   /* premium/legendary ONLY */
+  box-shadow:0 2px 12px rgba(212,160,23,.25),var(--ge-hi-inset)}
+.ge-btn-sm{min-height:44px;padding:0 13px;font-size:11px;border-radius:var(--ge-r-sm)}
+.ge-btn-block{width:100%}
+.ge-btn-icon{width:44px;height:44px;min-height:44px;padding:0;border-radius:var(--ge-r-sm)}
+.ge-btn-row{display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);margin:var(--ge-sp-3) 0}
+.ge-btn-row .ge-btn{flex:1}
+
+/* ---- icon buttons (wishlist: 44px hit area even when glyph is small) ---- */
+.ge-iconbtn{display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:var(--ge-r-sm);border:1px solid var(--ge-line);
+  background:var(--ge-surface-1);color:var(--ge-muted);cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease),color var(--ge-dur-fast)}
+.ge-iconbtn svg{width:var(--ge-ic-md);height:var(--ge-ic-md)}
+.ge-iconbtn:active{transform:scale(.92);color:var(--ge-ink)}
+
+/* ==========================================================================
+   TABS + SEGMENTED CONTROLS
+   ========================================================================== */
+.ge-tabs{display:flex;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-3);
+  overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.ge-tabs::-webkit-scrollbar{display:none}
+.ge-tab{flex:1 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:0 16px;border-radius:var(--ge-r-md);border:1px solid var(--ge-line);
+  background:var(--ge-surface-1);color:var(--ge-muted);cursor:pointer;
+  font-family:var(--ge-label);font-weight:700;font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;white-space:nowrap;
+  transition:color var(--ge-dur-fast),border-color var(--ge-dur-fast),background var(--ge-dur-fast)}
+.ge-tab svg{width:var(--ge-ic-sm);height:var(--ge-ic-sm)}
+.ge-tab.is-active{color:var(--ge-white);border-color:rgba(224,32,32,.55);
+  background:linear-gradient(180deg,rgba(224,32,32,.16),rgba(224,32,32,.05));
+  box-shadow:var(--ge-edge-red)}
+.ge-seg{display:flex;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-pill);padding:3px;gap:2px;margin-bottom:var(--ge-sp-3)}
+.ge-seg button{flex:1;min-height:44px;border:0;border-radius:var(--ge-r-pill);
+  background:transparent;color:var(--ge-muted);cursor:pointer;
+  font-family:var(--ge-label);font-weight:600;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;transition:background var(--ge-dur-fast),color var(--ge-dur-fast)}
+.ge-seg button.is-active{background:var(--ge-surface-3);color:var(--ge-white);
+  box-shadow:var(--ge-hi-inset),var(--ge-sh-1)}
+
+/* ==========================================================================
+   PROGRESS — bars, rings, gauges, sparklines, star meters
+   ========================================================================== */
+.ge-progress{height:8px;border-radius:var(--ge-r-pill);background:var(--ge-surface-3);
+  border:1px solid var(--ge-line);overflow:hidden;position:relative}
+.ge-progress>i{display:block;height:100%;width:0;border-radius:inherit;
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-red));
+  transition:width var(--ge-dur-slow) var(--ge-ease)}
+.ge-progress-thin{height:5px}
+.ge-progress-ok>i{background:linear-gradient(90deg,#1f9d44,var(--ge-green))}
+.ge-progress-warn>i{background:linear-gradient(90deg,#b26a00,var(--ge-amber))}
+.ge-progress-bad>i{background:linear-gradient(90deg,#a30f0f,var(--ge-danger))}
+.ge-progress-gold>i{background:var(--ge-grad-gold)}
+.ge-progress-meta{display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:6px;font-size:12px;color:var(--ge-muted)}
+.ge-progress-meta b{font-family:var(--ge-data);color:var(--ge-ink);font-variant-numeric:tabular-nums}
+
+/* ---- progress ring: workers set stroke-dasharray/offset in JS.
+   r=15.9155 gives circumference 100 → dasharray="PCT 100" ---- */
+.ge-ring{position:relative;width:72px;height:72px;flex:none}
+.ge-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ge-ring-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:3}
+.ge-ring-val{fill:none;stroke:var(--ge-red);stroke-width:3;stroke-linecap:round;
+  transition:stroke-dasharray var(--ge-dur-slow) var(--ge-ease),stroke-dashoffset var(--ge-dur-slow) var(--ge-ease)}
+.ge-ring-ok .ge-ring-val{stroke:var(--ge-green)}
+.ge-ring-warn .ge-ring-val{stroke:var(--ge-amber)}
+.ge-ring-bad .ge-ring-val{stroke:var(--ge-danger)}
+.ge-ring-gold .ge-ring-val{stroke:var(--ge-gold)}
+.ge-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-family:var(--ge-data);
+  font-weight:700;font-size:14px;color:var(--ge-white);font-variant-numeric:tabular-nums}
+.ge-ring-label small{font-size:9px;color:var(--ge-muted);font-weight:600;
+  font-family:var(--ge-label);letter-spacing:.08em}
+
+/* ---- gauge: horizontal bar with tick marks (transform/opacity-safe) ---- */
+.ge-gauge{position:relative;height:10px;border-radius:var(--ge-r-pill);
+  background:var(--ge-surface-3);border:1px solid var(--ge-line);overflow:hidden}
+.ge-gauge>i{position:absolute;inset:0;width:calc(var(--ge-gv,0)*100%);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-red));
+  transition:width var(--ge-dur-slow) var(--ge-ease)}
+.ge-gauge::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(0,0,0,.5) calc(10% - 1px) 10%)}
+.ge-gauge-ok>i{background:linear-gradient(90deg,#1f9d44,var(--ge-green))}
+.ge-gauge-warn>i{background:linear-gradient(90deg,#b26a00,var(--ge-amber))}
+
+/* ---- SVG sparkline helper: <svg class="ge-spark" viewBox="0 0 100 36">
+   <polygon class="ge-spark-fill" points="..."/><polyline points="..."/></svg> ---- */
+.ge-spark{display:block;width:100%;height:36px}
+.ge-spark polyline{fill:none;stroke:var(--ge-red);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.ge-spark .ge-spark-fill{fill:rgba(224,32,32,.1);stroke:none}
+.ge-spark-ok polyline{stroke:var(--ge-green)}
+.ge-spark-ok .ge-spark-fill{fill:rgba(61,220,95,.1)}
+
+/* ---- star meter: <span class="ge-stars"><i class="on">★</i>…</span>
+   (text glyphs sized/colored by CSS; icon('star') preferred for single stars) ---- */
+.ge-stars{display:inline-flex;gap:3px;color:var(--ge-faint);font-size:15px;line-height:1}
+.ge-stars .on{color:var(--ge-gold);text-shadow:0 0 8px rgba(212,160,23,.35)}
+.ge-stars .half{color:var(--ge-gold);opacity:.55}
+
+/* ==========================================================================
+   OVERLAYS — modal sheets, toasts, empty / loading / error states.
+   NOTE: legacy modal()/toast()/cineOverlay() are chrome-bucket owned.
+   These classes are for NEW markup workers add inside those containers.
+   ========================================================================== */
+.ge-modal-back{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;
+  justify-content:center;background:rgba(0,0,0,.72);opacity:0;pointer-events:none;
+  transition:opacity var(--ge-dur) var(--ge-ease-out)}
+.ge-modal-back.is-open{opacity:1;pointer-events:auto}
+.ge-modal{width:100%;max-width:520px;max-height:86dvh;overflow-y:auto;
+  background:var(--ge-grad-surface);border:1px solid var(--ge-line-strong);
+  border-bottom:0;border-radius:var(--ge-r-xl) var(--ge-r-xl) 0 0;
+  box-shadow:var(--ge-sh-3),var(--ge-edge-red);
+  transform:translateY(28px);transition:transform var(--ge-dur) var(--ge-ease-out)}
+.ge-modal-back.is-open .ge-modal{transform:none}
+.ge-modal-head{display:flex;align-items:center;gap:var(--ge-sp-2);
+  padding:var(--ge-sp-4) var(--ge-sp-4) var(--ge-sp-3);
+  border-bottom:1px solid var(--ge-line);position:sticky;top:0;
+  background:var(--ge-glass);backdrop-filter:blur(8px);z-index:1}
+.ge-modal-head h3{margin:0;flex:1;font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--ge-white)}
+.ge-modal-body{padding:var(--ge-sp-4)}
+.ge-modal-foot{display:flex;gap:var(--ge-sp-2);padding:var(--ge-sp-3) var(--ge-sp-4);
+  padding-bottom:calc(var(--ge-sp-4) + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--ge-line)}
+.ge-modal-foot .ge-btn{flex:1}
+
+/* ---- toasts: drop into #toast-root as <div class="ge-toast …"> ---- */
+.ge-toast{display:flex;align-items:center;gap:var(--ge-sp-2);
+  background:var(--ge-glass);backdrop-filter:blur(8px);
+  border:1px solid var(--ge-line-strong);border-left:3px solid var(--ge-muted);
+  border-radius:var(--ge-r-md);padding:var(--ge-sp-3) var(--ge-sp-4);margin:var(--ge-sp-2);
+  box-shadow:var(--ge-sh-2);color:var(--ge-ink);font-size:13.5px;line-height:1.4;
+  animation:ge-toast-in var(--ge-dur) var(--ge-ease-out)}
+.ge-toast svg{width:var(--ge-ic-md);height:var(--ge-ic-md);flex:none}
+.ge-toast-good{border-left-color:var(--ge-green)} .ge-toast-good svg{color:var(--ge-green)}
+.ge-toast-bad{border-left-color:var(--ge-danger)} .ge-toast-bad svg{color:var(--ge-danger)}
+.ge-toast-warn{border-left-color:var(--ge-amber)} .ge-toast-warn svg{color:var(--ge-amber)}
+.ge-toast-info{border-left-color:var(--ge-red)} .ge-toast-info svg{color:var(--ge-red)}
+/* P2-4 discovery moments: industrial beat — gold-ruled, dark, letter-spaced */
+.ge-toast-disc{border-left:3px solid var(--ge-gold);background:linear-gradient(135deg,rgba(24,15,5,.94),rgba(10,8,9,.94));
+  box-shadow:0 0 0 1px rgba(212,160,23,.28),var(--ge-sh-2)}
+.ge-toast-disc .ge-disc-ic{color:var(--ge-gold);flex:none;display:flex}
+.ge-toast-disc .ge-disc-tx b{display:block;font-family:var(--ge-font-display);font-size:12px;letter-spacing:.22em;color:var(--ge-gold)}
+.ge-toast-disc .ge-disc-tx i{display:block;font-style:normal;font-size:12.5px;color:var(--ge-ink);margin-top:2px;line-height:1.45}
+
+/* ---- empty / loading / error ---- */
+.ge-empty{text-align:center;padding:var(--ge-sp-8) var(--ge-sp-4);color:var(--ge-muted)}
+.ge-empty>svg{width:44px;height:44px;color:var(--ge-faint);margin-bottom:var(--ge-sp-3)}
+.ge-empty h3{margin:0 0 var(--ge-sp-2);font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:16px;letter-spacing:.05em;text-transform:uppercase;color:var(--ge-ink)}
+.ge-empty p{margin:0 0 var(--ge-sp-4);font-size:13.5px}
+.ge-loading{display:flex;flex-direction:column;align-items:center;gap:var(--ge-sp-3);
+  padding:var(--ge-sp-8) var(--ge-sp-4);color:var(--ge-muted)}
+.ge-spinner{width:30px;height:30px;border-radius:50%;
+  border:3px solid var(--ge-line);border-top-color:var(--ge-red);
+  animation:ge-spin .8s linear infinite}
+.ge-error{border:1px solid rgba(255,68,68,.4);background:rgba(255,68,68,.08);
+  border-radius:var(--ge-r-md);padding:var(--ge-sp-4);color:#FFB3B3;font-size:13.5px;
+  display:flex;gap:var(--ge-sp-2);align-items:flex-start}
+.ge-error svg{width:var(--ge-ic-md);height:var(--ge-ic-md);flex:none;color:var(--ge-danger)}
+.ge-skel{position:relative;overflow:hidden;background:var(--ge-surface-2);
+  border-radius:var(--ge-r-sm);min-height:16px}
+.ge-skel::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
+  transform:translateX(-100%);animation:ge-shimmer 1.5s var(--ge-ease) infinite}
+
+/* ==========================================================================
+   TEXT + LAYOUT PRIMITIVES
+   ========================================================================== */
+.ge-section-title{display:flex;align-items:center;gap:var(--ge-sp-2);
+  margin:var(--ge-sp-5) 0 var(--ge-sp-3);font-family:var(--ge-label);
+  font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ge-muted)}
+.ge-section-title::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--ge-red)}
+.ge-section-title .ge-spread{margin-left:auto}
+.ge-datarow{display:flex;justify-content:space-between;align-items:center;gap:var(--ge-sp-3);
+  padding:10px 0;border-bottom:1px solid var(--ge-line);min-height:44px;font-size:13.5px}
+.ge-datarow:last-child{border-bottom:0}
+.ge-datarow>span{color:var(--ge-muted)}
+.ge-datarow>b{font-family:var(--ge-data);font-weight:600;color:var(--ge-ink);
+  font-variant-numeric:tabular-nums;text-align:right}
+.ge-divider{height:1px;background:var(--ge-line);margin:var(--ge-sp-3) 0;border:0}
+.ge-row{display:flex;align-items:center;gap:var(--ge-sp-2)}
+.ge-stack{display:flex;flex-direction:column;gap:var(--ge-sp-2)}
+.ge-spread{margin-left:auto}
+.ge-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2)}
+
+/* ---- motion (transform/opacity only; no big blurs, no giant backgrounds) ---- */
+@keyframes ge-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes ge-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ge-pop{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
+@keyframes ge-toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ge-spin{to{transform:rotate(360deg)}}
+@keyframes ge-shimmer{to{transform:translateX(100%)}}
+@keyframes ge-pulse-soft{0%,100%{opacity:1}50%{opacity:.55}}
+.ge-anim-rise{animation:ge-rise var(--ge-dur) var(--ge-ease-out)}
+.ge-anim-pop{animation:ge-pop var(--ge-dur-fast) var(--ge-ease-out)}
+.ge-anim-pulse{animation:ge-pulse-soft 2s var(--ge-ease) infinite}
+
+/* ==========================================================================
+   RESPONSIVE — mobile-first 360–430px; tablet app-shell at 768/1024;
+   landscape sanity; zero horizontal overflow.
+   ========================================================================== */
+@media (min-width:768px){
+  :root{--ge-app-max:720px}
+  .ge-tiles{grid-template-columns:repeat(4,1fr)}
+  .ge-modal{align-self:center;border-radius:var(--ge-r-xl);border-bottom:1px solid var(--ge-line-strong);
+    margin-bottom:5dvh}
+  .ge-cols-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-3);align-items:start}
+}
+@media (min-width:1024px){
+  :root{--ge-app-max:960px}
+  .ge-cols-2{grid-template-columns:1fr 1fr}
+  .ge-cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--ge-sp-3);align-items:start}
+}
+@media (max-width:767px){
+  .ge-cols-2,.ge-cols-3{display:flex;flex-direction:column;gap:var(--ge-sp-3)}
+}
+@media (orientation:landscape) and (max-height:500px){
+  /* landscape phones: keep chrome slim, let content breathe */
+  .ge-topbar-inner{min-height:48px}
+  .ge-navdock-btn{min-height:52px}
+  .ge-screen{padding-top:var(--ge-sp-3)}
+}
+
+/* ---- reduced motion: disable all non-essential animation ---- */
+@media (prefers-reduced-motion:reduce){
+  [class*="ge-"]{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .ge-skel::after,.ge-anim-pulse{animation:none!important}
+  .ge-screen{animation:none}
+}
+
+/* ---- focus visibility (keyboard / switch access) ---- */
+[class*="ge-"]:focus-visible{outline:2px solid var(--ge-red-glow);outline-offset:2px}
+
+/* ============================ END GE DESIGN SYSTEM v1 ===================== */
+
+/* ===== UI OVERHAUL [HOME] ===== */
+/* ============ HOME AREA extra styles — ge- prefixed, token-driven ============
+   Pairs with functions.js. tokens.css (coordinator) implements the base
+   ge-* system (ge-card, ge-btn, ge-tiles, ge-pill, ge-badge, ge-progress,
+   ge-section-title, ge-anim-*, ...). Nothing here restyles legacy classes.
+   Motion: transform/opacity only. No blue. Green = semantic only. */
+
+/* Identity hero (menu + home) */
+.ge-home-hero{position:relative;overflow:hidden;border-radius:var(--ge-r-lg);
+  padding:var(--ge-sp-5);margin-bottom:var(--ge-sp-4);
+  background:linear-gradient(160deg,var(--ge-graphite),var(--ge-black) 72%);
+  border:1px solid var(--ge-line);box-shadow:var(--ge-hi-inset),var(--ge-sh-2)}
+.ge-home-hero::after{content:"";position:absolute;inset:0;background:var(--ge-grain);
+  opacity:.55;pointer-events:none}
+.ge-home-hero-top{display:flex;gap:var(--ge-sp-4);align-items:center;
+  position:relative;z-index:1}
+.ge-home-mask{width:56px;height:56px;flex:0 0 56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,var(--ge-crimson-deep),var(--ge-black) 78%);
+  border:1px solid var(--ge-line-strong);color:var(--ge-red-glow)}
+.ge-home-name{font-size:var(--ge-size-h1);letter-spacing:.02em;color:var(--ge-white)}
+.ge-home-rank{margin-top:var(--ge-sp-1)}
+.ge-home-stats{margin-top:var(--ge-sp-4);position:relative;z-index:1}
+
+/* XP card spacing */
+.ge-home-xp{margin-bottom:var(--ge-sp-4)}
+.ge-home-alerts{min-height:44px}
+.ge-home-titles{display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);margin-top:var(--ge-sp-2)}
+.ge-home-motto{text-align:center;color:var(--ge-faint);font-size:var(--ge-size-caption);
+  letter-spacing:.06em;margin:var(--ge-sp-6) 0 var(--ge-sp-2)}
+
+/* Difficulty cards */
+.ge-diff-card{text-align:center;cursor:pointer;transition:transform var(--ge-dur) var(--ge-ease)}
+.ge-diff-card:active{transform:scale(.98)}
+.ge-diff-card.sel{border-color:var(--ge-red-glow);box-shadow:var(--ge-edge-red),var(--ge-sh-glow)}
+.ge-diff-crown{color:var(--ge-red-glow);margin-bottom:var(--ge-sp-2)}
+.ge-diff-start{margin:var(--ge-sp-4) var(--ge-sp-4) 0}
+
+/* Command-center module grid */
+.ge-menu-modules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--ge-sp-3);margin-bottom:var(--ge-sp-4)}
+@media(min-width:768px){.ge-menu-modules{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.ge-menu-modules{grid-template-columns:repeat(5,minmax(0,1fr))}}
+button.ge-menu-mod{font:inherit;color:inherit;border:0;cursor:pointer;text-align:left;
+  display:flex;flex-direction:column;gap:var(--ge-sp-2);min-height:44px;
+  padding:var(--ge-sp-4)}
+.ge-menu-mod-head{display:flex;align-items:center;gap:var(--ge-sp-2);color:var(--ge-red-glow)}
+.ge-menu-mod-title{color:var(--ge-ink)}
+.ge-menu-mod-metrics{display:flex;flex-direction:column;align-items:flex-start;
+  gap:var(--ge-sp-1);font-size:var(--ge-size-caption);color:var(--ge-muted)}
+.ge-menu-mod-metrics .ge-num{color:var(--ge-ink);font-size:var(--ge-size-h2)}
+.ge-menu-mod-cta{margin-top:auto;align-self:flex-start;
+  font-family:var(--ge-label);font-size:var(--ge-size-label);letter-spacing:.08em;
+  color:var(--ge-red-glow);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-pill);padding:8px 14px;min-height:44px;
+  display:inline-flex;align-items:center}
+
+/* Compact nav list (full MENU_ITEMS reachability) */
+.ge-menu-nav{padding:var(--ge-sp-2);margin-bottom:var(--ge-sp-4)}
+button.ge-menu-navrow{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
+  display:flex;align-items:center;gap:var(--ge-sp-3);width:100%;min-height:44px;
+  padding:var(--ge-sp-2) var(--ge-sp-3);border-radius:var(--ge-r-sm);color:var(--ge-ink)}
+button.ge-menu-navrow>svg:first-child{color:var(--ge-red-glow)}
+button.ge-menu-navrow>span:first-of-type{flex:1;text-align:left;
+  font-family:var(--ge-label);font-size:var(--ge-size-label);letter-spacing:.08em}
+button.ge-menu-navrow:active{background:var(--ge-raised)}
+
+/* Home "what should I do next" actions */
+.ge-home-actions{display:flex;flex-direction:column;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-4)}
+button.ge-home-action{font:inherit;color:inherit;border:0;cursor:pointer;
+  display:flex;align-items:center;gap:var(--ge-sp-3);min-height:56px;
+  text-align:left;width:100%}
+.ge-home-action-ico{width:40px;height:40px;flex:0 0 40px;border-radius:var(--ge-r-md);
+  display:flex;align-items:center;justify-content:center;background:var(--ge-raised)}
+.ge-home-sev-warn{color:var(--ge-amber)}
+.ge-home-sev-good{color:var(--ge-green)}
+.ge-home-sev-info{color:var(--ge-muted)}
+.ge-home-action-tx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ge-home-action-tx b{font-size:var(--ge-size-body);color:var(--ge-ink)}
+
+/* Home glance tiles (2-col mobile -> 3-col tablet) */
+.ge-home-glance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--ge-sp-3);margin-bottom:var(--ge-sp-4)}
+@media(min-width:768px){.ge-home-glance{grid-template-columns:repeat(3,minmax(0,1fr))}}
+button.ge-metric-tile{font:inherit;color:inherit;border:0;cursor:pointer;text-align:left}
+
+/* Focus visibility for custom pressables */
+.ge-menu-mod:focus-visible,.ge-menu-navrow:focus-visible,
+.ge-home-action:focus-visible,.ge-home-glance>button:focus-visible,
+.ge-diff-card:focus-visible{outline:2px solid var(--ge-red-glow);outline-offset:2px}
+
+/* ===== UI OVERHAUL [GROW ROOM] ===== */
+/* ============================================================
+   SHOCKER OWNZ GROW EMPIRE — grow room area styles
+   Worker: growroom. ge- prefixed, token-driven (tokens.css merged
+   by coordinator). Composes with legacy styles.css; never restyles
+   legacy classes. Motion: transform/opacity only.
+   ============================================================ */
+
+/* ---------- facility banner ---------- */
+.ge-facility{padding:0;overflow:hidden}
+.ge-facscene{display:block;width:100%;height:auto}
+.ge-facscene-glow{animation:ge-facglow 3.4s ease-in-out infinite}
+@keyframes ge-facglow{0%,100%{opacity:.7}50%{opacity:1}}
+.ge-facility-meta{display:flex;align-items:center;gap:var(--ge-sp-3);padding:var(--ge-sp-3) var(--ge-sp-4)}
+.ge-facility-meta>.ge-label{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.ge-facility-slots{margin-left:auto;white-space:nowrap}
+.ge-facility-env{display:inline-flex;align-items:center;gap:8px}
+
+/* ---------- status ring ---------- */
+.ge-ring{position:relative;display:inline-block;width:46px;height:46px;flex:none}
+.ge-ring svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.ge-ring-track{fill:none;stroke:var(--ge-line-strong);stroke-width:3}
+.ge-ring-val{fill:none;stroke:var(--ge-green);stroke-width:3;stroke-linecap:round}
+.ge-ring-ok .ge-ring-val{stroke:var(--ge-green)}
+.ge-ring-warn .ge-ring-val{stroke:var(--ge-amber)}
+.ge-ring-bad .ge-ring-val{stroke:var(--ge-danger)}
+.ge-ring-gold .ge-ring-val{stroke:var(--ge-gold)}
+.ge-ring-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--ge-data);font-size:11px;font-weight:700;color:var(--ge-ink)}
+.ge-ring-label small{font-size:8px;font-weight:400;color:var(--ge-muted);margin-left:1px}
+.ge-slot-ring{position:absolute;top:-10px;right:-10px}
+.ge-slot-ring .ge-ring{width:40px;height:40px;background:var(--ge-graphite);border-radius:50%;box-shadow:var(--ge-sh-2)}
+.ge-slot-ring .ge-ring-label{font-size:10px}
+
+/* ---------- plant slot cards (grow + grows) ---------- */
+#scr-grow .ge-plant-card,
+#scr-grows .ge-plant-card{display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--ge-sp-3);align-items:start;text-align:left}
+.ge-plant-art{position:relative;min-width:0}
+.ge-plant-art>svg{width:100%;height:auto;display:block}
+.ge-plant-meta{min-width:0;display:flex;flex-direction:column;gap:6px}
+.ge-plant-name{font-size:var(--ge-size-h2);font-weight:700}
+.ge-plant-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ge-plant-sub .ge-pill{font-size:10px}
+
+/* ---------- cultivation floor ---------- */
+.ge-growfloor{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--ge-sp-3);margin:var(--ge-sp-3) 0}
+.ge-empty-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;border:1.5px dashed var(--ge-line-strong);border-radius:var(--ge-r-lg);color:var(--ge-faint);background:rgba(255,255,255,.015);cursor:pointer}
+.ge-empty-slot:active{transform:scale(.97)}
+.ge-empty-pot{width:44px;height:44px}
+
+/* ---------- issue pills ---------- */
+.ge-issue-row{display:flex;flex-wrap:wrap;gap:8px;margin:var(--ge-sp-2) 0}
+.ge-issue-row .ge-pill{font-size:11px}
+
+/* ---------- environment controls ---------- */
+.ge-env-ctl{margin:var(--ge-sp-3) 0}
+.ge-env-ctl input[type=range]{width:100%;height:34px;accent-color:var(--ge-red);cursor:pointer}
+
+/* ---------- mentor tip ---------- */
+.ge-mentor{display:flex;gap:var(--ge-sp-3);align-items:flex-start}
+.ge-mentor .npc-text{flex:1;min-width:0}
+.ge-mentor .npc-text b{display:block}
+.ge-mentor .ge-btn{margin-top:var(--ge-sp-2)}
+
+/* ---------- advance day ---------- */
+.ge-daybtn{margin-top:var(--ge-sp-4)}
+
+/* ---------- plant focus sheet ---------- */
+.ge-focus .ge-focus-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--ge-sp-4)}
+.ge-focus-art{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.ge-focus-art .focus-stage{position:relative;width:min(240px,62vw)}
+.ge-focus-art .focus-plant svg{width:100%;height:auto;display:block}
+.ge-focus-title{font-size:var(--ge-size-h1);font-weight:800;max-width:100%}
+.ge-focus-data{min-width:0;display:flex;flex-direction:column;gap:var(--ge-sp-2)}
+.ge-focus-data .ge-section-title{margin:var(--ge-sp-3) 0 var(--ge-sp-1)}
+.ge-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ge-btn-grid .ge-btn{min-height:44px}
+.ge-stars-list{display:flex;flex-direction:column;gap:6px}
+.ge-stars-row{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:8px}
+.ge-stars{display:inline-flex;gap:3px;color:var(--ge-faint)}
+.ge-stars .on{color:var(--ge-ink)}
+
+/* ---------- harvest report ---------- */
+.ge-harvest-report{position:relative;text-align:center;overflow:hidden;padding-top:var(--ge-sp-2)}
+.ge-petal-fall{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ge-petal-fall i{position:absolute;top:-14px;width:8px;height:11px;border-radius:60% 40% 60% 40%;background:var(--ge-red);opacity:.55;animation:ge-petal 3.6s linear infinite}
+.ge-petal-fall i:first-child{left:10%}
+.ge-petal-fall i:nth-child(2){left:24%;animation-delay:.7s;background:#7a8a3a}
+.ge-petal-fall i:nth-child(3){left:56%;animation-delay:1.4s;background:var(--ge-gold);opacity:.4}
+.ge-petal-fall i:nth-child(4){left:78%;animation-delay:2.1s}
+.ge-petal-fall i:nth-child(5){left:40%;animation-delay:2.8s}
+.ge-petal-fall i:nth-child(6){left:66%;animation-delay:1s}
+@keyframes ge-petal{0%{transform:translateY(-10px) rotate(0)}100%{transform:translateY(460px) rotate(340deg)}}
+.ge-harvest-art{display:flex;align-items:flex-end;justify-content:center;gap:var(--ge-sp-4);margin:var(--ge-sp-2) 0}
+.ge-harvest-art svg{height:150px;width:auto}
+.ge-report-overall{display:flex;flex-direction:column;align-items:center;gap:2px;margin:var(--ge-sp-3) 0}
+.ge-report-overall b{font-size:var(--ge-size-display)}
+.ge-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:var(--ge-sp-3) 0}
+
+/* ---------- tablet: plant visual left, telemetry right ---------- */
+@media (min-width:768px){
+  .ge-growfloor{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #scr-grows .ge-plant-card{grid-template-columns:120px minmax(0,1fr)}
+  .ge-focus{max-width:760px}
+  .ge-focus .ge-focus-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}
+  .ge-focus-art{position:sticky;top:0}
+  .ge-btn-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1024px){
+  .ge-growfloor{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .ge-facscene-glow,
+  .ge-petal-fall{display:none}
+}
+
+/* ===== UI OVERHAUL [ENVIRONMENT] ===== */
+/* ============================================================
+   GROW EMPIRE — UI OVERHAUL · ENVIRONMENT WORKER CSS
+   Extra area CSS only. All classes ge- prefixed, token-driven
+   (tokens.css is merged by the coordinator — no tokens copied
+   here). Transform/opacity animations only. 44px touch targets.
+   ============================================================ */
+
+/* ---------- world-event banner (injected by show() into grow/home) ---------- */
+.ge-wx-banner{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  margin:var(--ge-sp-3) var(--ge-sp-4); padding:var(--ge-sp-3) var(--ge-sp-4);
+}
+.ge-wx-banner-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ge-wx-banner-t b{ font-size:var(--ge-size-body); letter-spacing:.04em; }
+.ge-wx-banner .ge-btn-row{ flex:0 0 auto; }
+
+/* ---------- world-event modal ---------- */
+.ge-wx-ev{ display:flex; flex-direction:column; gap:var(--ge-sp-3); }
+.ge-wx-ev h3{ margin:0; }
+.ge-wx-choice{ justify-content:flex-start; text-align:left; }
+.ge-wx-choice b{ display:block; width:100%; }
+.ge-wx-sub{ display:block; font-size:var(--ge-size-caption); color:var(--ge-muted); font-weight:400; margin-top:2px; }
+
+/* ---------- challenge cards ---------- */
+.ge-wx-reward{ margin:var(--ge-sp-2) 0 0; color:var(--ge-muted); }
+.ge-wx-chal-foot{ margin-top:var(--ge-sp-3); display:flex; justify-content:flex-end; }
+
+/* ---------- contract offers ---------- */
+.ge-wx-offer{ margin-top:var(--ge-sp-3); }
+
+/* ---------- ENVIRONMENT CONTROL CENTER ---------- */
+.ge-env-panel{ overflow:hidden; }
+.ge-env-panel .ge-card-head{ align-items:flex-start; }
+.ge-env-gauges{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:var(--ge-sp-3); margin-top:var(--ge-sp-3);
+}
+@media (min-width:480px){ .ge-env-gauges{ grid-template-columns:repeat(3,1fr); } }
+@media (min-width:768px){ .ge-env-gauges{ grid-template-columns:repeat(4,1fr); } }
+.ge-env-gauge{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:var(--ge-sp-2); padding:var(--ge-sp-3) var(--ge-sp-2);
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);
+}
+.ge-env-gauge .ge-ring{ width:76px; height:76px; }
+.ge-env-gauge-name{
+  display:flex; align-items:center; gap:6px;
+  font-size:var(--ge-size-label); letter-spacing:.08em; color:var(--ge-muted);
+}
+.ge-env-score{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+.ge-env-score .ge-ring{ width:64px; height:64px; }
+
+/* ---------- hardware sliders (real inputs, premium styled) ---------- */
+.ge-env-sliders{ display:flex; flex-direction:column; gap:var(--ge-sp-4); margin-top:var(--ge-sp-2); }
+.ge-env-ctl{ display:flex; flex-direction:column; gap:4px; }
+.ge-env-ctl .ge-datarow{ min-height:0; padding:0; }
+.ge-env-scale{ display:flex; justify-content:space-between; }
+input[type=range].ge-env-slider{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:44px; background:transparent; margin:0; cursor:pointer;
+}
+input[type=range].ge-env-slider::-webkit-slider-runnable-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:28px; height:28px; margin-top:-11px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+  transition:transform var(--ge-dur-fast) var(--ge-ease);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb:active{ transform:scale(1.12); }
+input[type=range].ge-env-slider::-moz-range-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-moz-range-thumb{
+  width:24px; height:24px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+}
+input[type=range].ge-env-slider:focus-visible{ outline:2px solid var(--ge-red-glow); outline-offset:2px; }
+
+/* ---------- all-clear row ---------- */
+.ge-env-ok{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-3); padding:var(--ge-sp-3);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md);
+  background:var(--ge-surface-2); color:var(--ge-green);
+  font-size:var(--ge-size-body);
+}
+
+/* ---------- environment history ---------- */
+.ge-env-panel .ge-seg{ margin:var(--ge-sp-3) 0; }
+.ge-env-panel .ge-seg button{ min-height:44px; }
+.ge-env-hist-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:var(--ge-sp-3);
+}
+@media (min-width:768px){ .ge-env-hist-grid{ grid-template-columns:repeat(3,1fr); } }
+.ge-env-hist{
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); padding:var(--ge-sp-3);
+  display:flex; flex-direction:column; gap:var(--ge-sp-2);
+}
+.ge-env-hist .ge-spark{ width:100%; height:44px; }
+.ge-env-hist .ge-spark polyline{
+  fill:none; stroke:var(--ge-red-glow); stroke-width:1.5;
+  vector-effect:non-scaling-stroke;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  input[type=range].ge-env-slider::-webkit-slider-thumb{ transition:none; }
+}
+
+/* ===== UI OVERHAUL [GENETICS] ===== */
+/* ============================================================================
+   GE GENETICS — Secret Genetic Archive area styles (ge- prefixed, token-driven)
+   Loads after tokens.css. Transform/opacity animations only.
+   ========================================================================== */
+
+/* ---- filter bar ---- */
+.ge-filterbar{padding:var(--ge-sp-3)}
+.ge-tab-count{margin-left:6px;min-width:22px;height:18px;padding:0 6px;border-radius:var(--ge-r-pill);
+  background:rgba(255,255,255,.07);color:var(--ge-muted);font-size:10px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;font-family:var(--ge-data)}
+.ge-tab.is-active .ge-tab-count{background:rgba(224,32,32,.25);color:var(--ge-white)}
+.ge-filter-row{display:flex;gap:var(--ge-sp-2)}
+.ge-search-wrap{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);
+  background:var(--ge-surface-1);border:1px solid var(--ge-line);border-radius:var(--ge-r-md);
+  padding:0 var(--ge-sp-3);min-height:44px;color:var(--ge-faint)}
+.ge-search-wrap svg{width:var(--ge-ic-md);height:var(--ge-ic-md);flex:none}
+.ge-search{flex:1;min-height:44px;background:none;border:0;color:var(--ge-ink);
+  font-family:var(--ge-label);font-size:12px;letter-spacing:.08em;outline:none;min-width:0}
+.ge-search::placeholder{color:var(--ge-faint)}
+.ge-select{min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-2);
+  font-family:var(--ge-label);font-size:11px;letter-spacing:.06em;max-width:46%}
+.ge-input{width:100%;min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-3);
+  font-size:14px;margin-bottom:var(--ge-sp-2)}
+
+/* ---- specimen cards ---- */
+.ge-spec-card{display:grid;grid-template-columns:84px 1fr;gap:var(--ge-sp-3);align-items:start;
+  animation:ge-rise var(--ge-dur) var(--ge-ease-out)}
+.ge-spec-art{width:84px;min-height:84px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.09),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);display:flex;align-items:center;justify-content:center;
+  padding:var(--ge-sp-2);position:sticky;top:0}
+.ge-spec-art svg{width:100%;height:auto;max-height:110px}
+.ge-spec-main{min-width:0}
+.ge-spec-name{margin:0 0 var(--ge-sp-2);font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:17px;letter-spacing:.03em;text-transform:uppercase;color:var(--ge-white);
+  display:flex;align-items:center;gap:var(--ge-sp-2);flex-wrap:wrap}
+.ge-spec-name svg{width:var(--ge-ic-md);height:var(--ge-ic-md);color:var(--ge-red)}
+.ge-spec-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-pot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--ge-sp-2)}
+.ge-spec-potv{font-size:22px;font-weight:800;color:var(--ge-white)}
+.ge-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-meters{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-meter{display:flex;flex-direction:column;gap:5px}
+/* star meter — red fill keeps gold reserved for keeper/legendary */
+.ge-smeter{display:inline-flex;gap:3px;font-size:16px;line-height:1;color:var(--ge-faint)}
+.ge-smeter .on{color:var(--ge-red-glow);text-shadow:0 0 8px rgba(255,59,59,.35)}
+.ge-smeter .half{color:var(--ge-red-glow);opacity:.55}
+.ge-spec-lin{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2);
+  font-size:12px;color:var(--ge-muted)}
+.ge-spec-lin svg{width:var(--ge-ic-sm);height:var(--ge-ic-sm);flex:none;color:var(--ge-faint)}
+.ge-spec-lock{margin-top:var(--ge-sp-2);padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line)}
+.ge-spec-lock .ge-caption{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-card .ge-datarow{padding:8px 0;min-height:40px;font-size:13px}
+.ge-spec-card .ge-btn-row{margin:var(--ge-sp-2) 0 0}
+
+/* ---- strain hero ---- */
+.ge-strain-hero{text-align:center}
+.ge-strain-art{width:120px;margin:0 auto var(--ge-sp-3);border-radius:var(--ge-r-lg);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.1),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);padding:var(--ge-sp-3)}
+.ge-strain-art svg{width:100%;height:auto}
+.ge-strain-hero .ge-spec-badges{justify-content:center}
+.ge-strain-hero .ge-spec-lin{justify-content:center}
+
+/* ---- breeding lab ---- */
+.ge-breed-parent{display:flex;align-items:center;gap:var(--ge-sp-3)}
+.ge-breed-parent svg{width:64px;height:64px;flex:none}
+.ge-breed-parent select{flex:1;min-height:44px;background:var(--ge-surface-1);
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-md);color:var(--ge-ink);
+  padding:0 var(--ge-sp-2);font-size:14px;min-width:0}
+.ge-breed-vs{text-align:center;font-size:26px;color:var(--ge-red);font-weight:800;
+  margin:var(--ge-sp-1) 0;line-height:1}
+.ge-predict-parents{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--ge-sp-2);
+  align-items:center;margin-bottom:var(--ge-sp-3)}
+.ge-predict-par{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ge-predict-par span{font-weight:700;color:var(--ge-white);font-size:14px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.ge-predict-x{font-size:22px;color:var(--ge-red);font-weight:800}
+.ge-predict-row{margin-bottom:var(--ge-sp-2)}
+.ge-predict-row .ge-stars i{font-style:normal}
+
+/* ---- keeper identification cinematic ---- */
+.ge-kid-stage{position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:var(--ge-sp-3);width:100%;padding:var(--ge-sp-6) var(--ge-sp-4);text-align:center;
+  animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-kid-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 36%,rgba(224,32,32,.3),transparent 65%);
+  animation:ge-pulse-soft 2.4s var(--ge-ease) infinite}
+.ge-kid-plant{position:relative;z-index:1}
+.ge-kid-plant svg{width:150px;height:175px;filter:drop-shadow(0 0 22px rgba(255,59,59,.35))}
+.ge-kid-crown{position:relative;z-index:1;margin-top:calc(var(--ge-sp-3) * -1)}
+.ge-kid-crown svg{width:76px;height:auto;animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out) .3s backwards}
+.ge-kid-kicker{font-family:var(--ge-label);font-weight:700;font-size:10px;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--ge-red-glow)}
+.ge-kid-title{margin:0}
+.ge-kid-name{font-size:16px;font-weight:700;color:var(--ge-white)}
+.ge-kid-pheno{color:var(--ge-muted);font-weight:600}
+.ge-kid-desc{color:#d8d8d8;font-size:14px;line-height:1.5;margin:0;max-width:340px}
+.ge-kid-hint{font-family:var(--ge-label);font-size:10px;letter-spacing:.24em;color:var(--ge-faint);
+  text-transform:uppercase;margin:var(--ge-sp-2) 0 0}
+.ge-kid-traits{width:100%;max-width:330px;display:flex;flex-direction:column;gap:6px;z-index:1}
+.ge-kid-trait{display:flex;justify-content:space-between;align-items:center;min-height:44px;
+  padding:8px 14px;background:var(--ge-glass);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md);animation:ge-kid-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-kid-trait span{font-family:var(--ge-label);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--ge-muted)}
+.ge-kid-trait b{font-family:var(--ge-data);font-size:17px;color:var(--ge-white);font-variant-numeric:tabular-nums}
+.ge-kid-stage .ge-btn-block{position:relative;z-index:1;max-width:330px}
+.ge-mut-dna svg{width:84px;height:84px;color:var(--ge-gold)}
+.ge-mut-legend{margin-top:var(--ge-sp-1)}
+@keyframes ge-kid-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ---- animated lineage tree ---- */
+.ge-linwrap{padding:var(--ge-sp-1) 0}
+.ge-lin-scroll{overflow-x:auto;padding:var(--ge-sp-2) 0;-webkit-overflow-scrolling:touch}
+.ge-lin-svg{display:block;overflow:visible}
+.ge-lin-node{cursor:pointer;animation:ge-lin-node-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-lin-node:focus-visible{outline:2px solid var(--ge-red-glow);outline-offset:3px;border-radius:10px}
+.ge-lin-box{fill:var(--ge-surface-2);stroke:var(--ge-line-strong);stroke-width:1}
+.ge-lin-node:hover .ge-lin-box{stroke:var(--ge-red)}
+.ge-lin-center .ge-lin-box{stroke:var(--ge-red);stroke-width:1.6}
+.ge-lin-rar-legendary .ge-lin-box{stroke:var(--ge-gold);stroke-width:1.6}
+.ge-lin-rar-elite .ge-lin-box{stroke:rgba(224,32,32,.7)}
+.ge-lin-name{fill:var(--ge-white);font-size:12px;font-weight:700;font-family:var(--ge-body)}
+.ge-lin-sub{fill:var(--ge-muted);font-size:9.5px;letter-spacing:.06em;font-family:var(--ge-label)}
+.ge-lin-glabel{fill:var(--ge-faint);font-size:10px;letter-spacing:.14em;font-family:var(--ge-label)}
+.ge-lin-line{stroke:var(--ge-line-strong);stroke-width:1.5;
+  animation:ge-lin-line-in var(--ge-dur-slow) var(--ge-ease-out) backwards}
+@keyframes ge-lin-node-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ge-lin-line-in{from{opacity:0}to{opacity:1}}
+
+/* ---- compare table ---- */
+.ge-cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.ge-cmp-table th,.ge-cmp-table td{padding:10px 8px;border-bottom:1px solid var(--ge-line);text-align:center}
+.ge-cmp-table th{font-family:var(--ge-label);font-size:10px;letter-spacing:.08em;color:var(--ge-muted);
+  text-transform:uppercase}
+.ge-cmp-table td:first-child{text-align:left;color:var(--ge-muted)}
+.ge-cmp-table td.win{color:var(--ge-green);font-weight:700}
+
+/* ---- small screens ---- */
+@media (max-width:380px){
+  .ge-spec-card{grid-template-columns:64px 1fr}
+  .ge-spec-art{width:64px;min-height:64px}
+  .ge-spec-meters{grid-template-columns:1fr}
+}
+
+/* ===== UI OVERHAUL [EMPIRE] ===== */
+/* ============================================================================
+   EMPIRE worker area CSS — ge- prefixed, token-driven.
+   Loaded AFTER tokens.css. No legacy-class restyles, no fixed positioning.
+   All motion is transform/opacity only; reduced-motion respected.
+   ============================================================================ */
+
+/* ---- Segmented tab bar (scrollable, 44px tabs) ---- */
+.ge-tabs{
+  display:flex; gap:var(--ge-sp-1); overflow-x:auto; padding:var(--ge-sp-2) var(--ge-sp-1);
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-tabs::-webkit-scrollbar{ display:none; }
+.ge-tab{
+  flex:1 0 auto; min-height:44px; padding:0 var(--ge-sp-4);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill);
+  background:var(--ge-graphite); color:var(--ge-muted);
+  font:600 var(--ge-size-label)/1 var(--ge-label); letter-spacing:.08em;
+  cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), background var(--ge-dur-fast) var(--ge-ease), color var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+  white-space:nowrap;
+}
+.ge-tab.is-active{
+  background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent;
+  box-shadow:var(--ge-sh-glow);
+}
+.ge-tab:active{ transform:scale(.97); }
+
+/* ---- Facility progression strip ---- */
+.ge-strip{
+  display:flex; align-items:stretch; overflow-x:auto; gap:0;
+  padding:var(--ge-sp-3) var(--ge-sp-1); -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-strip::-webkit-scrollbar{ display:none; }
+.ge-strip-node{
+  flex:1 0 108px; display:flex; flex-direction:column; align-items:center; gap:var(--ge-sp-1);
+  text-align:center; padding:var(--ge-sp-2);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-strip-cur{ border-color:var(--ge-red); box-shadow:var(--ge-sh-glow); background:var(--ge-gunmetal); }
+.ge-strip-done{ opacity:.85; }
+.ge-strip-dot{
+  width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+  background:var(--ge-raised); border:1px solid var(--ge-line-strong); color:var(--ge-muted);
+}
+.ge-strip-cur .ge-strip-dot{ background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent; }
+.ge-strip-done .ge-strip-dot{ color:var(--ge-green); border-color:var(--ge-green); }
+.ge-strip-name{ font:600 var(--ge-size-caption)/1.2 var(--ge-label); letter-spacing:.04em; color:var(--ge-ink); }
+.ge-strip-sub{ font:500 var(--ge-size-caption)/1 var(--ge-data); color:var(--ge-faint); }
+.ge-strip-link{ flex:0 0 14px; align-self:center; height:2px; background:var(--ge-line-strong); }
+.ge-strip-link.done{ background:var(--ge-green); }
+
+/* ---- Facility cards ---- */
+.ge-facility{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-facility-art{ flex:0 0 104px; border-radius:var(--ge-r-sm); overflow:hidden; border:1px solid var(--ge-line); }
+.ge-fac-art{ display:block; width:104px; height:auto; }
+.ge-facility-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-benefits{ margin:0; padding-left:var(--ge-sp-4); color:var(--ge-muted); font-size:var(--ge-size-caption); line-height:var(--ge-lh); }
+.ge-benefits li{ margin:2px 0; }
+.ge-lockreq{ display:flex; gap:var(--ge-sp-2); align-items:flex-start; color:var(--ge-muted); }
+.ge-lockreq > svg{ flex:0 0 auto; margin-top:2px; }
+.ge-lockreq b{ color:var(--ge-ink); font-size:var(--ge-size-body); }
+.ge-lockreq p{ margin:2px 0 0; }
+
+/* ---- Tier ladder (hub card) ---- */
+.ge-tierladder{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-1); margin:var(--ge-sp-2) 0; }
+.ge-tierchip{
+  font:600 10px/1 var(--ge-label); letter-spacing:.06em; color:var(--ge-faint);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill); padding:6px 9px;
+}
+.ge-tierchip.owned{ color:var(--ge-muted); border-color:var(--ge-line-strong); }
+.ge-tierchip.cur{ color:var(--ge-white); background:var(--ge-grad-red); border-color:transparent; }
+
+/* ---- Equipment / crew / comp shared module layout ---- */
+.ge-equip{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-equip-ico{
+  flex:0 0 52px; width:52px; height:52px; border-radius:var(--ge-r-md);
+  display:grid; place-items:center; color:var(--ge-red-glow);
+  background:var(--ge-gunmetal); border:1px solid var(--ge-line-strong);
+}
+.ge-equip-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-comp-trophy{ color:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-hired{ border-color:var(--ge-green); }
+
+/* Level dot meter (●○○○○ as CSS, no glyphs) */
+.ge-dots{ display:inline-flex; gap:6px; align-items:center; }
+.ge-dots i{ width:10px; height:10px; border-radius:50%; background:var(--ge-raised); border:1px solid var(--ge-line-strong); }
+.ge-dots i.on{ background:var(--ge-red-glow); border-color:var(--ge-red-glow); box-shadow:0 0 6px rgba(255,59,59,.5); }
+
+/* ---- Staff cards ---- */
+.ge-benched{ opacity:.72; border-style:dashed; }
+.ge-ecard .ge-btn-row{ display:flex; gap:var(--ge-sp-2); }
+.ge-ecard .ge-btn-row .ge-btn{ flex:1 1 0; min-width:0; padding-left:4px; padding-right:4px; }
+
+/* ---- Ceremony ---- */
+.ge-cer-head h3{ display:flex; align-items:center; gap:var(--ge-sp-2); margin:0 0 var(--ge-sp-3); font-size:var(--ge-size-h2); }
+.ge-cer-hero{ text-align:center; padding:var(--ge-sp-4) 0; }
+.ge-cer-title{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-cer-rows{ display:flex; flex-direction:column; gap:var(--ge-sp-1); margin-bottom:var(--ge-sp-3); }
+.ge-cer-row{
+  display:flex; justify-content:space-between; align-items:center; gap:var(--ge-sp-2);
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); font-size:var(--ge-size-body);
+  animation:ge-rise var(--ge-dur-slow) var(--ge-ease-out) both;
+}
+.ge-cer-row.ge-cer-top{ border-color:var(--ge-line-strong); background:var(--ge-gunmetal); }
+.ge-cer-me{ border-color:var(--ge-red); box-shadow:inset 0 0 0 1px var(--ge-red); }
+.ge-cer-me span{ color:var(--ge-white); font-weight:700; }
+.ge-medal{
+  display:inline-block; min-width:30px; text-align:center; margin-right:6px;
+  font:700 11px/1.6 var(--ge-label); letter-spacing:.05em; border-radius:var(--ge-r-xs);
+  border:1px solid var(--ge-line-strong); color:var(--ge-ink); padding:0 5px;
+}
+.ge-medal-1{ color:#0a0a0a; background:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-medal-2{ color:var(--ge-white); background:var(--ge-gunmetal); }
+.ge-medal-3{ color:var(--ge-ember); border-color:var(--ge-ember); }
+.ge-cer-win{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); border:1px solid var(--ge-gold); border-radius:var(--ge-r-md); background:linear-gradient(180deg, rgba(212,160,23,.10), transparent); margin:var(--ge-sp-3) 0; }
+.ge-cer-crown{ display:flex; justify-content:center; margin-bottom:var(--ge-sp-2); }
+.ge-cer-wintext{ font-size:var(--ge-size-body); color:var(--ge-ink); margin:0; }
+.ge-cer-final{ animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+
+/* Entry picker rows (competition entry modal) */
+.ge-pick{
+  display:flex; align-items:center; gap:var(--ge-sp-3); min-height:56px;
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); margin-bottom:var(--ge-sp-2); cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-pick:active{ transform:scale(.98); border-color:var(--ge-red); }
+.ge-pick svg{ flex:0 0 40px; }
+
+/* ---- Facility unlock cinematic ---- */
+.ge-cine-fac{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); }
+.ge-cine-title{ font-size:var(--ge-size-display); letter-spacing:.08em; color:var(--ge-white); margin-bottom:var(--ge-sp-4); animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+.ge-cine-compare{ display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-cine-side{ flex:1 1 0; min-width:0; border:1px solid var(--ge-line-strong); border-radius:var(--ge-r-md); overflow:hidden; background:var(--ge-graphite); padding-bottom:var(--ge-sp-2); }
+.ge-cine-side .ge-label{ display:block; padding:var(--ge-sp-2) 0 var(--ge-sp-1); color:var(--ge-faint); }
+.ge-cine-side svg{ width:100%; height:auto; display:block; }
+.ge-cine-side b{ display:block; padding:var(--ge-sp-1) var(--ge-sp-2) 0; font-size:var(--ge-size-caption); color:var(--ge-ink); }
+.ge-cine-arrow{ flex:0 0 auto; color:var(--ge-red-glow); animation:ge-pulse 1.2s var(--ge-ease) infinite; }
+
+/* ---- Small utilities ---- */
+.ge-locknote{ display:flex; align-items:center; gap:var(--ge-sp-2); color:var(--ge-amber); font-size:var(--ge-size-caption); margin:var(--ge-sp-2) 0; }
+.ge-up{ font-weight:800; color:var(--ge-ink); }
+.ge-hub .hub-map{ width:100%; height:auto; display:block; margin:var(--ge-sp-2) 0; }
+.ge-loc p.ge-caption{ margin:var(--ge-sp-1) 0; }
+.ge-legacy{ border-color:var(--ge-gold); }
+
+/* ---- Motion (transform/opacity only) ---- */
+@keyframes ge-rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes ge-pop{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:none;} }
+@keyframes ge-pulse{ 0%,100%{ opacity:.6; transform:scale(1);} 50%{ opacity:1; transform:scale(1.12);} }
+
+@media (prefers-reduced-motion: reduce){
+  .ge-cer-row, .ge-cine-title, .ge-cine-arrow{ animation:none !important; }
+  .ge-tab, .ge-pick{ transition:none !important; }
+}
+
+/* ---- Tablet: facilities grid ---- */
+@media (min-width:768px){
+  .ge-facility-art{ flex-basis:140px; }
+  .ge-fac-art{ width:140px; }
+}
+
+/* ===== UI OVERHAUL [DISPENSARY] ===== */
+/* ============================================================
+   DISPENSARY WORKER — extra area CSS (ge-dp-* namespace)
+   Token-driven (var(--ge-*)); transform/opacity motion only.
+   Loaded after tokens.css. Does not restyle legacy classes.
+   ============================================================ */
+
+/* metric tile grid: 2 cols on phones, auto-fit on larger screens */
+.ge-dp-metrics{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:var(--ge-sp-2);
+  margin-bottom:var(--ge-sp-3);
+}
+@media (min-width:768px){
+  .ge-dp-metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+}
+
+/* premium product card: art + meta layout (extends ge-card) */
+.ge-dp-product{display:flex;gap:var(--ge-sp-3);align-items:flex-start;}
+.ge-dp-flower{width:72px;height:72px;flex:0 0 72px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 35%,var(--ge-raised),var(--ge-graphite));
+  border:1px solid var(--ge-line);}
+.ge-dp-product .ge-plant-meta{flex:1;min-width:0;}
+.ge-dp-tags{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-1) 0;}
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+
+/* buyer / flower pick lists inside modals */
+.ge-dp-buyers{display:flex;flex-direction:column;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-buyer{display:flex;gap:var(--ge-sp-3);align-items:center;cursor:pointer;min-height:44px;}
+.ge-dp-buyer-face{flex:0 0 48px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--ge-r-md);background:var(--ge-gunmetal);border:1px solid var(--ge-line);}
+.ge-dp-offer{display:flex;align-items:baseline;gap:var(--ge-sp-2);margin-top:var(--ge-sp-1);}
+
+/* customer queue card */
+.ge-dp-cust .ge-card-head h3{display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-cnum{color:var(--ge-red-glow);font-size:var(--ge-size-caption);letter-spacing:.08em;}
+.ge-dp-prefs{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-2) 0;}
+.ge-dp-lines{margin:var(--ge-sp-2) 0;}
+.ge-dp-total{margin:var(--ge-sp-2) 0;padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line);}
+.ge-dp-total b{font-size:var(--ge-size-h2);}
+.ge-dp-trust{margin-top:var(--ge-sp-2);display:flex;flex-direction:column;gap:var(--ge-sp-1);}
+.ge-dp-trustrow{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-browse{padding:var(--ge-sp-3);}
+
+/* feed / news rows */
+.ge-dp-feedrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-feedrow:last-child{border-bottom:none;}
+.ge-dp-dot{width:8px;height:8px;border-radius:50%;background:var(--ge-faint);flex:0 0 8px;}
+.ge-dp-dot-good{background:var(--ge-green);}
+.ge-dp-dot-warn{background:var(--ge-amber);}
+.ge-dp-dot-bad{background:var(--ge-danger);}
+
+/* market demand rows */
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-demrow:last-child{border-bottom:none;}
+.ge-dp-demname{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-why{margin:0 0 var(--ge-sp-2) calc(var(--ge-sp-2) + 20px);}
+.ge-dp-dim{opacity:.55;}
+
+/* production pipeline strip */
+.ge-dp-pipeline{display:flex;align-items:center;gap:var(--ge-sp-1);flex-wrap:wrap;margin-bottom:var(--ge-sp-3);}
+.ge-dp-arrow{color:var(--ge-faint);}
+
+/* production banner */
+.ge-dp-banner{margin-bottom:var(--ge-sp-3);}
+
+/* rank ladder + rankup modal */
+.ge-dp-ladder{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin-top:var(--ge-sp-2);}
+.ge-dp-rankname{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-rankcrown{width:40px;height:40px;}
+.ge-dp-rankup{display:flex;flex-direction:column;gap:var(--ge-sp-3);align-items:center;text-align:center;}
+.ge-dp-rankup-title{color:var(--ge-red-glow);}
+.ge-dp-rankup-name{color:var(--ge-gold);}
+
+/* process amount input */
+.ge-dp-input{width:100%;min-height:44px;background:var(--ge-graphite);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-sm);color:var(--ge-ink);padding:0 var(--ge-sp-3);font-size:var(--ge-size-body);
+  margin:var(--ge-sp-1) 0 var(--ge-sp-3);}
+
+/* entrance: transform/opacity only */
+@keyframes ge-dp-rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:no-preference){
+  .ge-dp-product,.ge-dp-cust,.ge-dp-buyer{animation:ge-dp-rise var(--ge-dur) var(--ge-ease-out) both;}
+  .ge-dp-buyer:nth-child(2){animation-delay:40ms;}
+  .ge-dp-buyer:nth-child(3){animation-delay:80ms;}
+  .ge-dp-buyer:nth-child(4){animation-delay:120ms;}
+}
+
+/* ===== UI OVERHAUL [MISSIONS] ===== */
+/* ============================================================
+   MISSIONS WORKER — extra area CSS (ms-* only, token-driven).
+   Coordinator merges tokens.css (all --ge-* tokens + ge-* classes).
+   No legacy classes restyled. Animations: opacity/color only.
+   ============================================================ */
+
+/* ---- missions command header ---- */
+.ms-command{margin-bottom:var(--ge-sp-3)}
+.ms-nextup{margin-top:var(--ge-sp-3);padding-top:var(--ge-sp-3);border-top:1px solid var(--ge-line)}
+.ms-nextup .ge-label{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--ge-muted)}
+.ms-nextup b{font-size:var(--ge-size-body)}
+
+/* ---- section tabs ---- */
+.ms-tabs{margin:var(--ge-sp-3) 0 var(--ge-sp-2)}
+.ms-tabs .ge-tab .ic{margin-right:6px}
+
+/* ---- mission card ---- */
+.ge-mission.is-done{opacity:.82}
+.ms-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ms-cat{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ge-muted)}
+.ms-diff{margin-left:auto}
+.ms-title{margin:2px 0 6px;font-size:var(--ge-size-h2);line-height:var(--ge-lh-tight)}
+.ms-title .ic{color:var(--ge-green);margin-right:6px}
+.ms-reward{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:var(--ge-size-caption);color:var(--ge-muted)}
+.ms-reward .ic{color:var(--ge-red-glow);flex:none;margin-top:1px}
+
+/* ---- objectives checklist ---- */
+.ms-objs{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ms-obj{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-obj .ms-check{display:inline-flex;color:var(--ge-faint);flex:none}
+.ms-obj.is-done .ms-check{color:var(--ge-green)}
+.ms-obj .ms-objt{flex:1;font-size:var(--ge-size-caption);line-height:var(--ge-lh);color:var(--ge-ink)}
+.ms-obj.is-done .ms-objt{color:var(--ge-muted);text-decoration:line-through}
+.ms-obj .ge-num,.ms-obj .ge-pill{flex:none}
+
+/* ---- timed mission timer ---- */
+.ms-timer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-timer .ge-progress{flex-basis:100%}
+.ms-timer .ge-btn{flex:1 1 100%}
+.ms-left{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.06em;color:var(--ge-muted)}
+/* near-expiry urgency: subtle color shift + soft pulse (never flashing) */
+.ms-timer.ms-urgent{border-color:var(--ge-orange)}
+.ms-timer.ms-urgent .ms-left{color:var(--ge-orange);animation:ms-pulse var(--ge-dur-slow) ease-in-out infinite}
+@keyframes ms-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.ms-timer.ms-urgent .ms-left{animation:none}}
+
+/* ---- achievements ---- */
+.ms-gold{color:var(--ge-gold)}
+.ms-ach.is-done{border-color:var(--ge-line-strong)}
+
+/* ---- leaderboards ---- */
+.ms-records{margin:var(--ge-sp-3) 0}
+.ms-titles{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ms-titles .ge-badge{display:inline-flex;align-items:center;gap:6px}
+
+/* ===== UI OVERHAUL [PROJECT 0] ===== */
+/* ============================================================================
+   PROJECT 0 — extra area CSS (worker: project0)
+   ge- prefixed only, token-driven. Darker, reduced-clutter prestige look.
+   The coordinator merges this after tokens.css. No legacy classes restyled.
+   ========================================================================== */
+
+/* Darker screen wash — Project 0 sits visually below the rest of the game. */
+#scr-project0 .ge-screen{
+  background:linear-gradient(180deg,var(--ge-black) 0%,#050607 40%,var(--ge-black) 100%);
+}
+
+/* ---- Hero: black/graphite seal card, restrained gold/crimson ---- */
+.ge-p0-hero{
+  text-align:center;
+  background:linear-gradient(180deg,#101114 0%,#08090b 62%,#060708 100%);
+  border-color:rgba(212,160,23,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 32px rgba(0,0,0,.55);
+  position:relative;
+  overflow:hidden;
+}
+.ge-p0-hero::before{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(122,13,13,.28),transparent 60%);
+}
+.ge-p0-hero > *{position:relative}
+.ge-p0-sealrow{margin:var(--ge-sp-4) auto 0;display:flex;flex-direction:column;align-items:center}
+.ge-p0-eyebrow{
+  display:inline-flex;align-items:center;gap:var(--ge-sp-2);
+  color:var(--ge-gold);letter-spacing:.22em;font-size:var(--ge-size-label);
+  font-weight:700;margin-top:var(--ge-sp-3);
+}
+.ge-p0-eyebrow .ic{color:var(--ge-gold)}
+.ge-p0-title{
+  margin:var(--ge-sp-2) 0 0;
+  font-size:var(--ge-size-display);
+  letter-spacing:.14em;color:var(--ge-white);
+  text-shadow:0 2px 18px rgba(224,32,32,.35);
+}
+.ge-p0-motto{
+  margin:var(--ge-sp-3) auto 0;max-width:34ch;
+  font-size:var(--ge-size-body);font-style:italic;
+  color:var(--ge-muted);line-height:var(--ge-lh);
+}
+.ge-p0-herorow{
+  display:flex;align-items:center;justify-content:center;
+  gap:var(--ge-sp-6);margin:var(--ge-sp-5) 0 var(--ge-sp-2);
+}
+.ge-p0-score .ge-display{font-size:34px;line-height:1}
+.ge-p0-pointspill{margin-top:var(--ge-sp-2);display:flex;justify-content:center}
+.ge-p0-titles{
+  display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);justify-content:center;
+  margin-top:var(--ge-sp-3);padding-bottom:var(--ge-sp-2);
+}
+.ge-p0-title-pill{display:inline-flex;align-items:center;gap:var(--ge-sp-2);font-weight:600}
+
+/* ---- Archive metric tiles: gold reserved for the score tile ---- */
+.ge-p0-metric{position:relative;overflow:hidden}
+.ge-p0-metric-ic{
+  display:flex;justify-content:center;margin-bottom:var(--ge-sp-2);
+  color:var(--ge-faint);
+}
+.ge-p0-metric-gold{border-color:rgba(212,160,23,.45)}
+.ge-p0-metric-gold .ge-p0-metric-ic{color:var(--ge-gold)}
+.ge-p0-metric-gold .ge-metric-value{color:var(--ge-gold)}
+.ge-p0-metric .ge-metric-value{font-size:var(--ge-size-h1)}
+
+/* ---- Track cards: minimal, hairline, gold only when maxed ---- */
+.ge-p0-track{border-left:2px solid var(--ge-line-strong)}
+.ge-p0-track .ge-card-head h3{font-size:var(--ge-size-h2);letter-spacing:.06em}
+
+/* ---- Rewards table ---- */
+.ge-p0-rewards{padding:0;overflow:hidden}
+.ge-p0-rewardrow{padding:var(--ge-sp-3) var(--ge-sp-4);border-bottom:1px solid var(--ge-line)}
+.ge-p0-rewardrow:last-child{border-bottom:none}
+.ge-p0-reward-track{
+  display:flex;align-items:center;gap:var(--ge-sp-2);
+  font-weight:700;letter-spacing:.08em;font-size:var(--ge-size-caption);
+  color:var(--ge-white);margin-bottom:var(--ge-sp-2);
+}
+.ge-p0-reward-track .ic{color:var(--ge-faint)}
+.ge-p0-reward-cells{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2)}
+.ge-p0-rewardcell{
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);
+  padding:var(--ge-sp-2) var(--ge-sp-3);min-height:44px;
+  display:flex;flex-direction:column;gap:var(--ge-sp-1);
+}
+.ge-p0-rewardcell.is-earned{border-color:rgba(212,160,23,.5);background:rgba(212,160,23,.06)}
+.ge-p0-rewarddesc{font-size:var(--ge-size-caption);color:var(--ge-ink);display:flex;align-items:center;gap:var(--ge-sp-1)}
+.ge-p0-rewardcell .ge-pill{align-self:flex-start}
+
+/* ---- Legacy prestige panel: crimson edge-light on black ---- */
+.ge-p0-legacy{
+  background:linear-gradient(180deg,#141014 0%,#0a090b 100%);
+  box-shadow:var(--ge-sh-2),inset 0 1px 0 rgba(255,59,59,.28);
+  border-color:rgba(122,13,13,.7);
+}
+.ge-p0-legacy .ge-card-head h3{color:var(--ge-white)}
+.ge-p0-legacy .ge-card-head .ic{color:var(--ge-red-glow)}
+.ge-p0-legacy p{margin:0 0 var(--ge-sp-3)}
+.ge-p0-locknote{
+  display:flex;align-items:center;justify-content:center;gap:var(--ge-sp-2);
+  color:var(--ge-muted);font-size:var(--ge-size-caption);
+  padding:var(--ge-sp-3) 0 var(--ge-sp-1);margin:0;
+}
+
+/* ---- Reduced motion: transform/opacity only everywhere else ---- */
+@media (prefers-reduced-motion: reduce){
+  .ge-p0-hero::before{display:none}
+  .ge-p0-hero .crown-anim{animation:none}
+}
+
+/* ===== UI OVERHAUL [PROFILE+MISC] ===== */
+/* ============================================================
+   GROW EMPIRE UI OVERHAUL — PROFILE+MISC WORKER (bucket K)
+   Extra area CSS only. ge- prefixed, token-driven (tokens.css owns tokens).
+   44px minimum touch targets · transform/opacity motion only.
+   ============================================================ */
+
+/* ---------- svg alignment inside new markup ---------- */
+.ge-term svg, .ge-welcome svg, .ge-dossier svg, .ge-notif svg,
+.ge-node svg, .ge-am-card svg, .ge-title svg, .ge-legal svg { flex:none; }
+.ge-datarow svg, .ge-metric-label svg, .ge-notif-meta svg { vertical-align:-0.18em; }
+
+/* ---------- secure terminal backdrop (login / welcome) ---------- */
+.ge-term-bg{
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(224,32,32,.14), transparent 60%),
+    var(--ge-grad-black);
+  overflow:hidden;
+}
+.ge-term-smoke{
+  position:absolute; width:140%; height:44%; left:-20%; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,255,255,.05), transparent 70%);
+  opacity:.7; animation:ge-term-drift 26s ease-in-out infinite alternate;
+}
+.ge-term-smoke.s1{ top:-12%; }
+.ge-term-smoke.s2{ top:30%; animation-delay:-13s; animation-duration:34s; }
+@keyframes ge-term-drift{
+  from{ transform:translateX(-4%) scale(1); }
+  to{ transform:translateX(4%) scale(1.06); }
+}
+.ge-term-scan{
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(to bottom, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+  opacity:.5;
+}
+.ge-term{
+  position:relative; margin:var(--ge-sp-4) auto; max-width:var(--ge-app-max);
+  padding:var(--ge-sp-6) var(--ge-sp-5);
+  background:var(--ge-glass); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-xl); box-shadow:var(--ge-sh-2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.ge-term-head{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label);
+  letter-spacing:.14em; color:var(--ge-muted);
+  padding-bottom:var(--ge-sp-3); border-bottom:1px solid var(--ge-line);
+}
+.ge-term-head svg{ color:var(--ge-red-glow); }
+.ge-term-dot{ width:8px; height:8px; border-radius:50%; background:var(--ge-green); margin-left:auto; box-shadow:0 0 8px var(--ge-green); }
+.ge-term-brand{ text-align:center; padding:var(--ge-sp-5) 0 var(--ge-sp-4); }
+.ge-term-brand .ge-display{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-term-local{
+  display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-5); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+  font-family:var(--ge-label); font-size:var(--ge-size-caption); color:var(--ge-faint);
+  text-align:center;
+}
+.ge-term h3.ge-h2{ margin:var(--ge-sp-4) 0 var(--ge-sp-3); letter-spacing:.08em; }
+
+/* ---------- inputs / checks ---------- */
+.ge-input{
+  display:block; width:100%; min-height:44px; margin:0 0 var(--ge-sp-3);
+  padding:var(--ge-sp-3) var(--ge-sp-4);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink);
+  font-family:var(--ge-body); font-size:var(--ge-size-body);
+}
+.ge-input:focus{ outline:none; border-color:var(--ge-red); box-shadow:0 0 0 2px rgba(255,59,59,.25); }
+select.ge-input{ appearance:auto; }
+.ge-check{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  min-height:44px; margin:0 0 var(--ge-sp-3);
+  font-size:var(--ge-size-body); color:var(--ge-muted); cursor:pointer;
+}
+.ge-check input{ width:22px; height:22px; accent-color:var(--ge-red); flex:none; }
+.ge-field{ display:block; flex:1; min-width:0; }
+.ge-field > span{
+  display:block; margin-bottom:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label); color:var(--ge-muted);
+  letter-spacing:.1em;
+}
+
+/* ---------- welcome ---------- */
+.ge-welcome{ max-width:var(--ge-app-max); margin:var(--ge-sp-6) auto; padding:0 var(--ge-sp-4) var(--ge-sp-8); text-align:center; }
+.ge-w-title{ letter-spacing:.08em; color:var(--ge-white); }
+.ge-w-name{ font-size:var(--ge-size-h1); font-weight:700; color:var(--ge-gold); margin-top:var(--ge-sp-2); }
+.ge-w-sub{ color:var(--ge-muted); margin:var(--ge-sp-1) 0 var(--ge-sp-3); }
+.ge-welcome .ge-card{ text-align:left; margin-top:var(--ge-sp-4); }
+
+/* ---------- dossier (profile) ---------- */
+.ge-dossier{ text-align:center; padding-top:var(--ge-sp-6); }
+.ge-dossier-mask{ color:var(--ge-red-glow); margin-bottom:var(--ge-sp-2); }
+.ge-dossier-name{ letter-spacing:.05em; color:var(--ge-white); margin-bottom:var(--ge-sp-2); word-break:break-word; }
+.ge-dossier .ge-badge{ font-size:var(--ge-size-label); letter-spacing:.12em; padding:6px 14px; }
+.ge-dossier-sub{ color:var(--ge-muted); margin:var(--ge-sp-3) 0 var(--ge-sp-2); }
+.ge-dossier-stars{ justify-content:center; margin-bottom:var(--ge-sp-3); }
+.ge-star{ color:var(--ge-faint); display:inline-flex; }
+.ge-star.on{ color:var(--ge-gold); }
+.ge-dossier-id{
+  display:flex; gap:var(--ge-sp-4); justify-content:center;
+  margin-top:var(--ge-sp-3); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+}
+.ge-dossier-id > div{ display:flex; flex-direction:column; gap:2px; }
+.ge-dossier-id b{ font-size:var(--ge-size-h2); font-family:var(--ge-data); }
+.ge-title-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-4); }
+.ge-title{
+  display:grid; grid-template-columns:1fr auto; gap:2px var(--ge-sp-3); align-items:center;
+  min-height:64px; padding:var(--ge-sp-3) var(--ge-sp-4); text-align:left;
+  background:var(--ge-graphite); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); color:var(--ge-faint); cursor:default;
+}
+.ge-title b{ font-size:var(--ge-size-body); }
+.ge-title span.ge-caption{ grid-column:1; }
+.ge-title svg{ grid-row:1 / span 2; grid-column:2; }
+.ge-title.has{ color:var(--ge-ink); border-color:var(--ge-line-strong); cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease); }
+.ge-title.has:hover{ border-color:var(--ge-red); }
+.ge-title.has:active{ transform:scale(.98); }
+.ge-title.has svg{ color:var(--ge-green); }
+.ge-title.sel{ border-color:var(--ge-gold); box-shadow:0 0 0 1px var(--ge-gold), var(--ge-sh-1); }
+.ge-ach-tags{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-2); }
+
+/* ---------- notification center ---------- */
+.ge-notif{
+  display:flex; align-items:flex-start; gap:var(--ge-sp-3); width:100%;
+  min-height:56px; padding:var(--ge-sp-3) var(--ge-sp-4); margin-bottom:var(--ge-sp-2);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink); text-align:left; cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), opacity var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-notif:active{ transform:scale(.99); }
+.ge-notif.is-read{ opacity:.62; }
+.ge-notif-ico{
+  flex:none; width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-notif.is-read .ge-notif-ico{ color:var(--ge-faint); }
+.ge-notif-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-notif-msg{ font-size:var(--ge-size-body); line-height:var(--ge-lh); word-break:break-word; }
+.ge-notif-msg svg{ width:16px; height:16px; }
+.ge-notif-meta{ letter-spacing:.08em; }
+.ge-unread{ flex:none; width:10px; height:10px; margin-top:6px; border-radius:50%; background:var(--ge-red-glow); box-shadow:0 0 8px var(--ge-red-glow); }
+
+/* ---------- tech tree ---------- */
+.ge-tree{ display:flex; flex-direction:column; }
+.ge-tier{
+  background:var(--ge-grad-surface); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-lg); padding:var(--ge-sp-4); box-shadow:var(--ge-sh-1);
+}
+.ge-tier-head{ display:flex; align-items:center; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-tier-head b{ letter-spacing:.1em; font-size:var(--ge-size-body); }
+.ge-tier-head p{ margin:2px 0 0; }
+.ge-tier-num{
+  flex:none; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--ge-grad-red); color:var(--ge-white);
+  font-family:var(--ge-data); font-size:var(--ge-size-h2); font-weight:700;
+}
+.ge-tier-nodes{ display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-node{
+  display:flex; gap:var(--ge-sp-3); align-items:flex-start;
+  padding:var(--ge-sp-3); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-node-ico{
+  flex:none; width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-muted);
+}
+.ge-node.owned .ge-node-ico{ color:var(--ge-green); }
+.ge-node.available .ge-node-ico{ color:var(--ge-gold); }
+.ge-node.locked{ opacity:.75; }
+.ge-node-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-node-body b{ font-size:var(--ge-size-body); }
+.ge-node-body p{ margin:0; }
+.ge-node .ge-btn{ align-self:center; flex:none; }
+.ge-tree-link{ width:2px; height:18px; margin:0 auto; background:var(--ge-line-strong); }
+
+/* ---------- automation ---------- */
+.ge-am-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-4); }
+.ge-am-head{ display:flex; gap:var(--ge-sp-3); align-items:center; margin-bottom:var(--ge-sp-2); }
+.ge-am-ico{
+  flex:none; width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-md); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-am-name{ font-weight:700; font-size:var(--ge-size-h2); }
+.ge-am-status{ margin-top:4px; }
+.ge-am-desc{ margin:0 0 var(--ge-sp-3); }
+.ge-am-stats{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+/* P3-W4: tech-tree requirement rows on automation cards */
+.ge-am-reqs{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-am-reqs .ge-datarow{ padding:3px 0; }
+.ge-am-reqs .ge-datarow span{ display:flex; align-items:center; gap:6px; }
+.ge-am-req-unmet span{ color:var(--ge-muted); }
+.ge-am-req-unmet b{ color:var(--ge-amber); }
+.ge-am-controls{ display:flex; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-am-actions .ge-caption{ margin-top:var(--ge-sp-2); }
+.ge-notes{ margin:0; padding-left:var(--ge-sp-5); color:var(--ge-muted); font-size:var(--ge-size-body); line-height:var(--ge-lh); }
+.ge-notes li{ margin-bottom:var(--ge-sp-2); }
+
+/* ---------- settings extras ---------- */
+.ge-prefbtn{ min-width:88px; min-height:44px; }
+.ge-inline-btns{ display:flex; gap:var(--ge-sp-2); flex:none; }
+.ge-inline-btns .ge-btn-sm{ min-height:44px; }
+.ge-legal{ text-align:left; max-height:50vh; overflow:auto; padding-right:var(--ge-sp-2); }
+.ge-legal p{ margin:0 0 var(--ge-sp-3); line-height:var(--ge-lh); font-size:var(--ge-size-body); }
+.ge-center{ text-align:center; }
+
+/* ---------- responsive: two columns on tablet+ ---------- */
+@media (min-width:768px){
+  .ge-title-grid{ grid-template-columns:1fr 1fr; }
+  .ge-am-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* ===== UI OVERHAUL [CHROME (loads last)] ===== */
+/* ==========================================================================
+   CHROME worker — app-shell area CSS (ge- prefixed, token-driven)
+   LOAD ORDER: styles.css -> tokens.css -> this file (must load LAST).
+   Covers: top command bar, HUD floats, bottom nav dock, cinematic stage,
+   level-up cinema, toast/modal confirm extras. No legacy classes redefined;
+   composites (.ge-x.legacy-y) only disambiguate where two stylesheets meet.
+   All motion is transform/opacity; tokens.css handles prefers-reduced-motion
+   for every [class*="ge-"] selector.
+   ========================================================================== */
+
+/* ---------------- top command bar: slim profile ---------------- */
+.ge-topbar-stat .ge-label{font-size:10px;letter-spacing:.08em;color:var(--ge-faint)}
+.ge-topbar-stat .ge-data{font-size:13px;color:var(--ge-ink)}
+/* compact pop on value rewrite (updateHUD re-creates the span -> replays) */
+.ge-hud-val{display:inline-block;animation:ge-hud-pop var(--ge-dur) var(--ge-ease-out)}
+@keyframes ge-hud-pop{0%{transform:scale(1.16);opacity:.45}100%{transform:scale(1);opacity:1}}
+/* XP micro-bar tucked under LVL */
+.ge-topbar-lvl{position:relative;padding-bottom:9px}
+.ge-topbar-xp{position:absolute;left:0;right:0;bottom:1px}
+
+/* ---------------- HUD floating gain/loss indicators ---------------- */
+.ge-hud-float{position:absolute;top:calc(100% - 4px);left:50%;z-index:61;
+  transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  font-family:var(--ge-data);font-weight:800;font-size:13px;
+  animation:ge-hud-float 1.6s ease-out forwards}
+.ge-hud-float.gain{color:var(--ge-green);text-shadow:0 0 8px rgba(61,220,95,.7)}
+.ge-hud-float.loss{color:var(--ge-danger);text-shadow:0 0 8px rgba(255,68,68,.7)}
+@keyframes ge-hud-float{0%{opacity:0;transform:translate(-50%,8px)}
+  18%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+
+/* ---------------- bottom nav: floating elevated dock ---------------- */
+#bottomnav.ge-navdock{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  padding-bottom:0;border:1px solid var(--ge-line-strong);border-radius:var(--ge-r-xl);
+  box-shadow:var(--ge-sh-3),var(--ge-sh-glow)}
+.ge-navdock-btn{transition:color var(--ge-dur) var(--ge-ease-out)}
+.ge-navdock-btn svg{transition:color var(--ge-dur) var(--ge-ease-out),filter var(--ge-dur) var(--ge-ease-out)}
+/* show() toggles legacy .active; alias it to the tokens .is-active treatment */
+.ge-navdock-btn.active{color:var(--ge-white)}
+.ge-navdock-btn.active::before{content:"";position:absolute;top:0;left:22%;right:22%;
+  height:2px;border-radius:2px;background:var(--ge-red);box-shadow:var(--ge-sh-glow)}
+.ge-navdock-btn.active svg{color:var(--ge-red-glow);filter:drop-shadow(0 0 6px rgba(255,59,59,.65))}
+/* body clearance for the floating dock (overrides legacy 104px) */
+body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) + 30px)}
+
+/* ---------------- cinematic overlay ---------------- */
+/* composite beats legacy .cine-back (centered, darker) AND tokens .ge-modal-back */
+.ge-modal-back.cine-back{align-items:center;background:rgba(4,4,6,.92)}
+.ge-cine-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:min(92vw,480px);max-height:84dvh;overflow-y:auto;text-align:center;
+  transform:scale(.94) translateY(12px);opacity:0;
+  transition:transform var(--ge-dur-slow) var(--ge-ease-out),opacity var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-modal-back.is-open .ge-cine-stage{transform:none;opacity:1}
+
+/* ---------------- level-up cinema ---------------- */
+.ge-cine-levelup .ge-cine-stage{background:radial-gradient(ellipse at 50% 32%,rgba(212,160,23,.14),transparent 62%)}
+.ge-lvlup{display:flex;flex-direction:column;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-6) 0}
+.ge-lvlup-crown{width:88px;height:auto;filter:drop-shadow(0 0 24px rgba(212,160,23,.7))}
+.ge-lvlup-title{color:var(--ge-gold);letter-spacing:.05em;text-shadow:0 0 26px rgba(212,160,23,.5)}
+.ge-lvlup-sub{color:var(--ge-muted);letter-spacing:.24em}
+/* ---------- P1.3 staged harvest reveal: industrial smoke / VHS / glitch ---------- */
+.pr-report{--pr-red:var(--ge-red);--pr-gold:var(--ge-gold)}
+.pr-smoke{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.5;
+  background:
+   radial-gradient(120px 60px at 20% 100%,rgba(224,32,32,.10),transparent 70%),
+   radial-gradient(160px 80px at 70% 100%,rgba(140,140,150,.12),transparent 70%),
+   radial-gradient(100px 50px at 45% 100%,rgba(224,32,32,.07),transparent 70%);
+  animation:pr-smoke-drift 7s ease-in-out infinite alternate}
+@keyframes pr-smoke-drift{from{transform:translateY(8px) scaleY(1)}to{transform:translateY(-10px) scaleY(1.06)}}
+.pr-scan{position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.55) 3px 4px)}
+.pr-kicker{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:var(--ge-sp-2);
+  font-family:var(--ge-font-display);font-size:11px;letter-spacing:.28em;color:var(--ge-faint)}
+.pr-kicker-bar{display:inline-block;width:34px;height:2px;background:var(--pr-red)}
+.pr-glitch{position:relative;text-shadow:2px 0 0 rgba(224,32,32,.55),-2px 0 0 rgba(255,122,26,.28)}
+.pr-prog{margin:var(--ge-sp-2) 0;letter-spacing:.22em}
+.pr-stage{min-height:210px;display:flex;flex-direction:column;justify-content:center}
+.pr-beat{border:1px solid var(--ge-line);border-left:3px solid var(--pr-red);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0));
+  padding:var(--ge-sp-3);margin:0 0 var(--ge-sp-3)}
+.pr-beat-in{animation:pr-beat-in .28s ease-out}
+@keyframes pr-beat-in{from{opacity:0;transform:translateY(10px);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+.pr-beat-top{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:var(--ge-sp-2)}
+.pr-beat-kicker{font-size:10px;letter-spacing:.24em;color:var(--pr-red)}
+.pr-beat-title{font-family:var(--ge-font-display);font-size:13px;letter-spacing:.2em;color:var(--ge-ink)}
+.pr-beat-val{font-family:var(--ge-font-display);font-size:44px;line-height:1;color:var(--ge-ink)}
+.pr-beat-sub{font-size:11px;letter-spacing:.24em;color:var(--ge-faint);margin-top:6px}
+.pr-beat-note{margin-top:10px;font-size:13px;line-height:1.5}
+.pr-next{margin-top:var(--ge-sp-2);letter-spacing:.26em;animation:pr-next-pulse 1.6s ease-in-out infinite}
+@keyframes pr-next-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.pr-banners{display:flex;flex-direction:column;gap:10px;margin-bottom:var(--ge-sp-3)}
+.pr-banner{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--ge-line);
+  border-left:4px solid var(--pr-red);padding:12px 14px;background:rgba(10,8,9,.72);
+  position:relative;overflow:hidden;opacity:0;animation:pr-beat-in .3s ease-out forwards}
+.pr-banner::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.6) 2px 3px)}
+.pr-banner-ic{color:var(--pr-red);flex:none}
+.pr-banner-tx b{display:block;font-family:var(--ge-font-display);font-size:14px;letter-spacing:.18em;color:var(--ge-ink)}
+.pr-banner-tx i{display:block;font-style:normal;font-size:12px;color:var(--ge-faint);margin-top:3px;line-height:1.45}
+.pr-banner-gold{border-left-color:var(--pr-gold)}
+/* P2-W6: story-arc chapter card (shared vocabulary) */
+.ge-chain-chapter{position:relative;border:1px solid var(--ge-line);border-left:3px solid var(--ge-red);border-radius:var(--radius);padding:var(--ge-sp-3);margin-bottom:var(--ge-sp-3);background:rgba(255,255,255,.02)}
+.ge-chain-chapter .ge-kicker{font-size:11px;letter-spacing:2px;color:var(--ge-red)}
+.ge-chain-chapter h3{margin:4px 0;font-size:16px;color:var(--ge-white)}
+.ge-chain-chapter .ge-desc{font-size:13px;color:var(--ge-muted)}
+.ge-chain-chapter .ge-progress{margin-top:8px}
+.ge-chain-chapter.is-done{border-left-color:var(--ge-gold)}
+.ge-chain-chapter.is-locked{opacity:.75}
+.ge-chain-chapter .btn{min-height:44px}
+.pr-banner-gold .pr-banner-ic{color:var(--pr-gold)}
+.pr-banner-legend{border-left-color:var(--pr-gold);box-shadow:inset 0 0 24px rgba(212,160,23,.08)}
+.pr-banner-legend .pr-banner-ic{color:var(--pr-gold)}
+.pr-banner-p0{border-left-color:#8a4a8e}
+.pr-banner-p0 .pr-banner-ic{color:#c07ac4}
+
+/* ---------- tablet: plant visual left, telemetry right ---------- */
+@media (min-width:768px){
+  .ge-growfloor{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #scr-grows .ge-plant-card{grid-template-columns:120px minmax(0,1fr)}
+  .ge-focus{max-width:760px}
+  .ge-focus .ge-focus-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}
+  .ge-focus-art{position:sticky;top:0}
+  .ge-btn-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1024px){
+  .ge-growfloor{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .ge-facscene-glow,
+  .ge-petal-fall{display:none}
+}
+
+/* ===== UI OVERHAUL [ENVIRONMENT] ===== */
+/* ============================================================
+   GROW EMPIRE — UI OVERHAUL · ENVIRONMENT WORKER CSS
+   Extra area CSS only. All classes ge- prefixed, token-driven
+   (tokens.css is merged by the coordinator — no tokens copied
+   here). Transform/opacity animations only. 44px touch targets.
+   ============================================================ */
+
+/* ---------- world-event banner (injected by show() into grow/home) ---------- */
+.ge-wx-banner{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  margin:var(--ge-sp-3) var(--ge-sp-4); padding:var(--ge-sp-3) var(--ge-sp-4);
+}
+.ge-wx-banner-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ge-wx-banner-t b{ font-size:var(--ge-size-body); letter-spacing:.04em; }
+.ge-wx-banner .ge-btn-row{ flex:0 0 auto; }
+
+/* ---------- world-event modal ---------- */
+.ge-wx-ev{ display:flex; flex-direction:column; gap:var(--ge-sp-3); }
+.ge-wx-ev h3{ margin:0; }
+.ge-wx-choice{ justify-content:flex-start; text-align:left; }
+.ge-wx-choice b{ display:block; width:100%; }
+.ge-wx-sub{ display:block; font-size:var(--ge-size-caption); color:var(--ge-muted); font-weight:400; margin-top:2px; }
+
+/* ---------- challenge cards ---------- */
+.ge-wx-reward{ margin:var(--ge-sp-2) 0 0; color:var(--ge-muted); }
+.ge-wx-chal-foot{ margin-top:var(--ge-sp-3); display:flex; justify-content:flex-end; }
+
+/* ---------- contract offers ---------- */
+.ge-wx-offer{ margin-top:var(--ge-sp-3); }
+
+/* ---------- ENVIRONMENT CONTROL CENTER ---------- */
+.ge-env-panel{ overflow:hidden; }
+.ge-env-panel .ge-card-head{ align-items:flex-start; }
+.ge-env-gauges{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:var(--ge-sp-3); margin-top:var(--ge-sp-3);
+}
+@media (min-width:480px){ .ge-env-gauges{ grid-template-columns:repeat(3,1fr); } }
+@media (min-width:768px){ .ge-env-gauges{ grid-template-columns:repeat(4,1fr); } }
+.ge-env-gauge{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:var(--ge-sp-2); padding:var(--ge-sp-3) var(--ge-sp-2);
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);
+}
+.ge-env-gauge .ge-ring{ width:76px; height:76px; }
+.ge-env-gauge-name{
+  display:flex; align-items:center; gap:6px;
+  font-size:var(--ge-size-label); letter-spacing:.08em; color:var(--ge-muted);
+}
+.ge-env-score{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+.ge-env-score .ge-ring{ width:64px; height:64px; }
+
+/* ---------- hardware sliders (real inputs, premium styled) ---------- */
+.ge-env-sliders{ display:flex; flex-direction:column; gap:var(--ge-sp-4); margin-top:var(--ge-sp-2); }
+.ge-env-ctl{ display:flex; flex-direction:column; gap:4px; }
+.ge-env-ctl .ge-datarow{ min-height:0; padding:0; }
+.ge-env-scale{ display:flex; justify-content:space-between; }
+input[type=range].ge-env-slider{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:44px; background:transparent; margin:0; cursor:pointer;
+}
+input[type=range].ge-env-slider::-webkit-slider-runnable-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:28px; height:28px; margin-top:-11px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+  transition:transform var(--ge-dur-fast) var(--ge-ease);
+}
+input[type=range].ge-env-slider::-webkit-slider-thumb:active{ transform:scale(1.12); }
+input[type=range].ge-env-slider::-moz-range-track{
+  height:8px; border-radius:var(--ge-r-pill);
+  background:linear-gradient(90deg,var(--ge-crimson-deep),var(--ge-gunmetal));
+  border:1px solid var(--ge-line-strong);
+}
+input[type=range].ge-env-slider::-moz-range-thumb{
+  width:24px; height:24px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--ge-red-glow), var(--ge-crimson) 60%, var(--ge-crimson-deep));
+  border:2px solid var(--ge-line-strong);
+  box-shadow:var(--ge-sh-2), 0 0 0 6px rgba(224,32,32,.12);
+}
+input[type=range].ge-env-slider:focus-visible{ outline:2px solid var(--ge-red-glow); outline-offset:2px; }
+
+/* ---------- all-clear row ---------- */
+.ge-env-ok{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-3); padding:var(--ge-sp-3);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md);
+  background:var(--ge-surface-2); color:var(--ge-green);
+  font-size:var(--ge-size-body);
+}
+
+/* ---------- environment history ---------- */
+.ge-env-panel .ge-seg{ margin:var(--ge-sp-3) 0; }
+.ge-env-panel .ge-seg button{ min-height:44px; }
+.ge-env-hist-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:var(--ge-sp-3);
+}
+@media (min-width:768px){ .ge-env-hist-grid{ grid-template-columns:repeat(3,1fr); } }
+.ge-env-hist{
+  background:var(--ge-surface-2); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); padding:var(--ge-sp-3);
+  display:flex; flex-direction:column; gap:var(--ge-sp-2);
+}
+.ge-env-hist .ge-spark{ width:100%; height:44px; }
+.ge-env-hist .ge-spark polyline{
+  fill:none; stroke:var(--ge-red-glow); stroke-width:1.5;
+  vector-effect:non-scaling-stroke;
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  input[type=range].ge-env-slider::-webkit-slider-thumb{ transition:none; }
+}
+
+/* ===== UI OVERHAUL [GENETICS] ===== */
+/* ============================================================================
+   GE GENETICS — Secret Genetic Archive area styles (ge- prefixed, token-driven)
+   Loads after tokens.css. Transform/opacity animations only.
+   ========================================================================== */
+
+/* ---- filter bar ---- */
+.ge-filterbar{padding:var(--ge-sp-3)}
+.ge-tab-count{margin-left:6px;min-width:22px;height:18px;padding:0 6px;border-radius:var(--ge-r-pill);
+  background:rgba(255,255,255,.07);color:var(--ge-muted);font-size:10px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;font-family:var(--ge-data)}
+.ge-tab.is-active .ge-tab-count{background:rgba(224,32,32,.25);color:var(--ge-white)}
+.ge-filter-row{display:flex;gap:var(--ge-sp-2)}
+.ge-search-wrap{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);
+  background:var(--ge-surface-1);border:1px solid var(--ge-line);border-radius:var(--ge-r-md);
+  padding:0 var(--ge-sp-3);min-height:44px;color:var(--ge-faint)}
+.ge-search-wrap svg{width:var(--ge-ic-md);height:var(--ge-ic-md);flex:none}
+.ge-search{flex:1;min-height:44px;background:none;border:0;color:var(--ge-ink);
+  font-family:var(--ge-label);font-size:12px;letter-spacing:.08em;outline:none;min-width:0}
+.ge-search::placeholder{color:var(--ge-faint)}
+.ge-select{min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-2);
+  font-family:var(--ge-label);font-size:11px;letter-spacing:.06em;max-width:46%}
+.ge-input{width:100%;min-height:44px;background:var(--ge-surface-1);border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md);color:var(--ge-ink);padding:0 var(--ge-sp-3);
+  font-size:14px;margin-bottom:var(--ge-sp-2)}
+
+/* ---- specimen cards ---- */
+.ge-spec-card{display:grid;grid-template-columns:84px 1fr;gap:var(--ge-sp-3);align-items:start;
+  animation:ge-rise var(--ge-dur) var(--ge-ease-out)}
+.ge-spec-art{width:84px;min-height:84px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.09),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);display:flex;align-items:center;justify-content:center;
+  padding:var(--ge-sp-2);position:sticky;top:0}
+.ge-spec-art svg{width:100%;height:auto;max-height:110px}
+.ge-spec-main{min-width:0}
+.ge-spec-name{margin:0 0 var(--ge-sp-2);font-family:var(--ge-font-h1);font-stretch:condensed;
+  font-weight:800;font-size:17px;letter-spacing:.03em;text-transform:uppercase;color:var(--ge-white);
+  display:flex;align-items:center;gap:var(--ge-sp-2);flex-wrap:wrap}
+.ge-spec-name svg{width:var(--ge-ic-md);height:var(--ge-ic-md);color:var(--ge-red)}
+.ge-spec-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-pot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--ge-sp-2)}
+.ge-spec-potv{font-size:22px;font-weight:800;color:var(--ge-white)}
+.ge-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--ge-sp-2)}
+.ge-spec-meters{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-meter{display:flex;flex-direction:column;gap:5px}
+/* star meter — red fill keeps gold reserved for keeper/legendary */
+.ge-smeter{display:inline-flex;gap:3px;font-size:16px;line-height:1;color:var(--ge-faint)}
+.ge-smeter .on{color:var(--ge-red-glow);text-shadow:0 0 8px rgba(255,59,59,.35)}
+.ge-smeter .half{color:var(--ge-red-glow);opacity:.55}
+.ge-spec-lin{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2);
+  font-size:12px;color:var(--ge-muted)}
+.ge-spec-lin svg{width:var(--ge-ic-sm);height:var(--ge-ic-sm);flex:none;color:var(--ge-faint)}
+.ge-spec-lock{margin-top:var(--ge-sp-2);padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line)}
+.ge-spec-lock .ge-caption{display:flex;align-items:center;gap:var(--ge-sp-2);margin-bottom:var(--ge-sp-2)}
+.ge-spec-card .ge-datarow{padding:8px 0;min-height:40px;font-size:13px}
+.ge-spec-card .ge-btn-row{margin:var(--ge-sp-2) 0 0}
+
+/* ---- strain hero ---- */
+.ge-strain-hero{text-align:center}
+.ge-strain-art{width:120px;margin:0 auto var(--ge-sp-3);border-radius:var(--ge-r-lg);
+  background:radial-gradient(circle at 50% 60%,rgba(61,220,95,.1),transparent 70%),var(--ge-surface-1);
+  border:1px solid var(--ge-line);padding:var(--ge-sp-3)}
+.ge-strain-art svg{width:100%;height:auto}
+.ge-strain-hero .ge-spec-badges{justify-content:center}
+.ge-strain-hero .ge-spec-lin{justify-content:center}
+
+/* ---- breeding lab ---- */
+.ge-breed-parent{display:flex;align-items:center;gap:var(--ge-sp-3)}
+.ge-breed-parent svg{width:64px;height:64px;flex:none}
+.ge-breed-parent select{flex:1;min-height:44px;background:var(--ge-surface-1);
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-md);color:var(--ge-ink);
+  padding:0 var(--ge-sp-2);font-size:14px;min-width:0}
+.ge-breed-vs{text-align:center;font-size:26px;color:var(--ge-red);font-weight:800;
+  margin:var(--ge-sp-1) 0;line-height:1}
+.ge-predict-parents{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--ge-sp-2);
+  align-items:center;margin-bottom:var(--ge-sp-3)}
+.ge-predict-par{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ge-predict-par span{font-weight:700;color:var(--ge-white);font-size:14px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.ge-predict-x{font-size:22px;color:var(--ge-red);font-weight:800}
+.ge-predict-row{margin-bottom:var(--ge-sp-2)}
+.ge-predict-row .ge-stars i{font-style:normal}
+
+/* ---- keeper identification cinematic ---- */
+.ge-kid-stage{position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:var(--ge-sp-3);width:100%;padding:var(--ge-sp-6) var(--ge-sp-4);text-align:center;
+  animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-kid-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 36%,rgba(224,32,32,.3),transparent 65%);
+  animation:ge-pulse-soft 2.4s var(--ge-ease) infinite}
+.ge-kid-plant{position:relative;z-index:1}
+.ge-kid-plant svg{width:150px;height:175px;filter:drop-shadow(0 0 22px rgba(255,59,59,.35))}
+.ge-kid-crown{position:relative;z-index:1;margin-top:calc(var(--ge-sp-3) * -1)}
+.ge-kid-crown svg{width:76px;height:auto;animation:ge-kid-in var(--ge-dur-slow) var(--ge-ease-out) .3s backwards}
+.ge-kid-kicker{font-family:var(--ge-label);font-weight:700;font-size:10px;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--ge-red-glow)}
+.ge-kid-title{margin:0}
+.ge-kid-name{font-size:16px;font-weight:700;color:var(--ge-white)}
+.ge-kid-pheno{color:var(--ge-muted);font-weight:600}
+.ge-kid-desc{color:#d8d8d8;font-size:14px;line-height:1.5;margin:0;max-width:340px}
+.ge-kid-hint{font-family:var(--ge-label);font-size:10px;letter-spacing:.24em;color:var(--ge-faint);
+  text-transform:uppercase;margin:var(--ge-sp-2) 0 0}
+.ge-kid-traits{width:100%;max-width:330px;display:flex;flex-direction:column;gap:6px;z-index:1}
+.ge-kid-trait{display:flex;justify-content:space-between;align-items:center;min-height:44px;
+  padding:8px 14px;background:var(--ge-glass);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md);animation:ge-kid-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-kid-trait span{font-family:var(--ge-label);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--ge-muted)}
+.ge-kid-trait b{font-family:var(--ge-data);font-size:17px;color:var(--ge-white);font-variant-numeric:tabular-nums}
+.ge-kid-stage .ge-btn-block{position:relative;z-index:1;max-width:330px}
+.ge-mut-dna svg{width:84px;height:84px;color:var(--ge-gold)}
+.ge-mut-legend{margin-top:var(--ge-sp-1)}
+@keyframes ge-kid-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ---- animated lineage tree ---- */
+.ge-linwrap{padding:var(--ge-sp-1) 0}
+.ge-lin-scroll{overflow-x:auto;padding:var(--ge-sp-2) 0;-webkit-overflow-scrolling:touch}
+.ge-lin-svg{display:block;overflow:visible}
+.ge-lin-node{cursor:pointer;animation:ge-lin-node-in var(--ge-dur) var(--ge-ease-out) backwards}
+.ge-lin-node:focus-visible{outline:2px solid var(--ge-red-glow);outline-offset:3px;border-radius:10px}
+.ge-lin-box{fill:var(--ge-surface-2);stroke:var(--ge-line-strong);stroke-width:1}
+.ge-lin-node:hover .ge-lin-box{stroke:var(--ge-red)}
+.ge-lin-center .ge-lin-box{stroke:var(--ge-red);stroke-width:1.6}
+.ge-lin-rar-legendary .ge-lin-box{stroke:var(--ge-gold);stroke-width:1.6}
+.ge-lin-rar-elite .ge-lin-box{stroke:rgba(224,32,32,.7)}
+.ge-lin-name{fill:var(--ge-white);font-size:12px;font-weight:700;font-family:var(--ge-body)}
+.ge-lin-sub{fill:var(--ge-muted);font-size:9.5px;letter-spacing:.06em;font-family:var(--ge-label)}
+.ge-lin-glabel{fill:var(--ge-faint);font-size:10px;letter-spacing:.14em;font-family:var(--ge-label)}
+.ge-lin-line{stroke:var(--ge-line-strong);stroke-width:1.5;
+  animation:ge-lin-line-in var(--ge-dur-slow) var(--ge-ease-out) backwards}
+@keyframes ge-lin-node-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ge-lin-line-in{from{opacity:0}to{opacity:1}}
+
+/* ---- compare table ---- */
+.ge-cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.ge-cmp-table th,.ge-cmp-table td{padding:10px 8px;border-bottom:1px solid var(--ge-line);text-align:center}
+.ge-cmp-table th{font-family:var(--ge-label);font-size:10px;letter-spacing:.08em;color:var(--ge-muted);
+  text-transform:uppercase}
+.ge-cmp-table td:first-child{text-align:left;color:var(--ge-muted)}
+.ge-cmp-table td.win{color:var(--ge-green);font-weight:700}
+
+/* ---- small screens ---- */
+@media (max-width:380px){
+  .ge-spec-card{grid-template-columns:64px 1fr}
+  .ge-spec-art{width:64px;min-height:64px}
+  .ge-spec-meters{grid-template-columns:1fr}
+}
+
+/* ===== UI OVERHAUL [EMPIRE] ===== */
+/* ============================================================================
+   EMPIRE worker area CSS — ge- prefixed, token-driven.
+   Loaded AFTER tokens.css. No legacy-class restyles, no fixed positioning.
+   All motion is transform/opacity only; reduced-motion respected.
+   ============================================================================ */
+
+/* ---- Segmented tab bar (scrollable, 44px tabs) ---- */
+.ge-tabs{
+  display:flex; gap:var(--ge-sp-1); overflow-x:auto; padding:var(--ge-sp-2) var(--ge-sp-1);
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-tabs::-webkit-scrollbar{ display:none; }
+.ge-tab{
+  flex:1 0 auto; min-height:44px; padding:0 var(--ge-sp-4);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill);
+  background:var(--ge-graphite); color:var(--ge-muted);
+  font:600 var(--ge-size-label)/1 var(--ge-label); letter-spacing:.08em;
+  cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), background var(--ge-dur-fast) var(--ge-ease), color var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+  white-space:nowrap;
+}
+.ge-tab.is-active{
+  background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent;
+  box-shadow:var(--ge-sh-glow);
+}
+.ge-tab:active{ transform:scale(.97); }
+
+/* ---- Facility progression strip ---- */
+.ge-strip{
+  display:flex; align-items:stretch; overflow-x:auto; gap:0;
+  padding:var(--ge-sp-3) var(--ge-sp-1); -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.ge-strip::-webkit-scrollbar{ display:none; }
+.ge-strip-node{
+  flex:1 0 108px; display:flex; flex-direction:column; align-items:center; gap:var(--ge-sp-1);
+  text-align:center; padding:var(--ge-sp-2);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-strip-cur{ border-color:var(--ge-red); box-shadow:var(--ge-sh-glow); background:var(--ge-gunmetal); }
+.ge-strip-done{ opacity:.85; }
+.ge-strip-dot{
+  width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+  background:var(--ge-raised); border:1px solid var(--ge-line-strong); color:var(--ge-muted);
+}
+.ge-strip-cur .ge-strip-dot{ background:var(--ge-grad-red); color:var(--ge-white); border-color:transparent; }
+.ge-strip-done .ge-strip-dot{ color:var(--ge-green); border-color:var(--ge-green); }
+.ge-strip-name{ font:600 var(--ge-size-caption)/1.2 var(--ge-label); letter-spacing:.04em; color:var(--ge-ink); }
+.ge-strip-sub{ font:500 var(--ge-size-caption)/1 var(--ge-data); color:var(--ge-faint); }
+.ge-strip-link{ flex:0 0 14px; align-self:center; height:2px; background:var(--ge-line-strong); }
+.ge-strip-link.done{ background:var(--ge-green); }
+
+/* ---- Facility cards ---- */
+.ge-facility{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-facility-art{ flex:0 0 104px; border-radius:var(--ge-r-sm); overflow:hidden; border:1px solid var(--ge-line); }
+.ge-fac-art{ display:block; width:104px; height:auto; }
+.ge-facility-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-benefits{ margin:0; padding-left:var(--ge-sp-4); color:var(--ge-muted); font-size:var(--ge-size-caption); line-height:var(--ge-lh); }
+.ge-benefits li{ margin:2px 0; }
+.ge-lockreq{ display:flex; gap:var(--ge-sp-2); align-items:flex-start; color:var(--ge-muted); }
+.ge-lockreq > svg{ flex:0 0 auto; margin-top:2px; }
+.ge-lockreq b{ color:var(--ge-ink); font-size:var(--ge-size-body); }
+.ge-lockreq p{ margin:2px 0 0; }
+
+/* ---- Tier ladder (hub card) ---- */
+.ge-tierladder{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-1); margin:var(--ge-sp-2) 0; }
+.ge-tierchip{
+  font:600 10px/1 var(--ge-label); letter-spacing:.06em; color:var(--ge-faint);
+  border:1px solid var(--ge-line); border-radius:var(--ge-r-pill); padding:6px 9px;
+}
+.ge-tierchip.owned{ color:var(--ge-muted); border-color:var(--ge-line-strong); }
+.ge-tierchip.cur{ color:var(--ge-white); background:var(--ge-grad-red); border-color:transparent; }
+
+/* ---- Equipment / crew / comp shared module layout ---- */
+.ge-equip{ display:flex; gap:var(--ge-sp-3); align-items:flex-start; }
+.ge-equip-ico{
+  flex:0 0 52px; width:52px; height:52px; border-radius:var(--ge-r-md);
+  display:grid; place-items:center; color:var(--ge-red-glow);
+  background:var(--ge-gunmetal); border:1px solid var(--ge-line-strong);
+}
+.ge-equip-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-comp-trophy{ color:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-hired{ border-color:var(--ge-green); }
+
+/* Level dot meter (●○○○○ as CSS, no glyphs) */
+.ge-dots{ display:inline-flex; gap:6px; align-items:center; }
+.ge-dots i{ width:10px; height:10px; border-radius:50%; background:var(--ge-raised); border:1px solid var(--ge-line-strong); }
+.ge-dots i.on{ background:var(--ge-red-glow); border-color:var(--ge-red-glow); box-shadow:0 0 6px rgba(255,59,59,.5); }
+
+/* ---- Staff cards ---- */
+.ge-benched{ opacity:.72; border-style:dashed; }
+.ge-ecard .ge-btn-row{ display:flex; gap:var(--ge-sp-2); }
+.ge-ecard .ge-btn-row .ge-btn{ flex:1 1 0; min-width:0; padding-left:4px; padding-right:4px; }
+
+/* ---- Ceremony ---- */
+.ge-cer-head h3{ display:flex; align-items:center; gap:var(--ge-sp-2); margin:0 0 var(--ge-sp-3); font-size:var(--ge-size-h2); }
+.ge-cer-hero{ text-align:center; padding:var(--ge-sp-4) 0; }
+.ge-cer-title{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-cer-rows{ display:flex; flex-direction:column; gap:var(--ge-sp-1); margin-bottom:var(--ge-sp-3); }
+.ge-cer-row{
+  display:flex; justify-content:space-between; align-items:center; gap:var(--ge-sp-2);
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); font-size:var(--ge-size-body);
+  animation:ge-rise var(--ge-dur-slow) var(--ge-ease-out) both;
+}
+.ge-cer-row.ge-cer-top{ border-color:var(--ge-line-strong); background:var(--ge-gunmetal); }
+.ge-cer-me{ border-color:var(--ge-red); box-shadow:inset 0 0 0 1px var(--ge-red); }
+.ge-cer-me span{ color:var(--ge-white); font-weight:700; }
+.ge-medal{
+  display:inline-block; min-width:30px; text-align:center; margin-right:6px;
+  font:700 11px/1.6 var(--ge-label); letter-spacing:.05em; border-radius:var(--ge-r-xs);
+  border:1px solid var(--ge-line-strong); color:var(--ge-ink); padding:0 5px;
+}
+.ge-medal-1{ color:#0a0a0a; background:var(--ge-gold); border-color:var(--ge-gold); }
+.ge-medal-2{ color:var(--ge-white); background:var(--ge-gunmetal); }
+.ge-medal-3{ color:var(--ge-ember); border-color:var(--ge-ember); }
+.ge-cer-win{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); border:1px solid var(--ge-gold); border-radius:var(--ge-r-md); background:linear-gradient(180deg, rgba(212,160,23,.10), transparent); margin:var(--ge-sp-3) 0; }
+.ge-cer-crown{ display:flex; justify-content:center; margin-bottom:var(--ge-sp-2); }
+.ge-cer-wintext{ font-size:var(--ge-size-body); color:var(--ge-ink); margin:0; }
+.ge-cer-final{ animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+
+/* Entry picker rows (competition entry modal) */
+.ge-pick{
+  display:flex; align-items:center; gap:var(--ge-sp-3); min-height:56px;
+  padding:var(--ge-sp-2) var(--ge-sp-3); border:1px solid var(--ge-line); border-radius:var(--ge-r-sm);
+  background:var(--ge-graphite); margin-bottom:var(--ge-sp-2); cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-pick:active{ transform:scale(.98); border-color:var(--ge-red); }
+.ge-pick svg{ flex:0 0 40px; }
+
+/* ---- Facility unlock cinematic ---- */
+.ge-cine-fac{ text-align:center; padding:var(--ge-sp-4) var(--ge-sp-2); }
+.ge-cine-title{ font-size:var(--ge-size-display); letter-spacing:.08em; color:var(--ge-white); margin-bottom:var(--ge-sp-4); animation:ge-pop var(--ge-dur-slow) var(--ge-ease-out) both; }
+.ge-cine-compare{ display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-cine-side{ flex:1 1 0; min-width:0; border:1px solid var(--ge-line-strong); border-radius:var(--ge-r-md); overflow:hidden; background:var(--ge-graphite); padding-bottom:var(--ge-sp-2); }
+.ge-cine-side .ge-label{ display:block; padding:var(--ge-sp-2) 0 var(--ge-sp-1); color:var(--ge-faint); }
+.ge-cine-side svg{ width:100%; height:auto; display:block; }
+.ge-cine-side b{ display:block; padding:var(--ge-sp-1) var(--ge-sp-2) 0; font-size:var(--ge-size-caption); color:var(--ge-ink); }
+.ge-cine-arrow{ flex:0 0 auto; color:var(--ge-red-glow); animation:ge-pulse 1.2s var(--ge-ease) infinite; }
+
+/* ---- Small utilities ---- */
+.ge-locknote{ display:flex; align-items:center; gap:var(--ge-sp-2); color:var(--ge-amber); font-size:var(--ge-size-caption); margin:var(--ge-sp-2) 0; }
+.ge-up{ font-weight:800; color:var(--ge-ink); }
+.ge-hub .hub-map{ width:100%; height:auto; display:block; margin:var(--ge-sp-2) 0; }
+.ge-loc p.ge-caption{ margin:var(--ge-sp-1) 0; }
+.ge-legacy{ border-color:var(--ge-gold); }
+
+/* ---- Motion (transform/opacity only) ---- */
+@keyframes ge-rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+@keyframes ge-pop{ from{ opacity:0; transform:scale(.94);} to{ opacity:1; transform:none;} }
+@keyframes ge-pulse{ 0%,100%{ opacity:.6; transform:scale(1);} 50%{ opacity:1; transform:scale(1.12);} }
+
+@media (prefers-reduced-motion: reduce){
+  .ge-cer-row, .ge-cine-title, .ge-cine-arrow{ animation:none !important; }
+  .ge-tab, .ge-pick{ transition:none !important; }
+}
+
+/* ---- Tablet: facilities grid ---- */
+@media (min-width:768px){
+  .ge-facility-art{ flex-basis:140px; }
+  .ge-fac-art{ width:140px; }
+}
+
+/* ===== UI OVERHAUL [DISPENSARY] ===== */
+/* ============================================================
+   DISPENSARY WORKER — extra area CSS (ge-dp-* namespace)
+   Token-driven (var(--ge-*)); transform/opacity motion only.
+   Loaded after tokens.css. Does not restyle legacy classes.
+   ============================================================ */
+
+/* metric tile grid: 2 cols on phones, auto-fit on larger screens */
+.ge-dp-metrics{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:var(--ge-sp-2);
+  margin-bottom:var(--ge-sp-3);
+}
+@media (min-width:768px){
+  .ge-dp-metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+}
+
+/* premium product card: art + meta layout (extends ge-card) */
+.ge-dp-product{display:flex;gap:var(--ge-sp-3);align-items:flex-start;}
+.ge-dp-flower{width:72px;height:72px;flex:0 0 72px;border-radius:var(--ge-r-md);
+  background:radial-gradient(circle at 50% 35%,var(--ge-raised),var(--ge-graphite));
+  border:1px solid var(--ge-line);}
+.ge-dp-product .ge-plant-meta{flex:1;min-width:0;}
+.ge-dp-tags{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-1) 0;}
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+
+/* buyer / flower pick lists inside modals */
+.ge-dp-buyers{display:flex;flex-direction:column;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-buyer{display:flex;gap:var(--ge-sp-3);align-items:center;cursor:pointer;min-height:44px;}
+.ge-dp-buyer-face{flex:0 0 48px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--ge-r-md);background:var(--ge-gunmetal);border:1px solid var(--ge-line);}
+.ge-dp-offer{display:flex;align-items:baseline;gap:var(--ge-sp-2);margin-top:var(--ge-sp-1);}
+
+/* customer queue card */
+.ge-dp-cust .ge-card-head h3{display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-cnum{color:var(--ge-red-glow);font-size:var(--ge-size-caption);letter-spacing:.08em;}
+.ge-dp-prefs{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin:var(--ge-sp-2) 0;}
+.ge-dp-lines{margin:var(--ge-sp-2) 0;}
+.ge-dp-total{margin:var(--ge-sp-2) 0;padding-top:var(--ge-sp-2);border-top:1px solid var(--ge-line);}
+.ge-dp-total b{font-size:var(--ge-size-h2);}
+.ge-dp-trust{margin-top:var(--ge-sp-2);display:flex;flex-direction:column;gap:var(--ge-sp-1);}
+.ge-dp-trustrow{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-browse{padding:var(--ge-sp-3);}
+
+/* feed / news rows */
+.ge-dp-feedrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-feedrow:last-child{border-bottom:none;}
+.ge-dp-dot{width:8px;height:8px;border-radius:50%;background:var(--ge-faint);flex:0 0 8px;}
+.ge-dp-dot-good{background:var(--ge-green);}
+.ge-dp-dot-warn{background:var(--ge-amber);}
+.ge-dp-dot-bad{background:var(--ge-danger);}
+
+/* market demand rows */
+.ge-dp-demrow{display:flex;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-2) 0;
+  border-bottom:1px solid var(--ge-line);min-height:44px;}
+.ge-dp-demrow:last-child{border-bottom:none;}
+.ge-dp-demname{flex:1;display:flex;align-items:center;gap:var(--ge-sp-2);}
+.ge-dp-why{margin:0 0 var(--ge-sp-2) calc(var(--ge-sp-2) + 20px);}
+.ge-dp-dim{opacity:.55;}
+
+/* production pipeline strip */
+.ge-dp-pipeline{display:flex;align-items:center;gap:var(--ge-sp-1);flex-wrap:wrap;margin-bottom:var(--ge-sp-3);}
+.ge-dp-arrow{color:var(--ge-faint);}
+
+/* production banner */
+.ge-dp-banner{margin-bottom:var(--ge-sp-3);}
+
+/* rank ladder + rankup modal */
+.ge-dp-ladder{display:flex;flex-wrap:wrap;gap:var(--ge-sp-1);margin-top:var(--ge-sp-2);}
+.ge-dp-rankname{display:flex;align-items:center;gap:var(--ge-sp-2);margin:var(--ge-sp-2) 0;}
+.ge-dp-rankcrown{width:40px;height:40px;}
+.ge-dp-rankup{display:flex;flex-direction:column;gap:var(--ge-sp-3);align-items:center;text-align:center;}
+.ge-dp-rankup-title{color:var(--ge-red-glow);}
+.ge-dp-rankup-name{color:var(--ge-gold);}
+
+/* process amount input */
+.ge-dp-input{width:100%;min-height:44px;background:var(--ge-graphite);border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-sm);color:var(--ge-ink);padding:0 var(--ge-sp-3);font-size:var(--ge-size-body);
+  margin:var(--ge-sp-1) 0 var(--ge-sp-3);}
+
+/* entrance: transform/opacity only */
+@keyframes ge-dp-rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:no-preference){
+  .ge-dp-product,.ge-dp-cust,.ge-dp-buyer{animation:ge-dp-rise var(--ge-dur) var(--ge-ease-out) both;}
+  .ge-dp-buyer:nth-child(2){animation-delay:40ms;}
+  .ge-dp-buyer:nth-child(3){animation-delay:80ms;}
+  .ge-dp-buyer:nth-child(4){animation-delay:120ms;}
+}
+
+/* ===== UI OVERHAUL [MISSIONS] ===== */
+/* ============================================================
+   MISSIONS WORKER — extra area CSS (ms-* only, token-driven).
+   Coordinator merges tokens.css (all --ge-* tokens + ge-* classes).
+   No legacy classes restyled. Animations: opacity/color only.
+   ============================================================ */
+
+/* ---- missions command header ---- */
+.ms-command{margin-bottom:var(--ge-sp-3)}
+.ms-nextup{margin-top:var(--ge-sp-3);padding-top:var(--ge-sp-3);border-top:1px solid var(--ge-line)}
+.ms-nextup .ge-label{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--ge-muted)}
+.ms-nextup b{font-size:var(--ge-size-body)}
+
+/* ---- section tabs ---- */
+.ms-tabs{margin:var(--ge-sp-3) 0 var(--ge-sp-2)}
+.ms-tabs .ge-tab .ic{margin-right:6px}
+
+/* ---- mission card ---- */
+.ge-mission.is-done{opacity:.82}
+.ms-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ms-cat{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ge-muted)}
+.ms-diff{margin-left:auto}
+.ms-title{margin:2px 0 6px;font-size:var(--ge-size-h2);line-height:var(--ge-lh-tight)}
+.ms-title .ic{color:var(--ge-green);margin-right:6px}
+.ms-reward{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:var(--ge-size-caption);color:var(--ge-muted)}
+.ms-reward .ic{color:var(--ge-red-glow);flex:none;margin-top:1px}
+
+/* ---- objectives checklist ---- */
+.ms-objs{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ms-obj{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-obj .ms-check{display:inline-flex;color:var(--ge-faint);flex:none}
+.ms-obj.is-done .ms-check{color:var(--ge-green)}
+.ms-obj .ms-objt{flex:1;font-size:var(--ge-size-caption);line-height:var(--ge-lh);color:var(--ge-ink)}
+.ms-obj.is-done .ms-objt{color:var(--ge-muted);text-decoration:line-through}
+.ms-obj .ge-num,.ms-obj .ge-pill{flex:none}
+
+/* ---- timed mission timer ---- */
+.ms-timer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);background:var(--ge-surface-2)}
+.ms-timer .ge-progress{flex-basis:100%}
+.ms-timer .ge-btn{flex:1 1 100%}
+.ms-left{font-family:var(--ge-label);font-size:var(--ge-size-label);font-weight:700;letter-spacing:.06em;color:var(--ge-muted)}
+/* near-expiry urgency: subtle color shift + soft pulse (never flashing) */
+.ms-timer.ms-urgent{border-color:var(--ge-orange)}
+.ms-timer.ms-urgent .ms-left{color:var(--ge-orange);animation:ms-pulse var(--ge-dur-slow) ease-in-out infinite}
+@keyframes ms-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.ms-timer.ms-urgent .ms-left{animation:none}}
+
+/* ---- achievements ---- */
+.ms-gold{color:var(--ge-gold)}
+.ms-ach.is-done{border-color:var(--ge-line-strong)}
+
+/* ---- leaderboards ---- */
+.ms-records{margin:var(--ge-sp-3) 0}
+.ms-titles{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ms-titles .ge-badge{display:inline-flex;align-items:center;gap:6px}
+
+/* ===== UI OVERHAUL [PROJECT 0] ===== */
+/* ============================================================================
+   PROJECT 0 — extra area CSS (worker: project0)
+   ge- prefixed only, token-driven. Darker, reduced-clutter prestige look.
+   The coordinator merges this after tokens.css. No legacy classes restyled.
+   ========================================================================== */
+
+/* Darker screen wash — Project 0 sits visually below the rest of the game. */
+#scr-project0 .ge-screen{
+  background:linear-gradient(180deg,var(--ge-black) 0%,#050607 40%,var(--ge-black) 100%);
+}
+
+/* ---- Hero: black/graphite seal card, restrained gold/crimson ---- */
+.ge-p0-hero{
+  text-align:center;
+  background:linear-gradient(180deg,#101114 0%,#08090b 62%,#060708 100%);
+  border-color:rgba(212,160,23,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 32px rgba(0,0,0,.55);
+  position:relative;
+  overflow:hidden;
+}
+.ge-p0-hero::before{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(122,13,13,.28),transparent 60%);
+}
+.ge-p0-hero > *{position:relative}
+.ge-p0-sealrow{margin:var(--ge-sp-4) auto 0;display:flex;flex-direction:column;align-items:center}
+.ge-p0-eyebrow{
+  display:inline-flex;align-items:center;gap:var(--ge-sp-2);
+  color:var(--ge-gold);letter-spacing:.22em;font-size:var(--ge-size-label);
+  font-weight:700;margin-top:var(--ge-sp-3);
+}
+.ge-p0-eyebrow .ic{color:var(--ge-gold)}
+.ge-p0-title{
+  margin:var(--ge-sp-2) 0 0;
+  font-size:var(--ge-size-display);
+  letter-spacing:.14em;color:var(--ge-white);
+  text-shadow:0 2px 18px rgba(224,32,32,.35);
+}
+.ge-p0-motto{
+  margin:var(--ge-sp-3) auto 0;max-width:34ch;
+  font-size:var(--ge-size-body);font-style:italic;
+  color:var(--ge-muted);line-height:var(--ge-lh);
+}
+.ge-p0-herorow{
+  display:flex;align-items:center;justify-content:center;
+  gap:var(--ge-sp-6);margin:var(--ge-sp-5) 0 var(--ge-sp-2);
+}
+.ge-p0-score .ge-display{font-size:34px;line-height:1}
+.ge-p0-pointspill{margin-top:var(--ge-sp-2);display:flex;justify-content:center}
+.ge-p0-titles{
+  display:flex;flex-wrap:wrap;gap:var(--ge-sp-2);justify-content:center;
+  margin-top:var(--ge-sp-3);padding-bottom:var(--ge-sp-2);
+}
+.ge-p0-title-pill{display:inline-flex;align-items:center;gap:var(--ge-sp-2);font-weight:600}
+
+/* ---- Archive metric tiles: gold reserved for the score tile ---- */
+.ge-p0-metric{position:relative;overflow:hidden}
+.ge-p0-metric-ic{
+  display:flex;justify-content:center;margin-bottom:var(--ge-sp-2);
+  color:var(--ge-faint);
+}
+.ge-p0-metric-gold{border-color:rgba(212,160,23,.45)}
+.ge-p0-metric-gold .ge-p0-metric-ic{color:var(--ge-gold)}
+.ge-p0-metric-gold .ge-metric-value{color:var(--ge-gold)}
+.ge-p0-metric .ge-metric-value{font-size:var(--ge-size-h1)}
+
+/* ---- Track cards: minimal, hairline, gold only when maxed ---- */
+.ge-p0-track{border-left:2px solid var(--ge-line-strong)}
+.ge-p0-track .ge-card-head h3{font-size:var(--ge-size-h2);letter-spacing:.06em}
+
+/* ---- Rewards table ---- */
+.ge-p0-rewards{padding:0;overflow:hidden}
+.ge-p0-rewardrow{padding:var(--ge-sp-3) var(--ge-sp-4);border-bottom:1px solid var(--ge-line)}
+.ge-p0-rewardrow:last-child{border-bottom:none}
+.ge-p0-reward-track{
+  display:flex;align-items:center;gap:var(--ge-sp-2);
+  font-weight:700;letter-spacing:.08em;font-size:var(--ge-size-caption);
+  color:var(--ge-white);margin-bottom:var(--ge-sp-2);
+}
+.ge-p0-reward-track .ic{color:var(--ge-faint)}
+.ge-p0-reward-cells{display:grid;grid-template-columns:1fr 1fr;gap:var(--ge-sp-2)}
+.ge-p0-rewardcell{
+  border:1px solid var(--ge-line);border-radius:var(--ge-r-sm);
+  padding:var(--ge-sp-2) var(--ge-sp-3);min-height:44px;
+  display:flex;flex-direction:column;gap:var(--ge-sp-1);
+}
+.ge-p0-rewardcell.is-earned{border-color:rgba(212,160,23,.5);background:rgba(212,160,23,.06)}
+.ge-p0-rewarddesc{font-size:var(--ge-size-caption);color:var(--ge-ink);display:flex;align-items:center;gap:var(--ge-sp-1)}
+.ge-p0-rewardcell .ge-pill{align-self:flex-start}
+
+/* ---- Legacy prestige panel: crimson edge-light on black ---- */
+.ge-p0-legacy{
+  background:linear-gradient(180deg,#141014 0%,#0a090b 100%);
+  box-shadow:var(--ge-sh-2),inset 0 1px 0 rgba(255,59,59,.28);
+  border-color:rgba(122,13,13,.7);
+}
+.ge-p0-legacy .ge-card-head h3{color:var(--ge-white)}
+.ge-p0-legacy .ge-card-head .ic{color:var(--ge-red-glow)}
+.ge-p0-legacy p{margin:0 0 var(--ge-sp-3)}
+.ge-p0-locknote{
+  display:flex;align-items:center;justify-content:center;gap:var(--ge-sp-2);
+  color:var(--ge-muted);font-size:var(--ge-size-caption);
+  padding:var(--ge-sp-3) 0 var(--ge-sp-1);margin:0;
+}
+
+/* ---- Reduced motion: transform/opacity only everywhere else ---- */
+@media (prefers-reduced-motion: reduce){
+  .ge-p0-hero::before{display:none}
+  .ge-p0-hero .crown-anim{animation:none}
+}
+
+/* ===== UI OVERHAUL [PROFILE+MISC] ===== */
+/* ============================================================
+   GROW EMPIRE UI OVERHAUL — PROFILE+MISC WORKER (bucket K)
+   Extra area CSS only. ge- prefixed, token-driven (tokens.css owns tokens).
+   44px minimum touch targets · transform/opacity motion only.
+   ============================================================ */
+
+/* ---------- svg alignment inside new markup ---------- */
+.ge-term svg, .ge-welcome svg, .ge-dossier svg, .ge-notif svg,
+.ge-node svg, .ge-am-card svg, .ge-title svg, .ge-legal svg { flex:none; }
+.ge-datarow svg, .ge-metric-label svg, .ge-notif-meta svg { vertical-align:-0.18em; }
+
+/* ---------- secure terminal backdrop (login / welcome) ---------- */
+.ge-term-bg{
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(224,32,32,.14), transparent 60%),
+    var(--ge-grad-black);
+  overflow:hidden;
+}
+.ge-term-smoke{
+  position:absolute; width:140%; height:44%; left:-20%; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,255,255,.05), transparent 70%);
+  opacity:.7; animation:ge-term-drift 26s ease-in-out infinite alternate;
+}
+.ge-term-smoke.s1{ top:-12%; }
+.ge-term-smoke.s2{ top:30%; animation-delay:-13s; animation-duration:34s; }
+@keyframes ge-term-drift{
+  from{ transform:translateX(-4%) scale(1); }
+  to{ transform:translateX(4%) scale(1.06); }
+}
+.ge-term-scan{
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(to bottom, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+  opacity:.5;
+}
+.ge-term{
+  position:relative; margin:var(--ge-sp-4) auto; max-width:var(--ge-app-max);
+  padding:var(--ge-sp-6) var(--ge-sp-5);
+  background:var(--ge-glass); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-xl); box-shadow:var(--ge-sh-2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.ge-term-head{
+  display:flex; align-items:center; gap:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label);
+  letter-spacing:.14em; color:var(--ge-muted);
+  padding-bottom:var(--ge-sp-3); border-bottom:1px solid var(--ge-line);
+}
+.ge-term-head svg{ color:var(--ge-red-glow); }
+.ge-term-dot{ width:8px; height:8px; border-radius:50%; background:var(--ge-green); margin-left:auto; box-shadow:0 0 8px var(--ge-green); }
+.ge-term-brand{ text-align:center; padding:var(--ge-sp-5) 0 var(--ge-sp-4); }
+.ge-term-brand .ge-display{ font-size:var(--ge-size-display); letter-spacing:.06em; color:var(--ge-white); }
+.ge-term-local{
+  display:flex; align-items:center; justify-content:center; gap:var(--ge-sp-2);
+  margin-top:var(--ge-sp-5); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+  font-family:var(--ge-label); font-size:var(--ge-size-caption); color:var(--ge-faint);
+  text-align:center;
+}
+.ge-term h3.ge-h2{ margin:var(--ge-sp-4) 0 var(--ge-sp-3); letter-spacing:.08em; }
+
+/* ---------- inputs / checks ---------- */
+.ge-input{
+  display:block; width:100%; min-height:44px; margin:0 0 var(--ge-sp-3);
+  padding:var(--ge-sp-3) var(--ge-sp-4);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink);
+  font-family:var(--ge-body); font-size:var(--ge-size-body);
+}
+.ge-input:focus{ outline:none; border-color:var(--ge-red); box-shadow:0 0 0 2px rgba(255,59,59,.25); }
+select.ge-input{ appearance:auto; }
+.ge-check{
+  display:flex; align-items:center; gap:var(--ge-sp-3);
+  min-height:44px; margin:0 0 var(--ge-sp-3);
+  font-size:var(--ge-size-body); color:var(--ge-muted); cursor:pointer;
+}
+.ge-check input{ width:22px; height:22px; accent-color:var(--ge-red); flex:none; }
+.ge-field{ display:block; flex:1; min-width:0; }
+.ge-field > span{
+  display:block; margin-bottom:var(--ge-sp-2);
+  font-family:var(--ge-label); font-size:var(--ge-size-label); color:var(--ge-muted);
+  letter-spacing:.1em;
+}
+
+/* ---------- welcome ---------- */
+.ge-welcome{ max-width:var(--ge-app-max); margin:var(--ge-sp-6) auto; padding:0 var(--ge-sp-4) var(--ge-sp-8); text-align:center; }
+.ge-w-title{ letter-spacing:.08em; color:var(--ge-white); }
+.ge-w-name{ font-size:var(--ge-size-h1); font-weight:700; color:var(--ge-gold); margin-top:var(--ge-sp-2); }
+.ge-w-sub{ color:var(--ge-muted); margin:var(--ge-sp-1) 0 var(--ge-sp-3); }
+.ge-welcome .ge-card{ text-align:left; margin-top:var(--ge-sp-4); }
+
+/* ---------- dossier (profile) ---------- */
+.ge-dossier{ text-align:center; padding-top:var(--ge-sp-6); }
+.ge-dossier-mask{ color:var(--ge-red-glow); margin-bottom:var(--ge-sp-2); }
+.ge-dossier-name{ letter-spacing:.05em; color:var(--ge-white); margin-bottom:var(--ge-sp-2); word-break:break-word; }
+.ge-dossier .ge-badge{ font-size:var(--ge-size-label); letter-spacing:.12em; padding:6px 14px; }
+.ge-dossier-sub{ color:var(--ge-muted); margin:var(--ge-sp-3) 0 var(--ge-sp-2); }
+.ge-dossier-stars{ justify-content:center; margin-bottom:var(--ge-sp-3); }
+.ge-star{ color:var(--ge-faint); display:inline-flex; }
+.ge-star.on{ color:var(--ge-gold); }
+.ge-dossier-id{
+  display:flex; gap:var(--ge-sp-4); justify-content:center;
+  margin-top:var(--ge-sp-3); padding-top:var(--ge-sp-4);
+  border-top:1px solid var(--ge-line);
+}
+.ge-dossier-id > div{ display:flex; flex-direction:column; gap:2px; }
+.ge-dossier-id b{ font-size:var(--ge-size-h2); font-family:var(--ge-data); }
+.ge-title-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-2); margin-bottom:var(--ge-sp-4); }
+.ge-title{
+  display:grid; grid-template-columns:1fr auto; gap:2px var(--ge-sp-3); align-items:center;
+  min-height:64px; padding:var(--ge-sp-3) var(--ge-sp-4); text-align:left;
+  background:var(--ge-graphite); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); color:var(--ge-faint); cursor:default;
+}
+.ge-title b{ font-size:var(--ge-size-body); }
+.ge-title span.ge-caption{ grid-column:1; }
+.ge-title svg{ grid-row:1 / span 2; grid-column:2; }
+.ge-title.has{ color:var(--ge-ink); border-color:var(--ge-line-strong); cursor:pointer; transition:transform var(--ge-dur-fast) var(--ge-ease), border-color var(--ge-dur-fast) var(--ge-ease); }
+.ge-title.has:hover{ border-color:var(--ge-red); }
+.ge-title.has:active{ transform:scale(.98); }
+.ge-title.has svg{ color:var(--ge-green); }
+.ge-title.sel{ border-color:var(--ge-gold); box-shadow:0 0 0 1px var(--ge-gold), var(--ge-sh-1); }
+.ge-ach-tags{ display:flex; flex-wrap:wrap; gap:var(--ge-sp-2); }
+
+/* ---------- notification center ---------- */
+.ge-notif{
+  display:flex; align-items:flex-start; gap:var(--ge-sp-3); width:100%;
+  min-height:56px; padding:var(--ge-sp-3) var(--ge-sp-4); margin-bottom:var(--ge-sp-2);
+  background:var(--ge-graphite); border:1px solid var(--ge-line-strong);
+  border-radius:var(--ge-r-md); color:var(--ge-ink); text-align:left; cursor:pointer;
+  transition:transform var(--ge-dur-fast) var(--ge-ease), opacity var(--ge-dur-fast) var(--ge-ease);
+}
+.ge-notif:active{ transform:scale(.99); }
+.ge-notif.is-read{ opacity:.62; }
+.ge-notif-ico{
+  flex:none; width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-notif.is-read .ge-notif-ico{ color:var(--ge-faint); }
+.ge-notif-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-notif-msg{ font-size:var(--ge-size-body); line-height:var(--ge-lh); word-break:break-word; }
+.ge-notif-msg svg{ width:16px; height:16px; }
+.ge-notif-meta{ letter-spacing:.08em; }
+.ge-unread{ flex:none; width:10px; height:10px; margin-top:6px; border-radius:50%; background:var(--ge-red-glow); box-shadow:0 0 8px var(--ge-red-glow); }
+
+/* ---------- tech tree ---------- */
+.ge-tree{ display:flex; flex-direction:column; }
+.ge-tier{
+  background:var(--ge-grad-surface); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-lg); padding:var(--ge-sp-4); box-shadow:var(--ge-sh-1);
+}
+.ge-tier-head{ display:flex; align-items:center; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-tier-head b{ letter-spacing:.1em; font-size:var(--ge-size-body); }
+.ge-tier-head p{ margin:2px 0 0; }
+.ge-tier-num{
+  flex:none; width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--ge-grad-red); color:var(--ge-white);
+  font-family:var(--ge-data); font-size:var(--ge-size-h2); font-weight:700;
+}
+.ge-tier-nodes{ display:flex; flex-direction:column; gap:var(--ge-sp-2); }
+.ge-node{
+  display:flex; gap:var(--ge-sp-3); align-items:flex-start;
+  padding:var(--ge-sp-3); border:1px solid var(--ge-line);
+  border-radius:var(--ge-r-md); background:var(--ge-graphite);
+}
+.ge-node-ico{
+  flex:none; width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-sm); background:var(--ge-raised); color:var(--ge-muted);
+}
+.ge-node.owned .ge-node-ico{ color:var(--ge-green); }
+.ge-node.available .ge-node-ico{ color:var(--ge-gold); }
+.ge-node.locked{ opacity:.75; }
+.ge-node-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.ge-node-body b{ font-size:var(--ge-size-body); }
+.ge-node-body p{ margin:0; }
+.ge-node .ge-btn{ align-self:center; flex:none; }
+.ge-tree-link{ width:2px; height:18px; margin:0 auto; background:var(--ge-line-strong); }
+
+/* ---------- automation ---------- */
+.ge-am-grid{ display:grid; grid-template-columns:1fr; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-4); }
+.ge-am-head{ display:flex; gap:var(--ge-sp-3); align-items:center; margin-bottom:var(--ge-sp-2); }
+.ge-am-ico{
+  flex:none; width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+  border-radius:var(--ge-r-md); background:var(--ge-raised); color:var(--ge-red-glow);
+}
+.ge-am-name{ font-weight:700; font-size:var(--ge-size-h2); }
+.ge-am-status{ margin-top:4px; }
+.ge-am-desc{ margin:0 0 var(--ge-sp-3); }
+.ge-am-stats{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+/* P3-W4: tech-tree requirement rows on automation cards */
+.ge-am-reqs{ border-top:1px solid var(--ge-line); padding-top:var(--ge-sp-2); margin-bottom:var(--ge-sp-3); }
+.ge-am-reqs .ge-datarow{ padding:3px 0; }
+.ge-am-reqs .ge-datarow span{ display:flex; align-items:center; gap:6px; }
+.ge-am-req-unmet span{ color:var(--ge-muted); }
+.ge-am-req-unmet b{ color:var(--ge-amber); }
+.ge-am-controls{ display:flex; gap:var(--ge-sp-3); margin-bottom:var(--ge-sp-3); }
+.ge-am-actions .ge-caption{ margin-top:var(--ge-sp-2); }
+.ge-notes{ margin:0; padding-left:var(--ge-sp-5); color:var(--ge-muted); font-size:var(--ge-size-body); line-height:var(--ge-lh); }
+.ge-notes li{ margin-bottom:var(--ge-sp-2); }
+
+/* ---------- settings extras ---------- */
+.ge-prefbtn{ min-width:88px; min-height:44px; }
+.ge-inline-btns{ display:flex; gap:var(--ge-sp-2); flex:none; }
+.ge-inline-btns .ge-btn-sm{ min-height:44px; }
+.ge-legal{ text-align:left; max-height:50vh; overflow:auto; padding-right:var(--ge-sp-2); }
+.ge-legal p{ margin:0 0 var(--ge-sp-3); line-height:var(--ge-lh); font-size:var(--ge-size-body); }
+.ge-center{ text-align:center; }
+
+/* ---------- responsive: two columns on tablet+ ---------- */
+@media (min-width:768px){
+  .ge-title-grid{ grid-template-columns:1fr 1fr; }
+  .ge-am-grid{ grid-template-columns:1fr 1fr; }
+}
+
+/* ===== UI OVERHAUL [CHROME (loads last)] ===== */
+/* ==========================================================================
+   CHROME worker — app-shell area CSS (ge- prefixed, token-driven)
+   LOAD ORDER: styles.css -> tokens.css -> this file (must load LAST).
+   Covers: top command bar, HUD floats, bottom nav dock, cinematic stage,
+   level-up cinema, toast/modal confirm extras. No legacy classes redefined;
+   composites (.ge-x.legacy-y) only disambiguate where two stylesheets meet.
+   All motion is transform/opacity; tokens.css handles prefers-reduced-motion
+   for every [class*="ge-"] selector.
+   ========================================================================== */
+
+/* ---------------- top command bar: slim profile ---------------- */
+.ge-topbar-stat .ge-label{font-size:10px;letter-spacing:.08em;color:var(--ge-faint)}
+.ge-topbar-stat .ge-data{font-size:13px;color:var(--ge-ink)}
+/* compact pop on value rewrite (updateHUD re-creates the span -> replays) */
+.ge-hud-val{display:inline-block;animation:ge-hud-pop var(--ge-dur) var(--ge-ease-out)}
+@keyframes ge-hud-pop{0%{transform:scale(1.16);opacity:.45}100%{transform:scale(1);opacity:1}}
+/* XP micro-bar tucked under LVL */
+.ge-topbar-lvl{position:relative;padding-bottom:9px}
+.ge-topbar-xp{position:absolute;left:0;right:0;bottom:1px}
+
+/* ---------------- HUD floating gain/loss indicators ---------------- */
+.ge-hud-float{position:absolute;top:calc(100% - 4px);left:50%;z-index:61;
+  transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  font-family:var(--ge-data);font-weight:800;font-size:13px;
+  animation:ge-hud-float 1.6s ease-out forwards}
+.ge-hud-float.gain{color:var(--ge-green);text-shadow:0 0 8px rgba(61,220,95,.7)}
+.ge-hud-float.loss{color:var(--ge-danger);text-shadow:0 0 8px rgba(255,68,68,.7)}
+@keyframes ge-hud-float{0%{opacity:0;transform:translate(-50%,8px)}
+  18%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}
+
+/* ---------------- bottom nav: floating elevated dock ---------------- */
+#bottomnav.ge-navdock{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  padding-bottom:0;border:1px solid var(--ge-line-strong);border-radius:var(--ge-r-xl);
+  box-shadow:var(--ge-sh-3),var(--ge-sh-glow)}
+.ge-navdock-btn{transition:color var(--ge-dur) var(--ge-ease-out)}
+.ge-navdock-btn svg{transition:color var(--ge-dur) var(--ge-ease-out),filter var(--ge-dur) var(--ge-ease-out)}
+/* show() toggles legacy .active; alias it to the tokens .is-active treatment */
+.ge-navdock-btn.active{color:var(--ge-white)}
+.ge-navdock-btn.active::before{content:"";position:absolute;top:0;left:22%;right:22%;
+  height:2px;border-radius:2px;background:var(--ge-red);box-shadow:var(--ge-sh-glow)}
+.ge-navdock-btn.active svg{color:var(--ge-red-glow);filter:drop-shadow(0 0 6px rgba(255,59,59,.65))}
+/* body clearance for the floating dock (overrides legacy 104px) */
+body{padding-bottom:calc(var(--ge-navdock-h) + env(safe-area-inset-bottom,0px) + 30px)}
+
+/* ---------------- cinematic overlay ---------------- */
+/* composite beats legacy .cine-back (centered, darker) AND tokens .ge-modal-back */
+.ge-modal-back.cine-back{align-items:center;background:rgba(4,4,6,.92)}
+.ge-cine-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:min(92vw,480px);max-height:84dvh;overflow-y:auto;text-align:center;
+  transform:scale(.94) translateY(12px);opacity:0;
+  transition:transform var(--ge-dur-slow) var(--ge-ease-out),opacity var(--ge-dur-slow) var(--ge-ease-out)}
+.ge-modal-back.is-open .ge-cine-stage{transform:none;opacity:1}
+
+/* ---------------- level-up cinema ---------------- */
+.ge-cine-levelup .ge-cine-stage{background:radial-gradient(ellipse at 50% 32%,rgba(212,160,23,.14),transparent 62%)}
+.ge-lvlup{display:flex;flex-direction:column;align-items:center;gap:var(--ge-sp-2);padding:var(--ge-sp-6) 0}
+.ge-lvlup-crown{width:88px;height:auto;filter:drop-shadow(0 0 24px rgba(212,160,23,.7))}
+.ge-lvlup-title{color:var(--ge-gold);letter-spacing:.05em;text-shadow:0 0 26px rgba(212,160,23,.5)}
+.ge-lvlup-sub{color:var(--ge-muted);letter-spacing:.24em}
+
+/* P1.4 ALMOST THERE + P1.6 ONE MORE THING (read-only progress UI) */
+.ge-home-onemore{display:flex;flex-direction:column;gap:10px}
+.ge-onemore-card{position:relative}
+/* P2.5 WELCOME BACK flags + ON THE HORIZON hooks (industrial, calm) */
+.ge-wflags{margin-top:var(--ge-sp-4);text-align:left}
+.ge-wflags .ge-label{margin-bottom:var(--ge-sp-2);display:block}
+.ge-wflag{display:flex;gap:var(--ge-sp-3);align-items:flex-start;padding:var(--ge-sp-3);border:1px solid var(--ge-line);border-radius:var(--radius);margin-bottom:var(--ge-sp-2);background:rgba(255,255,255,.02)}
+.ge-wflag-ico{flex:0 0 auto;color:var(--ge-gold);margin-top:2px}
+.ge-wflag b{display:block;letter-spacing:.08em;font-size:12px;color:var(--ge-white)}
+.ge-wflag .ge-body{display:block;margin-top:2px}
+.ge-horizon .ge-onemore-card{text-align:left;width:100%}
+.ge-onemore-x{position:absolute;top:4px;right:4px;background:none;border:none;color:inherit;opacity:.55;padding:10px;cursor:pointer}
+.ge-onemore-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-right:28px}
+.ge-onemore-head b{font-size:13px;letter-spacing:.04em}
+.ge-almost-row{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}
+.ge-almost-row:first-of-type{border-top:none;padding-top:2px}
+.ge-almost-lbl{display:block;font-size:10px;letter-spacing:.1em;opacity:.55;margin:6px 0 2px}
+
+/* P1.5: locked-nav affordances (Genetics Lab level-3 hub gate) */
+.ge-locked{opacity:.55;}
+.ge-navdock-btn.nav-locked{opacity:.45;filter:grayscale(.6);}
+.ge-tease-card{margin-bottom:10px;}
+
+/* ================= P2.1: ELITE EXPRESSION ceremony (industrial scan/smoke/glitch) ================ */
+/* black / charcoal / crimson / burnt orange; SVG only, no emoji, no casino chrome */
+.cine-elite .cine-stage{background:radial-gradient(ellipse at 50% 30%,rgba(204,85,0,.10),transparent 60%),#0b0b0d;}
+.elite-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.elite-stage .pr-smoke,.elite-stage .pr-scan{position:absolute;}
+.elite-kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.28em;color:#ff7a1a;font-weight:800;position:relative;z-index:1;}
+.elite-art{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;}
+.elite-dna{width:74px;height:auto;filter:drop-shadow(0 0 18px rgba(255,122,26,.7));}
+.elite-plant{width:150px;filter:drop-shadow(0 0 26px rgba(224,32,32,.6)) drop-shadow(0 0 52px rgba(204,85,0,.35));animation:revealPop .7s ease-out;}
+.elite-title{font-size:30px;color:#ff7a1a;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.75);margin:6px 0 2px;animation:countPop .55s ease-out;position:relative;z-index:1;text-align:center;}
+.elite-name{font-size:18px;font-weight:900;letter-spacing:1px;position:relative;z-index:1;}
+.elite-pheno{color:#ff7a1a;}
+.elite-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:420px;position:relative;z-index:1;}
+.elite-cell{background:linear-gradient(180deg,#16161a,#0d0d0f);border:1px solid #3a2a20;border-left:3px solid #cc5500;border-radius:10px;padding:10px 6px;animation:countPop .45s ease-out backwards;}
+.elite-cell span{display:block;font-size:9px;letter-spacing:1.5px;color:#8b8b93;font-weight:700;}
+.elite-cell b{display:block;font-size:22px;font-weight:800;color:#ffb066;font-variant-numeric:tabular-nums;margin-top:2px;}
+.elite-sub{color:#8b8b93;font-size:13px;font-style:italic;position:relative;z-index:1;}
+.elite-stage .ge-btn-block{position:relative;z-index:1;max-width:330px;}
+/* ================= P2.1: compare per-side action groups ================= */
+.ge-cmp-side{margin-top:10px;}
+.ge-cmp-side-name{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;color:#8b8b93;margin-bottom:6px;text-transform:uppercase;}
+.ge-cmp-overall td{background:rgba(204,85,0,.06);}
+/* ================= P3-W2: NEW GENETIC ceremony (industrial — crimson/burnt orange) ================= */
+.cine-genetic .cine-stage{background:radial-gradient(ellipse at 50% 28%,rgba(224,32,32,.12),transparent 62%),#0c0c0e;}
+.gen-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.gen-stage .pr-smoke,.gen-stage .pr-scan{position:absolute;}
+.gen-kicker{display:flex;align-items:center;gap:6px;color:#ff8c2e;letter-spacing:.18em;font-size:11px;font-weight:700;position:relative;z-index:1;}
+.gen-art{position:relative;z-index:1;}
+.gen-title{font-size:28px;color:#ff5a2e;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.8);margin:6px 0 2px;text-align:center;position:relative;z-index:1;}
+.gen-name{font-size:20px;font-weight:800;color:#fff;position:relative;z-index:1;text-align:center;}
+.gen-lin{display:flex;align-items:center;gap:6px;color:#b9b9c0;font-size:12px;position:relative;z-index:1;max-width:100%;}
+.gen-lin span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:340px;position:relative;z-index:1;}
+.gen-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,90,46,.25);border-radius:8px;padding:8px 4px;text-align:center;opacity:0;animation:genCellIn .5s ease-out forwards;}
+@keyframes genCellIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.gen-cell span{display:block;font-size:9px;letter-spacing:.12em;color:#8a8a92;}
+.gen-cell b{font-size:15px;color:#ffb37a;}
+.gen-sub{color:#9a9aa2;font-size:12px;text-align:center;position:relative;z-index:1;}
+.gen-namerow{display:flex;gap:8px;width:100%;max-width:340px;position:relative;z-index:1;}
+.gen-namerow[hidden]{display:none;}
+.gen-namerow .ge-input{flex:1;min-width:0;}
+.gen-stage .ge-btn-grid{position:relative;z-index:1;width:100%;max-width:340px;}
+/* ================= P3-W2: vault lineage sheet + selection history ================= */
+.ge-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px 4px;}
+.ge-sheet-head h3{margin:0;font-size:14px;letter-spacing:.1em;display:flex;align-items:center;gap:6px;}
+.ge-sheet-body{padding:6px 14px 26px;overflow-y:auto;max-height:72vh;}
+.w2-selchain{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.w2-sel-arrow{color:#ff5a2e;font-weight:800;}
+.ge-chip{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,90,46,.35);border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;cursor:pointer;text-align:left;font-family:inherit;}
+.ge-chip b{color:#ffb37a;font-size:14px;}
+.ge-chip span{font-size:10px;color:#b9b9c0;}
+.w2-vault-row{display:flex;gap:10px;align-items:flex-start;}
+.w2-vault-row .ge-spec-art{flex:0 0 64px;}
+.w2-vault-row .ge-spec-main{flex:1;min-width:0;}
+/* ================= P3-W3: PROJECT 0 VERIFIED ceremony (industrial — black/charcoal/crimson/burnt orange) ================= */
+.cine-p0verified .cine-stage{background:radial-gradient(ellipse at 50% 28%,rgba(204,85,0,.13),transparent 62%),#0b0b0d;}
+.p0v-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:18px 14px;overflow:hidden;}
+.p0v-stage .pr-smoke,.p0v-stage .pr-scan{position:absolute;}
+.p0v-mask{position:relative;z-index:1;opacity:.9;}
+.p0v-mask-ic{width:64px;height:auto;filter:drop-shadow(0 0 18px rgba(204,85,0,.55));}
+.p0v-kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.24em;color:#ff7a1a;font-weight:800;position:relative;z-index:1;}
+.p0v-title{font-size:30px;color:#ff5a2e;text-shadow:2px 2px 0 #000,0 0 26px rgba(224,32,32,.8);margin:6px 0 2px;animation:countPop .55s ease-out;position:relative;z-index:1;text-align:center;}
+.p0v-name{font-size:18px;font-weight:900;letter-spacing:1px;color:#fff;position:relative;z-index:1;text-align:center;}
+.p0v-tiers{display:flex;align-items:center;gap:6px;position:relative;z-index:1;flex-wrap:wrap;justify-content:center;}
+.p0v-tier{font-size:10px;letter-spacing:.14em;font-weight:800;padding:6px 10px;border:1px solid #3a3a40;border-radius:6px;color:#8a8a92;background:rgba(255,255,255,.03);}
+.p0v-tier.done{color:#ffb37a;border-color:rgba(255,90,46,.4);background:rgba(255,90,46,.08);}
+.p0v-tier.now{color:#ffd9d9;border-color:rgba(224,32,32,.65);background:rgba(224,32,32,.14);box-shadow:0 0 16px rgba(224,32,32,.35);}
+.p0v-arrow{color:#ff5a2e;font-weight:800;}
+.p0v-sub{color:#9a9aa2;font-size:12px;text-align:center;position:relative;z-index:1;line-height:1.5;}
+.p0v-stage .ge-btn-block{position:relative;z-index:1;max-width:330px;}
+/* ================= P3-W3: preservation pipeline rows ================= */
+.p0t-row{border-top:1px solid rgba(255,255,255,.07);padding:10px 2px 12px;}
+.p0t-row:first-of-type{border-top:none;}
+.p0t-rowhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.p0t-rowhead b{font-size:14px;color:#fff;}
+.p0t-req span{color:#9a9aa2;}
+.p0t-req.is-met span{color:#d7d7dc;}
+.p0t-req b{color:#8a8a92;}
+.p0t-req.is-met b{color:#ffb37a;}
+.p0t-row .ge-btn-block{margin-top:8px;}
+
+/* ================= P4D: unified reward tiers ================= */
+/* MINOR: subtle pop — small milestones, micro-rewards */
+.ge-toast.p4-minor{animation:p4-minor-in .32s ease-out;border-left:3px solid #8a8a92;}
+@keyframes p4-minor-in{0%{transform:translateY(6px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
+/* MAJOR: achievement banner — charcoal, crimson rule, burnt-orange title */
+.ge-toast.p4-major{display:flex;align-items:center;gap:10px;border-left:3px solid #e02020;
+  background:linear-gradient(135deg,rgba(30,8,8,.96),rgba(10,8,9,.96));padding:12px 14px;
+  animation:p4-major-in .45s cubic-bezier(.2,.9,.25,1.2);}
+@keyframes p4-major-in{0%{transform:scale(.92) translateY(10px);opacity:0}100%{transform:none;opacity:1}}
+.p4-major-ic{color:#ffb37a;flex:none;display:flex;}
+.p4-major-tx b{display:block;font-family:var(--ge-font-display);font-size:13px;letter-spacing:.22em;color:#ffb37a;}
+.p4-major-tx i{display:block;font-style:normal;font-size:12.5px;color:var(--ge-ink);margin-top:2px;line-height:1.45;}
+/* LEGENDARY: extends the ELITE EXPRESSION ceremony language (pr-smoke,
+   pr-scan, pr-glitch, crimson/burnt-orange, Shocker OwnZ kicker, gas-mask
+   mark). Composed on .elite-stage — no new modal system. */
+.cine-p4legend .cine-stage{background:radial-gradient(ellipse at 50% 28%,rgba(224,32,32,.16),transparent 62%),#0b0b0d;}
+.p4-leg-mask{position:relative;z-index:1;opacity:.92;}
+.p4-leg-mask-ic{width:66px;height:auto;filter:drop-shadow(0 0 20px rgba(224,32,32,.6));}
+.p4-leg-kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.26em;color:#ff5a2e;font-weight:800;position:relative;z-index:1;}
+.p4-leg-title{font-size:30px;color:#ff5a2e;text-shadow:2px 2px 0 #000,0 0 30px rgba(224,32,32,.85);margin:6px 0 2px;
+  animation:countPop .55s ease-out;position:relative;z-index:1;text-align:center;}
+.p4-leg-sub{color:#c9c9d1;font-size:13px;text-align:center;position:relative;z-index:1;line-height:1.5;max-width:340px;}
+.p4-leg-stage .ge-btn-block{position:relative;z-index:1;max-width:330px;}
+
+/* ================= P4: CODEX STATES / PERSONAL RECORDS / LEGACY =================
+   Palette: black / charcoal / crimson / burnt-orange / steel / white / gold-elite.
+   SVG icons only. */
+/* 8 codex states — each unmistakable: UNKNOWN -> DISCOVERED -> UNLOCKED -> OWNED ->
+   GROWN -> HARVESTED -> BRED -> MASTERED (gold, the highest bar in the archive) */
+.p4st{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:20px;border:1px solid var(--line);text-transform:uppercase;white-space:nowrap;}
+.p4st-unknown{color:#6b7280;border-color:#3a3f45;background:#15171a;}
+.p4st-discovered{color:#9aa3ad;border-color:#4a5058;background:#1a1d21;}
+.p4st-unlocked{color:#c8cdd3;border-color:#6b7280;background:#20242a;}
+.p4st-owned{color:#f5f5f5;border-color:#8a8f96;background:#26292f;}
+.p4st-grown{color:#f0a05a;border-color:var(--ge-ember);background:rgba(193,84,27,.12);}
+.p4st-harvested{color:#ff6b6b;border-color:var(--crimson);background:rgba(224,32,32,.10);}
+.p4st-bred{color:#ff8f8f;border-color:var(--crimson-glow);background:rgba(224,32,32,.16);}
+.p4st-mastered{color:#1a1200;background:linear-gradient(180deg,#e8b92a,var(--gold));border-color:#f5d76e;}
+.p4-mastered{border-color:var(--gold)!important;box-shadow:0 0 12px rgba(212,160,23,.25);}
+/* personal records grid (grower profile) */
+.p4-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px;}
+.p4-rec{background:#141416;border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0;}
+.p4-rec-lbl{font-size:10px;letter-spacing:.1em;color:var(--muted);font-weight:800;}
+.p4-rec-val{font-size:15px;font-weight:800;margin:4px 0;overflow:hidden;text-overflow:ellipsis;}
+.p4-rec-meta{font-size:11px;color:var(--muted);}
+.p4-rec-live{border-style:dashed;border-color:var(--ge-ember);}
+/* milestone / legacy timeline sheet */
+.p4-legacy-sub{margin:0 0 10px;}
+.p4-timeline{position:relative;margin:6px 0 0;padding-left:30px;}
+.p4-timeline::before{content:'';position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--crimson),var(--ge-ember),var(--gold));opacity:.55;}
+.p4-tl-row{position:relative;padding:8px 0;}
+.p4-tl-dot{position:absolute;left:-30px;top:8px;width:24px;height:24px;border-radius:50%;background:#141416;border:1px solid var(--crimson);display:flex;align-items:center;justify-content:center;color:var(--crimson-glow);}
+.p4-tl-day{font-size:10px;letter-spacing:.12em;color:var(--gold);font-weight:800;}
+.p4-tl-name{font-weight:800;font-size:13px;letter-spacing:.04em;margin:2px 0;}
+.p4-tl-sub{font-size:12px;}
+
+/* ================= P4 WAVE 6 — 4L/4M/4N/4V ================= */
+/* 4L: sales briefing */
+.p4l-card{border-left:3px solid var(--crimson);}
+.p4l-row{padding:8px 0;}
+/* 4M: empire evolution staging — border/glow/backdrop treatments only (GPU-cheap, mobile-safe) */
+.ge-facility{position:relative;}
+.p4m-stage-ribbon{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px;border-top:1px solid var(--line);font-size:11px;}
+.p4m-stage-ribbon b{font-weight:800;letter-spacing:1px;}
+.ge-facility.p4m-stage-0{border:1px dashed #4a4a4e;}
+.ge-facility.p4m-stage-1{border:1px solid #2c2c30;box-shadow:0 0 14px rgba(224,32,32,.12);}
+.ge-facility.p4m-stage-2{border:1px solid var(--crimson);box-shadow:0 0 18px rgba(224,32,32,.22);}
+.ge-facility.p4m-stage-3{border:1px solid #c96a1b;box-shadow:0 0 18px rgba(201,106,27,.25);}
+.ge-facility.p4m-stage-4{border:2px solid #6a6a70;box-shadow:0 0 16px rgba(120,124,132,.25);}
+.ge-facility.p4m-stage-5{border:1px solid var(--gold);box-shadow:0 0 22px rgba(212,160,23,.30);background:linear-gradient(180deg,#171208,#0a0708);}
+.ge-facility.p4m-stage-6{border:2px solid var(--gold);box-shadow:0 0 30px rgba(212,160,23,.40),0 0 12px rgba(224,32,32,.25);}
+.p4m-stageladder{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.p4m-stagechip{font-size:9px;font-weight:800;letter-spacing:.4px;padding:4px 8px;border-radius:20px;border:1px solid #3a3a3e;color:#5a5a60;background:#101012;}
+.p4m-stagechip.done{color:#c9c9ce;border-color:#55555c;}
+.p4m-stagechip.cur{color:#111;background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(212,160,23,.5);}
+/* 4N: automation feel */
+.ge-am-p4n{margin-top:8px;padding:8px 10px;border-top:1px solid var(--line);}
+.ge-am-p4n .ge-caption{margin:2px 0 8px;}
+/* 4V: strategy compass (reuses ge-card / ge-pill) */
